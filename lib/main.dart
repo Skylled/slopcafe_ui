@@ -5,6 +5,7 @@ import 'core/theme.dart';
 import 'core/secure_storage.dart';
 import 'core/api_client.dart';
 import 'screens/documents_screen.dart';
+import 'screens/agents_screen.dart';
 
 void main() {
   runApp(
@@ -195,7 +196,7 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
       case ActiveScreen.dashboard:
         return const DashboardScreen();
       case ActiveScreen.agents:
-        return const Center(child: Text('Agents List (Under Construction)'));
+        return const AgentsScreen();
       case ActiveScreen.documents:
         return const DocumentsScreen();
     }
