@@ -32,7 +32,7 @@ class SlopcafeAdminApp extends ConsumerWidget {
 }
 
 /// Simple state provider for current navigation screen.
-enum ActiveScreen { settings, dashboard, agents, documents }
+enum ActiveScreen { settings, documents, agents }
 
 final activeScreenProvider = StateProvider<ActiveScreen>((ref) => ActiveScreen.settings);
 
@@ -58,7 +58,7 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
     final token = await storage.getOperatorToken();
 
     if (url != null && token != null) {
-      ref.read(activeScreenProvider.notifier).state = ActiveScreen.dashboard;
+      ref.read(activeScreenProvider.notifier).state = ActiveScreen.documents;
     } else {
       ref.read(activeScreenProvider.notifier).state = ActiveScreen.settings;
     }
@@ -111,19 +111,14 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
                   label: Text('Settings'),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(Icons.dashboard_outlined),
-                  selectedIcon: Icon(Icons.dashboard),
-                  label: Text('Dashboard'),
+                  icon: Icon(Icons.description_outlined),
+                  selectedIcon: Icon(Icons.description),
+                  label: Text('Documents'),
                 ),
                 NavigationRailDestination(
                   icon: Icon(Icons.people_outline),
                   selectedIcon: Icon(Icons.people),
                   label: Text('Agents'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.description_outlined),
-                  selectedIcon: Icon(Icons.description),
-                  label: Text('Documents'),
                 ),
               ],
             ),
@@ -146,19 +141,14 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
                   label: 'Settings',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.dashboard_outlined),
-                  activeIcon: Icon(Icons.dashboard),
-                  label: 'Dashboard',
+                  icon: Icon(Icons.description_outlined),
+                  activeIcon: Icon(Icons.description),
+                  label: 'Documents',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.people_outline),
                   activeIcon: Icon(Icons.people),
                   label: 'Agents',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.description_outlined),
-                  activeIcon: Icon(Icons.description),
-                  label: 'Documents',
                 ),
               ],
             )
@@ -170,21 +160,18 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
     switch (screen) {
       case ActiveScreen.settings:
         return 0;
-      case ActiveScreen.dashboard:
+      case ActiveScreen.documents:
         return 1;
       case ActiveScreen.agents:
         return 2;
-      case ActiveScreen.documents:
-        return 3;
     }
   }
 
   void _onNavigationSelected(int index) {
     final screens = [
       ActiveScreen.settings,
-      ActiveScreen.dashboard,
+      ActiveScreen.documents,
       ActiveScreen.agents,
-      ActiveScreen.documents
     ];
     ref.read(activeScreenProvider.notifier).state = screens[index];
   }
@@ -193,12 +180,10 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
     switch (screen) {
       case ActiveScreen.settings:
         return const SettingsScreen();
-      case ActiveScreen.dashboard:
-        return const DashboardScreen();
-      case ActiveScreen.agents:
-        return const AgentsScreen();
       case ActiveScreen.documents:
         return const DocumentsScreen();
+      case ActiveScreen.agents:
+        return const AgentsScreen();
     }
   }
 }
@@ -283,7 +268,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       baseUrl: _urlController.text,
       operatorToken: _tokenController.text,
     );
-    ref.read(activeScreenProvider.notifier).state = ActiveScreen.dashboard;
+    ref.read(activeScreenProvider.notifier).state = ActiveScreen.documents;
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Settings saved successfully')),

@@ -20,7 +20,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   // Local state filters
   String? _selectedTag;
   final _slugController = TextEditingController();
-  bool _includeRevoked = true;
+  bool _includeRevoked = false;
 
   // Search parameters & debouncing
   final _searchController = TextEditingController();
@@ -88,7 +88,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
     setState(() {
       _selectedTag = null;
       _slugController.clear();
-      _includeRevoked = true;
+      _includeRevoked = false;
       _searchController.clear();
       _searchQuery = '';
     });
@@ -245,8 +245,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
+                  const SizedBox(height: 6),
                   SizedBox(
-                    height: 28,
+                    height: 38,
                     child: Switch(
                       value: _includeRevoked,
                       onChanged: (val) {
