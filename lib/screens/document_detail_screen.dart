@@ -251,7 +251,7 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
         ? '$_baseUrl/d/${_currentDoc.publicId}'
         : '';
     final slugDocUrl = (_baseUrl != null && _currentDoc.slug != null)
-        ? '$_baseUrl/d/by-slug/${_currentDoc.slug}'
+        ? '$_baseUrl/s/${_currentDoc.slug}'
         : '';
 
     return Scaffold(

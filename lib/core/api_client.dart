@@ -4,6 +4,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'secure_storage.dart';
 
+/// Slopcafe API Client.
+///
+/// Canonical HTTP API Reference:
+/// - Title: Slopcafe HTTP API reference
+/// - Slug: slopcafe-http-api
+/// - URL: https://slopcafe.com/s/slopcafe-http-api
+///
+/// Refer to the above Slopcafe document for the most up-to-date and complete contract
+/// regarding request/response shapes, headers, status codes, and error codes.
+/// Keep this client and the app's models synchronized with that reference.
+
+
 /// Enum representing the connection state of the Operator app.
 enum ConnectionStatus {
   initial,

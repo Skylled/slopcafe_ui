@@ -231,7 +231,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     try {
       // 1. Health Probe
-      final healthResponse = await dio.get('$url/');
+      final healthResponse = await dio.get('$url/healthz');
       
       // 2. Auth Probe
       final authResponse = await dio.get(
