@@ -42,7 +42,7 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
   * Wraps `flutter_secure_storage` to encrypt and store the API Base URL and Operator Token.
 * **[lib/core/document_cache.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/document_cache.dart)**
   * Manages the storage and retrieval of offline-cached documents to support running the app in disconnected mode.
-  * Encapsulates saving and loading the global documents metadata listing (`documents_list.json`) and checking if specific document versions exist in the cache.
+  * Encapsulates saving and loading the global documents metadata listing (`documents_list.json`), checking if specific document versions exist in the cache, and scanning the cache directory for version resolution.
 * **[lib/core/theme.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/theme.dart)**
   * Defines the color schemes and typographic parameters for the light and dark visual themes.
 
@@ -70,6 +70,7 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
   * Queries cache state dynamically to append `OFFLINE READY` badges to cached document list cards and search hit items.
 * **[lib/screens/document_detail_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/document_detail_screen.dart)**
   * Displays the content of individual documents across three formats: a native WebView/iframe renderer, raw HTML source, and parsed GitHub-Flavored Markdown (GFM).
+  * Implements a version-first load strategy that serves local cached content instantly, checks backend status using conditional `If-None-Match`/`304 Not Modified` headers, and triggers refreshes or reloads only when a version mismatch is detected.
   * Houses the document revocation action.
 * **[lib/screens/agents_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/agents_screen.dart)**
   * Displays a global directory of all active fleet agents with real-time status counters.

@@ -74,6 +74,28 @@ class DocumentCacheManager {
     }
   }
 
+  /// Find the version number of any cached HTML file for a given document publicId.
+  /// Returns null if no cached file is found.
+  static Future<int?> getCachedVersion(String publicId) async {
+    try {
+      final dir = await _cacheDir;
+      if (await dir.exists()) {
+        final List<FileSystemEntity> entities = dir.listSync();
+        final pattern = RegExp('^${RegExp.escape(publicId)}_v(\\d+)\\.html\$');
+        for (var entity in entities) {
+          if (entity is File) {
+            final filename = entity.path.split(Platform.pathSeparator).last;
+            final match = pattern.firstMatch(filename);
+            if (match != null) {
+              return int.tryParse(match.group(1) ?? '');
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
   /// Save the default/unfiltered list of documents to disk.
   static Future<void> saveCachedDocumentList(List<DocumentListing> documents) async {
     try {

@@ -83,29 +83,99 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
     if (_baseUrl == null) return;
 
     final String publicId = _currentDoc.publicId;
-    final int versionToLoad = _selectedVersion == 0
+    int versionToLoad = _selectedVersion == 0
         ? (_currentDoc.currentVer ?? 1)
         : _selectedVersion;
 
-    // 1. Try to load from cache first for instant/offline viewing
-    final cachedHtml = await DocumentCacheManager.getCachedHtml(publicId, versionToLoad);
+    // Check if we have a cached version for this document
+    int? cachedVersion;
+    if (_selectedVersion == 0) {
+      cachedVersion = await DocumentCacheManager.getCachedVersion(publicId);
+      if (cachedVersion != null) {
+        versionToLoad = cachedVersion;
+      }
+    } else {
+      final exists = await DocumentCacheManager.isCached(publicId, _selectedVersion);
+      if (exists) {
+        cachedVersion = _selectedVersion;
+      }
+    }
+
+    final cachedHtml = cachedVersion != null
+        ? await DocumentCacheManager.getCachedHtml(publicId, cachedVersion)
+        : null;
+
     if (cachedHtml != null) {
       final securedHtml = _injectCspMeta(cachedHtml);
       await _webViewController.loadHtmlString(securedHtml, baseUrl: _baseUrl);
     }
 
-    // 2. Fetch fresh version from server in background/foreground
+    // Fetch fresh version from server in background/foreground
     try {
       final dio = ref.read(dioProvider);
       final String path = _selectedVersion == 0
           ? '/d/$publicId/raw'
           : '/d/$publicId/v/$versionToLoad/raw';
 
-      final response = await dio.get(path);
+      final response = await dio.get(
+        path,
+        options: Options(
+          headers: {
+            if (cachedVersion != null) 'If-None-Match': '"v$cachedVersion"',
+          },
+          validateStatus: (status) => status == 200 || status == 304,
+        ),
+      );
+
+      if (response.statusCode == 304) {
+        // Cache is valid and matches the server version!
+        // No need to update the cache or reload the WebView since we already loaded cachedHtml.
+        return;
+      }
+
+      // If response is 200 OK, update the cache and render fresh HTML
       final freshHtml = response.data as String;
 
+      // Extract new version from etag header if present
+      final etagHeader = response.headers.value('etag') ?? response.headers.value('ETag');
+      int newVersion = versionToLoad;
+      if (etagHeader != null) {
+        final cleanEtag = etagHeader.replaceAll('"', '').trim();
+        if (cleanEtag.startsWith('v')) {
+          final ver = int.tryParse(cleanEtag.substring(1));
+          if (ver != null) {
+            newVersion = ver;
+          }
+        }
+      }
+
+      // Client-side guard: if the version matches the cached version, we don't need to reload or save
+      if (newVersion == cachedVersion && cachedHtml != null) {
+        return;
+      }
+
       // Update cache
-      await DocumentCacheManager.saveCachedHtml(publicId, versionToLoad, freshHtml);
+      await DocumentCacheManager.saveCachedHtml(publicId, newVersion, freshHtml);
+
+      // If version has changed, update _currentDoc so UI shows correct version
+      if (_selectedVersion == 0 && _currentDoc.currentVer != newVersion) {
+        setState(() {
+          _currentDoc = DocumentListing(
+            publicId: _currentDoc.publicId,
+            createdAt: _currentDoc.createdAt,
+            tags: _currentDoc.tags,
+            createdById: _currentDoc.createdById,
+            createdByName: _currentDoc.createdByName,
+            currentSize: _currentDoc.currentSize,
+            currentVer: newVersion,
+            description: _currentDoc.description,
+            slug: _currentDoc.slug,
+            title: _currentDoc.title,
+            visibility: _currentDoc.visibility,
+            revokedAt: _currentDoc.revokedAt,
+          );
+        });
+      }
 
       // Render fresh HTML
       final securedHtml = _injectCspMeta(freshHtml);
