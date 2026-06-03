@@ -124,16 +124,16 @@ class MintOAuthResponse {
   final String clientId;
   final String clientSecret;
   final String mcpUrl;
-  final String agentId;
-  final String agentName;
+  final String? agentId;
+  final String? agentName;
   final String note;
 
   MintOAuthResponse({
     required this.clientId,
     required this.clientSecret,
     required this.mcpUrl,
-    required this.agentId,
-    required this.agentName,
+    this.agentId,
+    this.agentName,
     required this.note,
   });
 
@@ -142,8 +142,8 @@ class MintOAuthResponse {
       clientId: json['client_id'] as String,
       clientSecret: json['client_secret'] as String,
       mcpUrl: json['mcp_url'] as String,
-      agentId: json['agent_id'] as String,
-      agentName: json['agent_name'] as String,
+      agentId: json['agent_id'] as String?,
+      agentName: json['agent_name'] as String?,
       note: json['note'] as String? ?? '',
     );
   }

@@ -173,6 +173,12 @@ class AgentManagerService {
     return MintOAuthResponse.fromJson(response.data as Map<String, dynamic>);
   }
 
+  Future<MintOAuthResponse> mintUnboundOAuthClient() async {
+    final dio = _ref.read(dioProvider);
+    final response = await dio.post('/admin/oauth-clients');
+    return MintOAuthResponse.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<void> deleteOAuthClient(String clientId) async {
     final dio = _ref.read(dioProvider);
     await dio.delete('/admin/oauth-clients/$clientId');

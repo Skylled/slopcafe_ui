@@ -406,6 +406,45 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: doc.visibility == 'public'
+                            ? theme.colorScheme.primary.withValues(alpha: 0.12)
+                            : theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: doc.visibility == 'public'
+                              ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                              : theme.colorScheme.outline.withValues(alpha: 0.15),
+                          width: 1.0,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            doc.visibility == 'public' ? Icons.public : Icons.lock_outline,
+                            size: 10,
+                            color: doc.visibility == 'public'
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            doc.visibility == 'public' ? 'PUBLIC' : 'PRIVATE',
+                            style: TextStyle(
+                              color: doc.visibility == 'public'
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                 ],
               ),
@@ -645,6 +684,45 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: doc.visibility == 'public'
+                            ? theme.colorScheme.primary.withValues(alpha: 0.12)
+                            : theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: doc.visibility == 'public'
+                              ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                              : theme.colorScheme.outline.withValues(alpha: 0.15),
+                          width: 1.0,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            doc.visibility == 'public' ? Icons.public : Icons.lock_outline,
+                            size: 10,
+                            color: doc.visibility == 'public'
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            doc.visibility == 'public' ? 'PUBLIC' : 'PRIVATE',
+                            style: TextStyle(
+                              color: doc.visibility == 'public'
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                 ],

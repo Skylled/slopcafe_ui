@@ -10,7 +10,7 @@ import '../core/secure_storage.dart';
 import '../core/api_client.dart';
 import '../providers/document_provider.dart';
 
-enum DocumentViewMode { rendered, source, markdown }
+enum DocumentViewMode { rendered, source, markdown, retainedSource }
 
 class DocumentDetailScreen extends ConsumerStatefulWidget {
   final DocumentListing document;
@@ -28,6 +28,8 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
   String? _baseUrl;
   bool _isLoadingBaseUrl = true;
   bool _isRevoking = false;
+  bool _updatingProperties = false;
+  int _selectedVersion = 0;
   late DocumentListing _currentDoc;
 
   @override
@@ -40,16 +42,42 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
   Future<void> _initBaseUrlAndWebview() async {
     final storage = SecureStorageService.instance;
     final url = await storage.getBaseUrl();
+    final token = await storage.getOperatorToken();
     setState(() {
       _baseUrl = url;
       _isLoadingBaseUrl = false;
     });
 
     if (url != null) {
+      final headers = <String, String>{};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+      
+      final String requestUrl = _selectedVersion == 0
+          ? '$url/d/${_currentDoc.publicId}'
+          : '$url/d/${_currentDoc.publicId}/v/$_selectedVersion/raw';
+
       _webViewController = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..loadRequest(Uri.parse('$url/d/${_currentDoc.publicId}'));
+        ..loadRequest(Uri.parse(requestUrl), headers: headers);
     }
+  }
+
+  Future<void> _reloadWebview() async {
+    if (_baseUrl == null) return;
+    final storage = SecureStorageService.instance;
+    final token = await storage.getOperatorToken();
+    final headers = <String, String>{};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    final String requestUrl = _selectedVersion == 0
+        ? '$_baseUrl/d/${_currentDoc.publicId}'
+        : '$_baseUrl/d/${_currentDoc.publicId}/v/$_selectedVersion/raw';
+
+    await _webViewController.loadRequest(Uri.parse(requestUrl), headers: headers);
   }
 
   Future<void> _copyToClipboard(String text, String message) async {
@@ -341,6 +369,28 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                   ],
                 ),
               ),
+              PopupMenuItem(
+                value: DocumentViewMode.retainedSource,
+                enabled: !isRevoked,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.lock_person_outlined,
+                      color: theme.colorScheme.error,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Retained Source (Debug)',
+                      style: TextStyle(
+                        color: isRevoked
+                            ? theme.colorScheme.onSurfaceVariant
+                            : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
 
@@ -366,6 +416,15 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                   break;
                 case 'open_browser':
                   _openExternalBrowser(publicDocUrl);
+                  break;
+                case 'toggle_visibility':
+                  _toggleVisibility();
+                  break;
+                case 'edit_slug':
+                  _showEditSlugDialog();
+                  break;
+                case 'edit_tags':
+                  _showEditTagsDialog();
                   break;
                 case 'revoke':
                   _showRevokeDialog();
@@ -408,6 +467,43 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
               ),
               const PopupMenuDivider(),
               PopupMenuItem(
+                value: 'toggle_visibility',
+                enabled: !isRevoked && !_updatingProperties,
+                child: Row(
+                  children: [
+                    Icon(
+                      _currentDoc.visibility == 'public' ? Icons.lock_outline : Icons.public,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(_currentDoc.visibility == 'public' ? 'Make Private' : 'Make Public'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'edit_slug',
+                enabled: !isRevoked && !_updatingProperties,
+                child: const Row(
+                  children: [
+                    Icon(Icons.bookmark_outline, size: 20),
+                    SizedBox(width: 8),
+                    Text('Edit Slug'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'edit_tags',
+                enabled: !isRevoked && !_updatingProperties,
+                child: const Row(
+                  children: [
+                    Icon(Icons.tag, size: 20),
+                    SizedBox(width: 8),
+                    Text('Edit Tags'),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              PopupMenuItem(
                 value: 'revoke',
                 enabled: !isRevoked && !_isRevoking,
                 child: Row(
@@ -444,6 +540,12 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
               children: [
                 // 1. Static Metadata Header Card
                 _buildMetadataHeaderCard(),
+
+                // 1.5. Version Selector Row (if not revoked)
+                if (!isRevoked) _buildVersionSelector(),
+
+                // 1.6. Historical Version Banner (if viewing history)
+                if (!isRevoked) _buildHistoricalVersionBanner(),
 
                 // 2. View mode toggle banner (subtle, informs user which mode they are looking at)
                 _buildViewModeBanner(),
@@ -531,6 +633,49 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _currentDoc.visibility == 'public'
+                        ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                        : theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(
+                      color: _currentDoc.visibility == 'public'
+                          ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                          : theme.colorScheme.outlineVariant,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _currentDoc.visibility == 'public'
+                            ? Icons.public
+                            : Icons.lock_outline,
+                        size: 10,
+                        color: _currentDoc.visibility == 'public'
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _currentDoc.visibility == 'public' ? 'PUBLIC' : 'PRIVATE',
+                        style: TextStyle(
+                          color: _currentDoc.visibility == 'public'
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
             ],
           ),
@@ -601,7 +746,6 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
 
     switch (_viewMode) {
       case DocumentViewMode.rendered:
-        // Already handled above, but kept to satisfy complete switch
         return const SizedBox.shrink();
       case DocumentViewMode.source:
         title = 'Raw HTML Source View (Debug Mode)';
@@ -612,6 +756,11 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
         title = 'Parsed Markdown View (Debug Mode)';
         bgColor = theme.colorScheme.tertiary.withValues(alpha: 0.08);
         icon = Icons.text_snippet_outlined;
+        break;
+      case DocumentViewMode.retainedSource:
+        title = 'Retained Source View (Debug Mode)';
+        bgColor = theme.colorScheme.error.withValues(alpha: 0.08);
+        icon = Icons.lock_person_outlined;
         break;
     }
 
@@ -697,14 +846,6 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 width: 1.5,
               ),
-              // left: BorderSide(
-              //   color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              //   width: 1.5,
-              // ),
-              // right: BorderSide(
-              //   color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              //   width: 1.5,
-              // ),
             ),
           ),
           child: ClipRRect(
@@ -719,14 +860,18 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
         return _buildSourceHtmlView();
       case DocumentViewMode.markdown:
         return _buildMarkdownTextView();
+      case DocumentViewMode.retainedSource:
+        return _buildRetainedSourceView();
     }
   }
 
   Widget _buildSourceHtmlView() {
     final theme = Theme.of(context);
-    final htmlAsync = ref.watch(
-      documentDetailHtmlProvider(_currentDoc.publicId),
-    );
+    final htmlAsync = _selectedVersion == 0
+        ? ref.watch(documentDetailHtmlProvider(_currentDoc.publicId))
+        : ref.watch(documentDetailHistoryRawProvider(
+            (publicId: _currentDoc.publicId, version: _selectedVersion),
+          ));
 
     return htmlAsync.when(
       data: (html) {
@@ -773,6 +918,24 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
       data: (res) {
         return Column(
           children: [
+            if (_selectedVersion != 0)
+              Container(
+                width: double.infinity,
+                color: theme.colorScheme.secondaryContainer,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: theme.colorScheme.onSecondaryContainer, size: 16),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Markdown view only supports the latest version. Showing latest version.',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             Expanded(
               child: Markdown(
                 data: res.markdown,
@@ -780,7 +943,6 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
                 padding: const EdgeInsets.all(16),
               ),
             ),
-            // Header information row at bottom of markdown tab
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               color: theme.colorScheme.surfaceContainerHighest,
@@ -803,6 +965,548 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildRetainedSourceView() {
+    final theme = Theme.of(context);
+    final sourceAsync = ref.watch(documentDetailSourceProvider(_currentDoc.publicId));
+
+    return sourceAsync.when(
+      data: (res) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_selectedVersion != 0)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  color: theme.colorScheme.secondaryContainer,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: theme.colorScheme.onSecondaryContainer, size: 16),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'Retained source view only supports the latest version. Showing latest version.',
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (res.unsanitized)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.errorContainer,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: theme.colorScheme.error),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded, color: theme.colorScheme.onErrorContainer),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Warning: This source contains unsanitized content. Exercise caution.',
+                          style: TextStyle(
+                            color: theme.colorScheme.onErrorContainer,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildFooterChip('Format: ${res.sourceFormat}'),
+                  _buildFooterChip('Sanitizer: ${res.sanitizerVersion}'),
+                  _buildFooterChip('Version: v${res.versionNo}'),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (res.stripped.isNotEmpty) ...[
+                Text(
+                  'Stripped Elements:',
+                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: res.stripped.map((item) => Chip(
+                      label: Text(item, style: const TextStyle(fontSize: 11)),
+                      visualDensity: VisualDensity.compact,
+                    )).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (res.willNotRender.isNotEmpty) ...[
+                Text(
+                  'Unrendered / Unsupported Elements:',
+                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: res.willNotRender.map((item) => Chip(
+                      label: Text(item, style: const TextStyle(fontSize: 11)),
+                      visualDensity: VisualDensity.compact,
+                    )).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Retained Authored Source:',
+                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy_rounded, size: 20),
+                    tooltip: 'Copy Source',
+                    onPressed: () => _copyToClipboard(res.source, 'Source code copied to clipboard'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.colorScheme.surfaceContainerHighest),
+                ),
+                child: SelectableText(
+                  res.source,
+                  style: const TextStyle(
+                    fontFamily: 'Courier',
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stack) => Center(
+        child: Text(
+          'Failed to load retained source: ${err.toString()}',
+          style: TextStyle(color: theme.colorScheme.error),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVersionSelector() {
+    final maxVer = _currentDoc.currentVer;
+    if (maxVer == null || maxVer <= 1) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final items = <DropdownMenuItem<int>>[
+      DropdownMenuItem(
+        value: 0,
+        child: Text('Latest Version (v$maxVer)'),
+      ),
+    ];
+    for (int i = maxVer; i >= 1; i--) {
+      items.add(DropdownMenuItem(
+        value: i,
+        child: Text('Version v$i'),
+      ));
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Icon(Icons.history_toggle_off, color: theme.colorScheme.onSurfaceVariant, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            'Viewing Version:',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: DropdownButtonFormField<int>(
+              value: _selectedVersion,
+              decoration: const InputDecoration(
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                isDense: true,
+              ),
+              items: items,
+              onChanged: (val) {
+                if (val == null) return;
+                setState(() {
+                  _selectedVersion = val;
+                });
+                _reloadWebview();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistoricalVersionBanner() {
+    if (_selectedVersion == 0) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      color: theme.colorScheme.errorContainer,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: theme.colorScheme.onErrorContainer, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Viewing historical version v$_selectedVersion. This is not the live version.',
+              style: TextStyle(
+                color: theme.colorScheme.onErrorContainer,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton.icon(
+            onPressed: _updatingProperties ? null : () => _restoreVersionConfirm(_selectedVersion),
+            icon: const Icon(Icons.settings_backup_restore, size: 16),
+            label: const Text('Restore', style: TextStyle(fontSize: 11)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.colorScheme.error,
+              foregroundColor: theme.colorScheme.onError,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _restoreVersionConfirm(int version) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Restore'),
+        content: Text('Are you sure you want to restore the document to version v$version? This will create a new version of the document matching version v$version.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            ),
+            child: const Text('Restore'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() {
+        _updatingProperties = true;
+      });
+
+      try {
+        final newVer = await ref
+            .read(documentsListProvider.notifier)
+            .restoreVersion(_currentDoc.publicId, version);
+
+        setState(() {
+          _selectedVersion = 0; // reset to latest
+          _currentDoc = DocumentListing(
+            publicId: _currentDoc.publicId,
+            createdAt: _currentDoc.createdAt,
+            tags: _currentDoc.tags,
+            createdById: _currentDoc.createdById,
+            createdByName: _currentDoc.createdByName,
+            currentSize: _currentDoc.currentSize,
+            currentVer: newVer,
+            description: _currentDoc.description,
+            slug: _currentDoc.slug,
+            title: _currentDoc.title,
+            revokedAt: _currentDoc.revokedAt,
+            visibility: _currentDoc.visibility,
+          );
+          _updatingProperties = false;
+        });
+
+        await _reloadWebview();
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Document successfully restored to version v$version (new version v$newVer).'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } catch (e) {
+        setState(() {
+          _updatingProperties = false;
+        });
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Restore failed: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleVisibility() async {
+    final nextVisibility = _currentDoc.visibility == 'public' ? 'private' : 'public';
+    setState(() {
+      _updatingProperties = true;
+    });
+
+    try {
+      final updated = await ref
+          .read(documentsListProvider.notifier)
+          .updateVisibility(_currentDoc.publicId, nextVisibility);
+
+      setState(() {
+        _currentDoc = updated;
+        _updatingProperties = false;
+      });
+
+      await _reloadWebview();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Visibility updated to: ${nextVisibility.toUpperCase()}'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        _updatingProperties = false;
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update visibility: ${e.toString()}'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _showEditSlugDialog() async {
+    final controller = TextEditingController(text: _currentDoc.slug ?? '');
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Document Slug'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Specify a unique URL-friendly slug. Leave empty to clear the slug.',
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: 'e.g. my-cool-document',
+                labelText: 'Slug',
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade100,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.amber.shade400),
+              ),
+              child: const Text(
+                'Note: Slugs are retired permanently when cleared or changed, making the old slug return 410 Gone.',
+                style: TextStyle(fontSize: 11, color: Colors.black87),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final newSlug = controller.text.trim();
+      setState(() {
+        _updatingProperties = true;
+      });
+
+      try {
+        final updated = await ref
+            .read(documentsListProvider.notifier)
+            .updateSlug(_currentDoc.publicId, newSlug);
+
+        setState(() {
+          _currentDoc = updated;
+          _updatingProperties = false;
+        });
+
+        await _reloadWebview();
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(newSlug.isEmpty
+                ? 'Slug cleared successfully (old slug retired)'
+                : 'Slug updated to: $newSlug'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } catch (e) {
+        setState(() {
+          _updatingProperties = false;
+        });
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update slug: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showEditTagsDialog() async {
+    final controller = TextEditingController(text: _currentDoc.tags.join(', '));
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Document Tags'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Enter tags separated by commas:'),
+            const SizedBox(height: 8),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: 'e.g. guide, tutorial, slop',
+                labelText: 'Tags',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final tagsInput = controller.text;
+      final tagsList = tagsInput
+          .split(',')
+          .map((t) => t.trim())
+          .where((t) => t.isNotEmpty)
+          .toList();
+
+      setState(() {
+        _updatingProperties = true;
+      });
+
+      try {
+        final updated = await ref
+            .read(documentsListProvider.notifier)
+            .updateTags(_currentDoc.publicId, tagsList);
+
+        setState(() {
+          _currentDoc = updated;
+          _updatingProperties = false;
+        });
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tags updated successfully'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } catch (e) {
+        setState(() {
+          _updatingProperties = false;
+        });
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update tags: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildFooterChip(String label) {

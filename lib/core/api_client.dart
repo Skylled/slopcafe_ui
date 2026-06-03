@@ -77,8 +77,11 @@ final dioProvider = Provider<Dio>((ref) {
       }
 
       // In the spec, health GET / is unauthenticated, but authenticated probe GET /admin/agents is auth.
-      // So if the path contains '/admin', we attach the token.
-      final isAuthRequired = options.path.contains('/admin') || options.path.startsWith('admin');
+      // So if the path contains '/admin' or '/d/', we attach the token.
+      final isAuthRequired = options.path.contains('/admin') ||
+          options.path.startsWith('admin') ||
+          options.path.contains('/d/') ||
+          options.path.startsWith('d/');
 
       if (isAuthRequired && token != null) {
         options.headers['Authorization'] = 'Bearer $token';

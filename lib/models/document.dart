@@ -10,6 +10,7 @@ class DocumentListing {
   final String? description;
   final List<String> tags;
   final String? slug;
+  final String visibility;
 
   DocumentListing({
     required this.publicId,
@@ -23,6 +24,7 @@ class DocumentListing {
     this.description,
     required this.tags,
     this.slug,
+    this.visibility = 'private',
   });
 
   bool get isRevoked => revokedAt != null;
@@ -42,6 +44,7 @@ class DocumentListing {
       description: json['description'] as String?,
       tags: List<String>.from(json['tags'] ?? const []),
       slug: json['slug'] as String?,
+      visibility: json['visibility'] as String? ?? 'private',
     );
   }
 
@@ -58,6 +61,7 @@ class DocumentListing {
       'description': description,
       'tags': tags,
       'slug': slug,
+      'visibility': visibility,
     };
   }
 }

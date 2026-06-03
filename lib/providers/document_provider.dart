@@ -1,5 +1,6 @@
 import 'dart:developer' as dev;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import '../core/api_client.dart';
 import '../models/document.dart';
 
@@ -120,6 +121,7 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
           slug: null,        // slug is cleared when revoked
           title: doc.title,
           revokedAt: revokedAt,
+          visibility: doc.visibility,
         );
       }
       return doc;
@@ -133,6 +135,153 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
       errorMessage: state.errorMessage,
       aggregatedTags: state.aggregatedTags,
     );
+  }
+
+  Future<DocumentListing> updateVisibility(String publicId, String visibility) async {
+    final dio = _ref.read(dioProvider);
+    await dio.post(
+      '/admin/documents/$publicId/visibility',
+      data: {'visibility': visibility},
+    );
+    
+    final updatedDocs = state.documents.map((doc) {
+      if (doc.publicId == publicId) {
+        return DocumentListing(
+          publicId: doc.publicId,
+          createdAt: doc.createdAt,
+          tags: doc.tags,
+          createdById: doc.createdById,
+          createdByName: doc.createdByName,
+          currentSize: doc.currentSize,
+          currentVer: doc.currentVer,
+          description: doc.description,
+          slug: doc.slug,
+          title: doc.title,
+          revokedAt: doc.revokedAt,
+          visibility: visibility,
+        );
+      }
+      return doc;
+    }).toList();
+
+    state = DocumentsListState(
+      documents: updatedDocs,
+      nextCursor: state.nextCursor,
+      isLoading: state.isLoading,
+      hasError: state.hasError,
+      errorMessage: state.errorMessage,
+      aggregatedTags: state.aggregatedTags,
+    );
+
+    return state.documents.firstWhere((d) => d.publicId == publicId);
+  }
+
+  Future<DocumentListing> updateSlug(String publicId, String slug) async {
+    final dio = _ref.read(dioProvider);
+    final response = await dio.post(
+      '/admin/documents/$publicId/slug',
+      data: {'slug': slug},
+    );
+    final data = response.data as Map<String, dynamic>;
+    final returnedSlug = data['slug'] as String?;
+
+    final updatedDocs = state.documents.map((doc) {
+      if (doc.publicId == publicId) {
+        return DocumentListing(
+          publicId: doc.publicId,
+          createdAt: doc.createdAt,
+          tags: doc.tags,
+          createdById: doc.createdById,
+          createdByName: doc.createdByName,
+          currentSize: doc.currentSize,
+          currentVer: doc.currentVer,
+          description: doc.description,
+          slug: returnedSlug,
+          title: doc.title,
+          revokedAt: doc.revokedAt,
+          visibility: doc.visibility,
+        );
+      }
+      return doc;
+    }).toList();
+
+    state = DocumentsListState(
+      documents: updatedDocs,
+      nextCursor: state.nextCursor,
+      isLoading: state.isLoading,
+      hasError: state.hasError,
+      errorMessage: state.errorMessage,
+      aggregatedTags: state.aggregatedTags,
+    );
+
+    return state.documents.firstWhere((d) => d.publicId == publicId);
+  }
+
+  Future<DocumentListing> updateTags(String publicId, List<String> tags) async {
+    final dio = _ref.read(dioProvider);
+    final response = await dio.post(
+      '/admin/documents/$publicId/tags',
+      data: {'tags': tags},
+    );
+    final data = response.data as Map<String, dynamic>;
+    final returnedTags = List<String>.from(data['tags'] ?? const []);
+
+    final updatedDocs = state.documents.map((doc) {
+      if (doc.publicId == publicId) {
+        return DocumentListing(
+          publicId: doc.publicId,
+          createdAt: doc.createdAt,
+          tags: returnedTags,
+          createdById: doc.createdById,
+          createdByName: doc.createdByName,
+          currentSize: doc.currentSize,
+          currentVer: doc.currentVer,
+          description: doc.description,
+          slug: doc.slug,
+          title: doc.title,
+          revokedAt: doc.revokedAt,
+          visibility: doc.visibility,
+        );
+      }
+      return doc;
+    }).toList();
+
+    final Set<String> allTags = Set<String>.from(state.aggregatedTags)..addAll(returnedTags);
+
+    state = DocumentsListState(
+      documents: updatedDocs,
+      nextCursor: state.nextCursor,
+      isLoading: state.isLoading,
+      hasError: state.hasError,
+      errorMessage: state.errorMessage,
+      aggregatedTags: allTags,
+    );
+
+    return state.documents.firstWhere((d) => d.publicId == publicId);
+  }
+
+  Future<int> restoreVersion(String publicId, int version) async {
+    final dio = _ref.read(dioProvider);
+    final response = await dio.post(
+      '/d/$publicId/restore',
+      data: FormData.fromMap({'version': version}),
+      options: Options(
+        contentType: Headers.formUrlEncodedContentType,
+      ),
+    );
+    
+    int newVer = version + 1;
+    if (response.data is Map) {
+      newVer = response.data['version'] as int? ?? 
+               (response.data['new_version'] as int? ?? (version + 1));
+    } else if (response.data is int) {
+      newVer = response.data as int;
+    } else if (response.data is String) {
+      newVer = int.tryParse(response.data.toString()) ?? (version + 1);
+    }
+    
+    await loadNextPage(clear: true);
+    return newVer;
   }
 }
 
@@ -223,4 +372,62 @@ final documentDetailTextProvider =
     sanitizerVersion: sanitizerVersion,
     converterVersion: converterVersion,
   );
+});
+
+class ReadSourceOkResponse {
+  final String source;
+  final String sourceFormat;
+  final int versionNo;
+  final String sanitizerVersion;
+  final List<String> stripped;
+  final List<String> willNotRender;
+  final bool unsanitized;
+  final String? title;
+  final String? description;
+  final List<String> tags;
+  final String? slug;
+
+  ReadSourceOkResponse({
+    required this.source,
+    required this.sourceFormat,
+    required this.versionNo,
+    required this.sanitizerVersion,
+    required this.stripped,
+    required this.willNotRender,
+    required this.unsanitized,
+    this.title,
+    this.description,
+    required this.tags,
+    this.slug,
+  });
+
+  factory ReadSourceOkResponse.fromJson(Map<String, dynamic> json) {
+    return ReadSourceOkResponse(
+      source: json['source'] as String,
+      sourceFormat: json['source_format'] as String,
+      versionNo: json['version_no'] as int,
+      sanitizerVersion: json['sanitizer_v'] as String,
+      stripped: List<String>.from(json['stripped'] ?? const []),
+      willNotRender: List<String>.from(json['will_not_render'] ?? const []),
+      unsanitized: json['unsanitized'] as bool? ?? false,
+      title: json['title'] as String?,
+      description: json['description'] as String?,
+      tags: List<String>.from(json['tags'] ?? const []),
+      slug: json['slug'] as String?,
+    );
+  }
+}
+
+final documentDetailSourceProvider =
+    FutureProvider.family<ReadSourceOkResponse, String>((ref, publicId) async {
+  final dio = ref.read(dioProvider);
+  final response = await dio.get('/d/$publicId/source');
+  return ReadSourceOkResponse.fromJson(response.data as Map<String, dynamic>);
+});
+
+final documentDetailHistoryRawProvider =
+    FutureProvider.family<String, ({String publicId, int version})>((ref, arg) async {
+  final dio = ref.read(dioProvider);
+  final response = await dio.get('/d/${arg.publicId}/v/${arg.version}/raw');
+  return response.data as String;
 });
