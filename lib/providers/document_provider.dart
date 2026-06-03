@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../core/api_client.dart';
 import '../models/document.dart';
+import '../core/document_cache.dart';
 
 class DocumentsListState {
   final List<DocumentListing> documents;
@@ -11,6 +12,7 @@ class DocumentsListState {
   final bool hasError;
   final String? errorMessage;
   final Set<String> aggregatedTags;
+  final bool isOffline;
 
   DocumentsListState({
     this.documents = const [],
@@ -19,6 +21,7 @@ class DocumentsListState {
     this.hasError = false,
     this.errorMessage,
     this.aggregatedTags = const {},
+    this.isOffline = false,
   });
 
   DocumentsListState copyWith({
@@ -28,6 +31,7 @@ class DocumentsListState {
     bool? hasError,
     String? errorMessage,
     Set<String>? aggregatedTags,
+    bool? isOffline,
   }) {
     return DocumentsListState(
       documents: documents ?? this.documents,
@@ -36,6 +40,7 @@ class DocumentsListState {
       hasError: hasError ?? this.hasError,
       errorMessage: errorMessage ?? this.errorMessage,
       aggregatedTags: aggregatedTags ?? this.aggregatedTags,
+      isOffline: isOffline ?? this.isOffline,
     );
   }
 }
@@ -95,9 +100,36 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
         isLoading: false,
         hasError: false,
         aggregatedTags: allTags,
+        isOffline: false,
       );
+
+      // Save to local cache only if they are not filtering (canonical default list)
+      if (tag == null && (slug == null || slug.isEmpty)) {
+        await DocumentCacheManager.saveCachedDocumentList(currentDocs);
+      }
     } catch (e, stack) {
       dev.log('Failed to fetch documents', error: e, stackTrace: stack);
+
+      // Load offline cache fallback
+      final cachedList = await DocumentCacheManager.getCachedDocumentList();
+      if (cachedList != null && cachedList.isNotEmpty) {
+        if (clear || state.documents.isEmpty) {
+          final Set<String> allTags = {};
+          for (var doc in cachedList) {
+            allTags.addAll(doc.tags);
+          }
+          state = DocumentsListState(
+            documents: cachedList,
+            nextCursor: null,
+            isLoading: false,
+            hasError: false,
+            aggregatedTags: allTags,
+            isOffline: true,
+          );
+          return;
+        }
+      }
+
       state = state.copyWith(
         isLoading: false,
         hasError: true,
@@ -134,7 +166,9 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
       hasError: state.hasError,
       errorMessage: state.errorMessage,
       aggregatedTags: state.aggregatedTags,
+      isOffline: state.isOffline,
     );
+    DocumentCacheManager.saveCachedDocumentList(updatedDocs);
   }
 
   Future<DocumentListing> updateVisibility(String publicId, String visibility) async {
@@ -171,7 +205,9 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
       hasError: state.hasError,
       errorMessage: state.errorMessage,
       aggregatedTags: state.aggregatedTags,
+      isOffline: state.isOffline,
     );
+    await DocumentCacheManager.saveCachedDocumentList(updatedDocs);
 
     return state.documents.firstWhere((d) => d.publicId == publicId);
   }
@@ -212,7 +248,9 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
       hasError: state.hasError,
       errorMessage: state.errorMessage,
       aggregatedTags: state.aggregatedTags,
+      isOffline: state.isOffline,
     );
+    await DocumentCacheManager.saveCachedDocumentList(updatedDocs);
 
     return state.documents.firstWhere((d) => d.publicId == publicId);
   }
@@ -255,7 +293,9 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
       hasError: state.hasError,
       errorMessage: state.errorMessage,
       aggregatedTags: allTags,
+      isOffline: state.isOffline,
     );
+    await DocumentCacheManager.saveCachedDocumentList(updatedDocs);
 
     return state.documents.firstWhere((d) => d.publicId == publicId);
   }
@@ -330,11 +370,74 @@ final documentSearchProvider =
     queryParams['slug'] = params.slug;
   }
 
-  final response = await dio.get('/admin/documents/search', queryParameters: queryParams);
-  final data = response.data as Map<String, dynamic>;
-  final List<dynamic> hitsJson = data['documents'] ?? [];
+  try {
+    final response = await dio.get('/admin/documents/search', queryParameters: queryParams);
+    final data = response.data as Map<String, dynamic>;
+    final List<dynamic> hitsJson = data['documents'] ?? [];
 
-  return hitsJson.map((j) => SearchHit.fromJson(j)).toList();
+    return hitsJson.map((j) => SearchHit.fromJson(j)).toList();
+  } catch (e, stack) {
+    dev.log('Search online query failed, attempting local search fallback', error: e, stackTrace: stack);
+    
+    // Fall back to local search over cached document list
+    final cachedList = await DocumentCacheManager.getCachedDocumentList();
+    if (cachedList != null) {
+      final queryLower = params.query.toLowerCase();
+      final List<SearchHit> localHits = [];
+      for (var doc in cachedList) {
+        // Apply tag/slug filters if present
+        if (params.tag != null && params.tag!.isNotEmpty && !doc.tags.contains(params.tag)) {
+          continue;
+        }
+        if (params.slug != null && params.slug!.isNotEmpty && doc.slug != params.slug) {
+          continue;
+        }
+
+        bool match = false;
+        String matchedField = '';
+        String snippet = '';
+
+        if (doc.title != null && doc.title!.toLowerCase().contains(queryLower)) {
+          match = true;
+          matchedField = 'title';
+          snippet = doc.title!;
+        } else if (doc.description != null && doc.description!.toLowerCase().contains(queryLower)) {
+          match = true;
+          matchedField = 'description';
+          snippet = doc.description!;
+        } else if (doc.slug != null && doc.slug!.toLowerCase().contains(queryLower)) {
+          match = true;
+          matchedField = 'slug';
+          snippet = doc.slug!;
+        } else if (doc.tags.any((t) => t.toLowerCase().contains(queryLower))) {
+          match = true;
+          matchedField = 'tags';
+          snippet = doc.tags.join(', ');
+        }
+
+        if (match) {
+          final int matchIdx = snippet.toLowerCase().indexOf(queryLower);
+          String highlightedSnippet = snippet;
+          if (matchIdx != -1) {
+            final prefix = snippet.substring(0, matchIdx);
+            final matchText = snippet.substring(matchIdx, matchIdx + queryLower.length);
+            final suffix = snippet.substring(matchIdx + queryLower.length);
+            highlightedSnippet = '$prefix[$matchText]$suffix';
+          }
+          localHits.add(
+            SearchHit(
+              document: doc,
+              score: 1.0,
+              matchedField: matchedField,
+              snippet: highlightedSnippet,
+            ),
+          );
+        }
+      }
+      return localHits;
+    }
+    rethrow;
+  }
 });
 
 final documentDetailHtmlProvider =

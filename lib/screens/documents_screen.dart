@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../models/document.dart';
 import '../providers/document_provider.dart';
 import 'document_detail_screen.dart';
+import '../core/document_cache.dart';
 
 class DocumentsScreen extends ConsumerStatefulWidget {
   const DocumentsScreen({super.key});
@@ -123,6 +124,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
       ),
       body: Column(
         children: [
+          if (listState.isOffline) _buildOfflineBanner(theme),
           // 1. Core Header visual Mode Toggle: List vs Search
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -408,43 +410,86 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                       ),
                     )
                   else
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: doc.visibility == 'public'
-                            ? theme.colorScheme.primary.withValues(alpha: 0.12)
-                            : theme.colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: doc.visibility == 'public'
-                              ? theme.colorScheme.primary.withValues(alpha: 0.2)
-                              : theme.colorScheme.outline.withValues(alpha: 0.15),
-                          width: 1.0,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FutureBuilder<bool>(
+                          future: DocumentCacheManager.isCached(doc.publicId, doc.currentVer ?? 1),
+                          builder: (context, snapshot) {
+                            final isCached = snapshot.data ?? false;
+                            if (!isCached) return const SizedBox.shrink();
+                            return Container(
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.tertiary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: theme.colorScheme.tertiary.withValues(alpha: 0.25),
+                                  width: 1.0,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.offline_pin_outlined,
+                                    size: 10,
+                                    color: theme.colorScheme.tertiary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'OFFLINE READY',
+                                    style: TextStyle(
+                                      color: theme.colorScheme.tertiary,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            doc.visibility == 'public' ? Icons.public : Icons.lock_outline,
-                            size: 10,
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
                             color: doc.visibility == 'public'
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            doc.visibility == 'public' ? 'PUBLIC' : 'PRIVATE',
-                            style: TextStyle(
+                                ? theme.colorScheme.primary.withValues(alpha: 0.12)
+                                : theme.colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
                               color: doc.visibility == 'public'
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurfaceVariant,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                                  ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                                  : theme.colorScheme.outline.withValues(alpha: 0.15),
+                              width: 1.0,
                             ),
                           ),
-                        ],
-                      ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                doc.visibility == 'public' ? Icons.public : Icons.lock_outline,
+                                size: 10,
+                                color: doc.visibility == 'public'
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                doc.visibility == 'public' ? 'PUBLIC' : 'PRIVATE',
+                                style: TextStyle(
+                                  color: doc.visibility == 'public'
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.onSurfaceVariant,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                 ],
               ),
@@ -674,7 +719,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.error.withValues(alpha: 0.1),
+                        color: theme.colorScheme.error.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -687,43 +732,86 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                       ),
                     )
                   else
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: doc.visibility == 'public'
-                            ? theme.colorScheme.primary.withValues(alpha: 0.12)
-                            : theme.colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: doc.visibility == 'public'
-                              ? theme.colorScheme.primary.withValues(alpha: 0.2)
-                              : theme.colorScheme.outline.withValues(alpha: 0.15),
-                          width: 1.0,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FutureBuilder<bool>(
+                          future: DocumentCacheManager.isCached(doc.publicId, doc.currentVer ?? 1),
+                          builder: (context, snapshot) {
+                            final isCached = snapshot.data ?? false;
+                            if (!isCached) return const SizedBox.shrink();
+                            return Container(
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.tertiary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: theme.colorScheme.tertiary.withValues(alpha: 0.25),
+                                  width: 1.0,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.offline_pin_outlined,
+                                    size: 10,
+                                    color: theme.colorScheme.tertiary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'OFFLINE READY',
+                                    style: TextStyle(
+                                      color: theme.colorScheme.tertiary,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            doc.visibility == 'public' ? Icons.public : Icons.lock_outline,
-                            size: 10,
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
                             color: doc.visibility == 'public'
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            doc.visibility == 'public' ? 'PUBLIC' : 'PRIVATE',
-                            style: TextStyle(
+                                ? theme.colorScheme.primary.withValues(alpha: 0.12)
+                                : theme.colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
                               color: doc.visibility == 'public'
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurfaceVariant,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                                  ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                                  : theme.colorScheme.outline.withValues(alpha: 0.15),
+                              width: 1.0,
                             ),
                           ),
-                        ],
-                      ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                doc.visibility == 'public' ? Icons.public : Icons.lock_outline,
+                                size: 10,
+                                color: doc.visibility == 'public'
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                doc.visibility == 'public' ? 'PUBLIC' : 'PRIVATE',
+                                style: TextStyle(
+                                  color: doc.visibility == 'public'
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.onSurfaceVariant,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                 ],
               ),
@@ -850,5 +938,41 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
     }
 
     return spans;
+  }
+
+  Widget _buildOfflineBanner(ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.tertiary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.tertiary.withValues(alpha: 0.25),
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.wifi_off_rounded,
+            color: theme.colorScheme.tertiary,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Offline Mode — showing cached documents.',
+              style: TextStyle(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -42,6 +42,7 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
   * Wraps `flutter_secure_storage` to encrypt and store the API Base URL and Operator Token.
 * **[lib/core/document_cache.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/document_cache.dart)**
   * Manages the storage and retrieval of offline-cached documents to support running the app in disconnected mode.
+  * Encapsulates saving and loading the global documents metadata listing (`documents_list.json`) and checking if specific document versions exist in the cache.
 * **[lib/core/theme.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/theme.dart)**
   * Defines the color schemes and typographic parameters for the light and dark visual themes.
 
@@ -54,8 +55,10 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
 ### 4. State Management (Providers)
 * **[lib/providers/document_provider.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/providers/document_provider.dart)**
   * Manages state for fetching document listings, including cursor-based infinite pagination.
+  * Automatically serializes and caches the document list locally when online, and falls back to loading cached listings when offline.
   * Aggregates document tags for sidebar/filter widgets.
   * Integrates search algorithms (such as full-text BM25 keyword matching) to calculate relevance score indicators.
+  * Implements local client-side search fallback over cached listings with highlight formatting when offline.
   * Provides triggers for revoking specific documents and caching them locally.
 * **[lib/providers/agent_provider.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/providers/agent_provider.dart)**
   * Manages agent lists, agent creation, key minting/rotation, and key revocation actions.
@@ -63,6 +66,8 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
 ### 5. UI & Screens
 * **[lib/screens/documents_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/documents_screen.dart)**
   * Renders the documents index, including search bars, tag selectors, and infinite scrolling feeds.
+  * Displays a premium offline status banner when operating in offline fallback mode.
+  * Queries cache state dynamically to append `OFFLINE READY` badges to cached document list cards and search hit items.
 * **[lib/screens/document_detail_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/document_detail_screen.dart)**
   * Displays the content of individual documents across three formats: a native WebView/iframe renderer, raw HTML source, and parsed GitHub-Flavored Markdown (GFM).
   * Houses the document revocation action.

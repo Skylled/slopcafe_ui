@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
+import '../models/document.dart';
 
 class DocumentCacheManager {
   static Future<Directory> get _cacheDir async {
@@ -60,5 +62,43 @@ class DocumentCacheManager {
     } catch (e) {
       // Fail silently if cache deletion fails
     }
+  }
+
+  /// Check if a specific version of a document is cached offline.
+  static Future<bool> isCached(String publicId, int version) async {
+    try {
+      final file = await _getCacheFile(publicId, version);
+      return await file.exists();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Save the default/unfiltered list of documents to disk.
+  static Future<void> saveCachedDocumentList(List<DocumentListing> documents) async {
+    try {
+      final dir = await _cacheDir;
+      final file = File('${dir.path}/documents_list.json');
+      final jsonList = documents.map((d) => d.toJson()).toList();
+      await file.writeAsString(json.encode(jsonList));
+    } catch (_) {
+      // Fail silently if cache writing fails
+    }
+  }
+
+  /// Load the cached list of documents from disk.
+  static Future<List<DocumentListing>?> getCachedDocumentList() async {
+    try {
+      final dir = await _cacheDir;
+      final file = File('${dir.path}/documents_list.json');
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        final List<dynamic> jsonList = json.decode(content);
+        return jsonList.map((j) => DocumentListing.fromJson(j)).toList();
+      }
+    } catch (_) {
+      // Fail silently if cache reading fails
+    }
+    return null;
   }
 }
