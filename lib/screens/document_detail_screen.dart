@@ -4,11 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 import '../models/document.dart';
 import '../core/secure_storage.dart';
 import '../core/api_client.dart';
 import '../providers/document_provider.dart';
+import '../core/document_cache.dart';
 
 enum DocumentViewMode { rendered, source, markdown, retainedSource }
 
@@ -42,42 +44,157 @@ class _DocumentDetailScreenState extends ConsumerState<DocumentDetailScreen> {
   Future<void> _initBaseUrlAndWebview() async {
     final storage = SecureStorageService.instance;
     final url = await storage.getBaseUrl();
-    final token = await storage.getOperatorToken();
-    setState(() {
-      _baseUrl = url;
-      _isLoadingBaseUrl = false;
-    });
+    _baseUrl = url;
 
     if (url != null) {
-      final headers = <String, String>{};
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
-      
-      final String requestUrl = _selectedVersion == 0
-          ? '$url/d/${_currentDoc.publicId}'
-          : '$url/d/${_currentDoc.publicId}/v/$_selectedVersion/raw';
-
       _webViewController = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..loadRequest(Uri.parse(requestUrl), headers: headers);
+        ..setJavaScriptMode(JavaScriptMode.disabled)
+        ..setNavigationDelegate(
+          NavigationDelegate(
+            onNavigationRequest: (NavigationRequest request) {
+              final url = request.url;
+              if (url == 'about:blank' || url.startsWith('data:')) {
+                return NavigationDecision.navigate;
+              }
+              _handleNavigation(url);
+              return NavigationDecision.prevent;
+            },
+          ),
+        );
+
+      await _loadHtmlIntoWebview();
     }
+
+    setState(() {
+      _isLoadingBaseUrl = false;
+    });
   }
 
   Future<void> _reloadWebview() async {
     if (_baseUrl == null) return;
-    final storage = SecureStorageService.instance;
-    final token = await storage.getOperatorToken();
-    final headers = <String, String>{};
-    if (token != null) {
-      headers['Authorization'] = 'Bearer $token';
+    await _loadHtmlIntoWebview();
+  }
+
+  Future<void> _handleNavigation(String url) async {
+    await _openExternalBrowser(url);
+  }
+
+  Future<void> _loadHtmlIntoWebview() async {
+    if (_baseUrl == null) return;
+
+    final String publicId = _currentDoc.publicId;
+    final int versionToLoad = _selectedVersion == 0
+        ? (_currentDoc.currentVer ?? 1)
+        : _selectedVersion;
+
+    // 1. Try to load from cache first for instant/offline viewing
+    final cachedHtml = await DocumentCacheManager.getCachedHtml(publicId, versionToLoad);
+    if (cachedHtml != null) {
+      final securedHtml = _injectCspMeta(cachedHtml);
+      await _webViewController.loadHtmlString(securedHtml, baseUrl: _baseUrl);
     }
 
-    final String requestUrl = _selectedVersion == 0
-        ? '$_baseUrl/d/${_currentDoc.publicId}'
-        : '$_baseUrl/d/${_currentDoc.publicId}/v/$_selectedVersion/raw';
+    // 2. Fetch fresh version from server in background/foreground
+    try {
+      final dio = ref.read(dioProvider);
+      final String path = _selectedVersion == 0
+          ? '/d/$publicId/raw'
+          : '/d/$publicId/v/$versionToLoad/raw';
 
-    await _webViewController.loadRequest(Uri.parse(requestUrl), headers: headers);
+      final response = await dio.get(path);
+      final freshHtml = response.data as String;
+
+      // Update cache
+      await DocumentCacheManager.saveCachedHtml(publicId, versionToLoad, freshHtml);
+
+      // Render fresh HTML
+      final securedHtml = _injectCspMeta(freshHtml);
+      await _webViewController.loadHtmlString(securedHtml, baseUrl: _baseUrl);
+    } on DioException catch (dioErr) {
+      final statusCode = dioErr.response?.statusCode;
+      if (statusCode == 404 || statusCode == 410) {
+        // Document has been revoked or deleted. Clean up cache!
+        await DocumentCacheManager.deleteCachedDoc(publicId);
+        
+        final errorTitle = statusCode == 410 ? 'Document Revoked' : 'Document Not Found';
+        final errorMsg = statusCode == 410 
+            ? 'This document has been permanently revoked.' 
+            : 'This document could not be found on the server.';
+            
+        final errorHtml = _buildErrorHtml(errorTitle, errorMsg);
+        await _webViewController.loadHtmlString(errorHtml);
+      } else {
+        // Network/connection/server error
+        if (cachedHtml == null) {
+          final errorHtml = _buildErrorHtml(
+            'Offline / Connection Error',
+            'Could not retrieve the document. Please check your internet connection.',
+          );
+          await _webViewController.loadHtmlString(errorHtml);
+        }
+      }
+    } catch (e) {
+      if (cachedHtml == null) {
+        final errorHtml = _buildErrorHtml('Error', e.toString());
+        await _webViewController.loadHtmlString(errorHtml);
+      }
+    }
+  }
+
+  String _injectCspMeta(String html) {
+    const csp = "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; img-src data:; style-src 'unsafe-inline' data:; font-src data:; base-uri 'none'; form-action 'none'\">";
+    if (html.contains('<head>')) {
+      return html.replaceFirst('<head>', '<head>\n$csp');
+    } else {
+      return '$csp\n$html';
+    }
+  }
+
+  String _buildErrorHtml(String title, String message) {
+    return '''
+      <!doctype html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+          body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 32px 16px;
+            margin: 0;
+            color: #666;
+            background-color: #fafafa;
+            text-align: center;
+          }
+          .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+          }
+          h1 {
+            font-size: 18px;
+            color: #d32f2f;
+            margin: 0 0 12px;
+          }
+          p {
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>$title</h1>
+          <p>$message</p>
+        </div>
+      </body>
+      </html>
+    ''';
   }
 
   Future<void> _copyToClipboard(String text, String message) async {
