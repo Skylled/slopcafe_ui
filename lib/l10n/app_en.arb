@@ -333,6 +333,23 @@
   "openingInBrowser": "Opening in browser…",
   "urlCopiedPaste": "URL copied — paste it in your browser",
   "couldNotLaunchBrowser": "Could not launch browser — URL copied instead",
+  "openInBrowserDialogTitle": "Open in browser?",
+  "@openInBrowserDialogTitle": {
+    "description": "Title of the confirmation modal when tapping an external link in the WebView reader."
+  },
+  "openInBrowserDialogBody": "Navigating to: {url}",
+  "@openInBrowserDialogBody": {
+    "description": "Body warning for external link navigation.",
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "proceed": "Proceed",
+  "@proceed": {
+    "description": "Proceed button label on the open-in-browser warning."
+  },
   "noBaseUrlConfigured": "No base URL configured. Open Settings to connect.",
   "deletedAgent": "Deleted agent",
   "@deletedAgent": { "description": "Author fallback in the Reader meta row when the creating agent no longer exists." },

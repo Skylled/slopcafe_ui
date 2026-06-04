@@ -657,6 +657,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not launch browser — URL copied instead';
 
   @override
+  String get openInBrowserDialogTitle => 'Open in browser?';
+
+  @override
+  String openInBrowserDialogBody(String url) {
+    return 'Navigating to: $url';
+  }
+
+  @override
+  String get proceed => 'Proceed';
+
+  @override
   String get noBaseUrlConfigured =>
       'No base URL configured. Open Settings to connect.';
 

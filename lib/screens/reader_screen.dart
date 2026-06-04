@@ -96,8 +96,113 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     await _loadHtmlIntoWebview();
   }
 
+  Future<DocumentListing?> _resolveDocumentListing(String? publicId, String? slug) async {
+    final docsList = ref.read(documentsListProvider).documents;
+    if (publicId != null) {
+      for (final d in docsList) {
+        if (d.publicId == publicId) return d;
+      }
+    }
+    if (slug != null) {
+      for (final d in docsList) {
+        if (d.slug == slug) return d;
+      }
+    }
+
+    final dio = ref.read(dioProvider);
+
+    // Try fetching by slug
+    if (slug != null) {
+      try {
+        final response = await dio.get('/admin/documents', queryParameters: {'slug': slug});
+        final data = response.data as Map<String, dynamic>;
+        final List<dynamic> docsJson = data['documents'] ?? [];
+        if (docsJson.isNotEmpty) {
+          return DocumentListing.fromJson(docsJson.first);
+        }
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    // Try fetching by publicId
+    if (publicId != null) {
+      try {
+        final response = await dio.get('/admin/documents/$publicId');
+        if (response.statusCode == 200) {
+          return DocumentListing.fromJson(response.data as Map<String, dynamic>);
+        }
+      } catch (e) {
+        // Fallback
+      }
+
+      // Placeholder fallback if not found or unauthorized
+      return DocumentListing(
+        publicId: publicId,
+        createdAt: DateTime.now(),
+        tags: [],
+        title: publicId,
+        visibility: 'private',
+      );
+    }
+    return null;
+  }
+
   Future<void> _handleNavigation(String url) async {
-    await _openExternalBrowser(url);
+    final reqUri = Uri.tryParse(url);
+    if (reqUri == null) {
+      await _openExternalBrowser(url);
+      return;
+    }
+
+    final baseUrlStr = _baseUrl;
+    Uri? baseUri;
+    if (baseUrlStr != null) {
+      baseUri = Uri.tryParse(baseUrlStr);
+    }
+
+    final bool isHostMatch = baseUri != null &&
+        reqUri.host.isNotEmpty &&
+        reqUri.host.toLowerCase() == baseUri.host.toLowerCase();
+
+    if (isHostMatch) {
+      final pathSegments = reqUri.pathSegments;
+      String? publicId;
+      String? slug;
+
+      if (pathSegments.length >= 2) {
+        if (pathSegments[0] == 'd') {
+          publicId = pathSegments[1];
+        } else if (pathSegments[0] == 's') {
+          slug = pathSegments[1];
+        }
+      }
+
+      if (publicId != null || slug != null) {
+        final doc = await _resolveDocumentListing(publicId, slug);
+        if (doc != null && mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => ReaderScreen(doc: doc)),
+          );
+          return;
+        }
+      }
+    }
+
+    // External link flow: show confirmation sheet
+    if (!mounted) return;
+    final l10n = context.l10n;
+    final proceed = await showConfirmSheet(
+      context,
+      title: l10n.openInBrowserDialogTitle,
+      cta: l10n.proceed,
+      danger: false,
+      body: Text(l10n.openInBrowserDialogBody(url)),
+    );
+
+    if (proceed == true) {
+      await _openExternalBrowser(url);
+    }
   }
 
   Future<void> _loadHtmlIntoWebview() async {

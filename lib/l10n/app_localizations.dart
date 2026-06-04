@@ -1174,6 +1174,24 @@ abstract class AppLocalizations {
   /// **'Could not launch browser — URL copied instead'**
   String get couldNotLaunchBrowser;
 
+  /// Title of the confirmation modal when tapping an external link in the WebView reader.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in browser?'**
+  String get openInBrowserDialogTitle;
+
+  /// Body warning for external link navigation.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigating to: {url}'**
+  String openInBrowserDialogBody(String url);
+
+  /// Proceed button label on the open-in-browser warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Proceed'**
+  String get proceed;
+
   /// No description provided for @noBaseUrlConfigured.
   ///
   /// In en, this message translates to:
