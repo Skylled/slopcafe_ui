@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:dio/dio.dart';
 
@@ -17,16 +16,17 @@ import '../providers/document_provider.dart';
 import '../widgets/app_button.dart';
 import '../widgets/pill.dart';
 import '../widgets/press_card.dart';
+import '../widgets/section_header.dart';
 import '../widgets/sheets.dart';
 import '../widgets/toast.dart';
+import 'document_list_screen.dart';
 
-/// The four ways to read a plated document.
-enum _ReaderMode { read, html, markdown, report }
-
-/// ReaderScreen — the Craft "plate". A full-bleed pushed route that renders a
-/// single document four ways (rendered WebView, raw HTML, converted Markdown,
-/// sanitizer report) while preserving the original detail screen's offline
-/// cache + version-first conditional-GET strategy and all operator actions.
+/// ReaderScreen — the Craft "plate". A full-bleed pushed route built around a
+/// single rendered WebView. The chrome is intentionally minimal — a compact
+/// top bar, a one-line title, a thin meta row and tappable tags — so the
+/// WebView (which scrolls internally) owns the majority of the screen. It
+/// preserves the original offline cache + version-first conditional-GET
+/// strategy and all operator actions (now consolidated into the more-sheet).
 class ReaderScreen extends ConsumerStatefulWidget {
   const ReaderScreen({super.key, required this.doc});
 
@@ -37,8 +37,6 @@ class ReaderScreen extends ConsumerStatefulWidget {
 }
 
 class _ReaderScreenState extends ConsumerState<ReaderScreen> {
-  _ReaderMode _mode = _ReaderMode.read;
-
   late final WebViewController _webViewController;
   String? _baseUrl;
   bool _isLoadingBaseUrl = true;
@@ -47,10 +45,6 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   /// 0 == latest; any other value is a pinned historical version.
   int _selectedVersion = 0;
-
-  /// True when the currently rendered WebView content came from the local cache
-  /// (drives the OFFLINE READY badge).
-  bool _servedFromCache = false;
 
   late DocumentListing _currentDoc;
 
@@ -137,7 +131,6 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     if (cachedHtml != null) {
       final securedHtml = _injectCspMeta(cachedHtml);
       await _webViewController.loadHtmlString(securedHtml, baseUrl: _baseUrl);
-      if (mounted) setState(() => _servedFromCache = true);
     }
 
     // Fetch fresh version from server in background/foreground
@@ -219,7 +212,6 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       // Render fresh HTML (now from the network, not the cache)
       final securedHtml = _injectCspMeta(freshHtml);
       await _webViewController.loadHtmlString(securedHtml, baseUrl: _baseUrl);
-      if (mounted) setState(() => _servedFromCache = false);
     } on DioException catch (dioErr) {
       final statusCode = dioErr.response?.statusCode;
       if (statusCode == 404 || statusCode == 410) {
@@ -235,7 +227,6 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
         final errorHtml = _buildErrorHtml(errorTitle, errorMsg);
         await _webViewController.loadHtmlString(errorHtml);
-        if (mounted) setState(() => _servedFromCache = false);
       } else {
         // Network/connection/server error
         if (cachedHtml == null) {
@@ -245,14 +236,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 'connection.',
           );
           await _webViewController.loadHtmlString(errorHtml);
-          if (mounted) setState(() => _servedFromCache = false);
         }
       }
     } catch (e) {
       if (cachedHtml == null) {
         final errorHtml = _buildErrorHtml('Error', e.toString());
         await _webViewController.loadHtmlString(errorHtml);
-        if (mounted) setState(() => _servedFromCache = false);
       }
     }
   }
@@ -799,6 +788,19 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           child: Column(
             children: [
               SheetActionRow(
+                icon: Icons.link,
+                label: 'Copy link',
+                onTap: (_baseUrl != null && !_currentDoc.isRevoked)
+                    ? () {
+                        Navigator.of(sheetContext).pop();
+                        _copyToClipboard(
+                          '$_baseUrl/d/${_currentDoc.publicId}',
+                          'Link copied',
+                        );
+                      }
+                    : null,
+              ),
+              SheetActionRow(
                 icon: isPublic ? Icons.lock_outline : Icons.public,
                 label: isPublic ? 'Make private' : 'Make public',
                 onTap: canEdit
@@ -819,7 +821,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                     : null,
               ),
               SheetActionRow(
-                icon: Icons.link,
+                icon: Icons.tag,
                 label: 'Copy slug URL',
                 onTap: (_baseUrl != null && _currentDoc.slug != null)
                     ? () {
@@ -909,68 +911,24 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
 
     final isRevoked = _currentDoc.isRevoked;
+    final ver = _currentDoc.currentVer;
     final topPad = MediaQuery.paddingOf(context).top;
 
     return Scaffold(
       backgroundColor: c.bg,
-      body: Stack(
+      body: Column(
         children: [
-          // Scrollable content
-          Positioned.fill(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 110),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCover(),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildBadges(),
-                        const SizedBox(height: 12),
-                        Text(
-                          _currentDoc.title ?? '[Untitled]',
-                          style: AppText.display.copyWith(color: c.text),
-                        ),
-                        if (_currentDoc.description != null &&
-                            _currentDoc.description!.trim().isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          Text(
-                            _currentDoc.description!,
-                            style: AppText.serifItalic.copyWith(
-                              color: c.textDim,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 18),
-                        _buildByline(),
-                        const SizedBox(height: 18),
-                        if (!isRevoked) ...[
-                          _buildSegmented(),
-                          const SizedBox(height: 18),
-                          if (_selectedVersion != 0) _buildHistoricalBanner(),
-                          _buildModeContent(),
-                        ] else
-                          _buildRevokedState(),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Top bar (back + kebab) over the cover
-          Positioned(
-            top: topPad + 12,
-            left: 14,
-            right: 14,
+          // ---- Compact top bar: back · version · more ----
+          Padding(
+            padding: EdgeInsets.fromLTRB(14, topPad + 10, 14, 0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _BackPill(onTap: () => Navigator.of(context).pop()),
+                const Spacer(),
+                if (ver != null && !isRevoked) ...[
+                  _VersionChip(version: ver, onTap: _openVersionSheet),
+                  const SizedBox(width: 8),
+                ],
                 _CircleIconButton(
                   icon: Icons.more_horiz,
                   onTap: _openMoreSheet,
@@ -979,182 +937,105 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             ),
           ),
 
-          // Bottom action bar
-          Positioned(left: 0, right: 0, bottom: 0, child: _buildBottomBar()),
+          // ---- Minimal document header: title · meta · tags ----
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
+            child: _buildHeader(c, isRevoked),
+          ),
+
+          // ---- WebView (or revoked state) owns the rest of the screen ----
+          Expanded(child: _buildReaderBody()),
         ],
       ),
     );
   }
 
-  Widget _buildCover() {
-    final c = context.colors;
-    final firstTag = _currentDoc.tags.isNotEmpty
-        ? _currentDoc.tags.first
-        : null;
-    final (bg, _) = c.tagTint(firstTag);
-    return Container(
-      height: 168,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [bg, Color.alphaBlend(bg.withValues(alpha: 0.35), c.surface)],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBadges() {
-    return Wrap(
-      spacing: 7,
-      runSpacing: 7,
-      crossAxisAlignment: WrapCrossAlignment.center,
+  Widget _buildHeader(AppColors c, bool isRevoked) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        if (_currentDoc.isRevoked)
-          const Pill(
-            'REVOKED',
-            tone: PillTone.red,
-            icon: Icons.block,
-            small: true,
-          )
-        else
-          VisBadge(_currentDoc.visibility),
-        if (_servedFromCache && !_currentDoc.isRevoked)
-          const OfflineReadyBadge(),
-        for (final tag in _currentDoc.tags)
-          Pill(tag, tone: PillTone.neutral, small: true, mono: true),
+        Text(
+          _currentDoc.title ?? '[Untitled]',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppText.titleSerif.copyWith(
+            fontSize: 22,
+            color: isRevoked ? c.textFaint : c.text,
+            decoration: isRevoked ? TextDecoration.lineThrough : null,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            if (isRevoked)
+              const Pill(
+                'REVOKED',
+                tone: PillTone.red,
+                icon: Icons.block,
+                small: true,
+              )
+            else
+              VisBadge(_currentDoc.visibility),
+            const MetaDot(),
+            Flexible(
+              child: Text(
+                _currentDoc.createdByName ?? 'Deleted agent',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.small.copyWith(
+                  color: c.textDim,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const MetaDot(),
+            Text(
+              fmtDate(_currentDoc.createdAt),
+              style: AppText.small.copyWith(color: c.textFaint),
+            ),
+          ],
+        ),
+        if (_currentDoc.tags.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 26,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.zero,
+              itemCount: _currentDoc.tags.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 7),
+              itemBuilder: (context, i) {
+                final tag = _currentDoc.tags[i];
+                return TagChip(
+                  tag,
+                  small: true,
+                  onTap: () => DocumentListScreen.openForTag(context, tag),
+                );
+              },
+            ),
+          ),
+        ],
       ],
     );
   }
 
-  Widget _buildByline() {
-    final c = context.colors;
-    final firstTag = _currentDoc.tags.isNotEmpty
-        ? _currentDoc.tags.first
-        : null;
-    final (tintBg, tintFg) = c.tagTint(firstTag);
-    final ver = _currentDoc.currentVer;
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: c.lineSoft),
-          bottom: BorderSide(color: c.lineSoft),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: tintBg,
-              borderRadius: BorderRadius.circular(AppRadii.md),
-            ),
-            alignment: Alignment.center,
-            child: Icon(Icons.person_outline, size: 19, color: tintFg),
-          ),
-          const SizedBox(width: 11),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _currentDoc.createdByName ?? 'Deleted agent',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppText.titleSm.copyWith(color: c.text),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  fmtDate(_currentDoc.createdAt),
-                  style: AppText.monoLabel.copyWith(color: c.textFaint),
-                ),
-              ],
-            ),
-          ),
-          if (ver != null)
-            PressCard(
-              onPress: _openVersionSheet,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: c.surface2,
-                  border: Border.all(color: c.lineSoft),
-                  borderRadius: BorderRadius.circular(AppRadii.md),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.layers_outlined, size: 14, color: c.textDim),
-                    const SizedBox(width: 6),
-                    Text(
-                      'v$ver',
-                      style: AppText.titleSm.copyWith(
-                        fontSize: 12.5,
-                        color: c.textDim,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSegmented() {
-    const options = [
-      (_ReaderMode.read, 'Read'),
-      (_ReaderMode.html, 'HTML'),
-      (_ReaderMode.markdown, 'Markdown'),
-      (_ReaderMode.report, 'Report'),
-    ];
-    final c = context.colors;
-    return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: c.surface2,
-        border: Border.all(color: c.lineSoft),
-        borderRadius: BorderRadius.circular(AppRadii.md),
-      ),
-      child: Row(
-        children: [
-          for (final (value, label) in options)
-            Expanded(
-              child: _SegButton(
-                label: label,
-                selected: _mode == value,
-                onTap: () => setState(() => _mode = value),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildModeContent() {
-    switch (_mode) {
-      case _ReaderMode.read:
-        return _buildReadView();
-      case _ReaderMode.html:
-        return _buildHtmlView();
-      case _ReaderMode.markdown:
-        return _buildMarkdownView();
-      case _ReaderMode.report:
-        return _buildReportView();
+  Widget _buildReaderBody() {
+    if (_currentDoc.isRevoked) {
+      return SingleChildScrollView(child: _buildRevokedState());
     }
+    return Column(
+      children: [
+        if (_selectedVersion != 0) _buildHistoricalBanner(),
+        Expanded(child: _buildReadView()),
+      ],
+    );
   }
 
   Widget _buildReadView() {
     final c = context.colors;
     return Container(
       clipBehavior: Clip.antiAlias,
-      height: 560,
       decoration: BoxDecoration(
         color: c.surface,
         border: Border.all(color: c.lineSoft),
@@ -1165,228 +1046,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
   }
 
-  Widget _buildHtmlView() {
-    final htmlAsync = _selectedVersion == 0
-        ? ref.watch(documentDetailHtmlProvider(_currentDoc.publicId))
-        : ref.watch(
-            documentDetailHistoryRawProvider((
-              publicId: _currentDoc.publicId,
-              version: _selectedVersion,
-            )),
-          );
-
-    return htmlAsync.when(
-      data: (html) => _CodeBlock(title: 'Raw HTML source', code: html),
-      loading: () => _loadingBox(),
-      error: (err, _) => _errorBox('Failed to load raw HTML', err),
-    );
-  }
-
-  Widget _buildMarkdownView() {
-    final c = context.colors;
-    final mdAsync = ref.watch(documentDetailTextProvider(_currentDoc.publicId));
-
-    return mdAsync.when(
-      data: (res) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                'CONVERTED MARKDOWN',
-                style: AppText.monoLabel.copyWith(
-                  letterSpacing: 0.6,
-                  color: c.textFaint,
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Pill('Debug', tone: PillTone.honey, small: true),
-            ],
-          ),
-          if (_selectedVersion != 0) ...[
-            const SizedBox(height: 10),
-            _infoNote(
-              'Markdown view only supports the latest version. Showing latest.',
-            ),
-          ],
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: c.surface,
-              border: Border.all(color: c.lineSoft),
-              borderRadius: BorderRadius.circular(AppRadii.xl),
-              boxShadow: c.shadow,
-            ),
-            child: MarkdownBody(
-              data: res.markdown,
-              selectable: true,
-              styleSheet: MarkdownStyleSheet(
-                p: AppText.bodyLg.copyWith(color: c.textDim),
-                h1: AppText.headline.copyWith(color: c.text),
-                h2: AppText.titleSerif.copyWith(color: c.text),
-                h3: AppText.title.copyWith(color: c.text),
-                code: AppText.mono.copyWith(color: c.text),
-                codeblockDecoration: BoxDecoration(
-                  color: c.bgDeep,
-                  border: Border.all(color: c.line),
-                  borderRadius: BorderRadius.circular(AppRadii.md),
-                ),
-                blockquote: AppText.serifItalic.copyWith(color: c.text),
-                blockquoteDecoration: BoxDecoration(
-                  border: Border(left: BorderSide(color: c.honey, width: 3)),
-                ),
-                a: AppText.bodyLg.copyWith(color: c.clay),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _footerChip('Sanitizer ${res.sanitizerVersion}'),
-              _footerChip('Converter ${res.converterVersion}'),
-            ],
-          ),
-        ],
-      ),
-      loading: () => _loadingBox(),
-      error: (err, _) => _errorBox('Failed to load Markdown', err),
-    );
-  }
-
-  Widget _buildReportView() {
-    final c = context.colors;
-    final sourceAsync = ref.watch(
-      documentDetailSourceProvider(_currentDoc.publicId),
-    );
-
-    return sourceAsync.when(
-      data: (res) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                'SANITIZER REPORT',
-                style: AppText.monoLabel.copyWith(
-                  letterSpacing: 0.6,
-                  color: c.textFaint,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Pill(
-                res.sanitizerVersion,
-                tone: PillTone.red,
-                small: true,
-                icon: Icons.shield_outlined,
-              ),
-            ],
-          ),
-          if (_selectedVersion != 0) ...[
-            const SizedBox(height: 10),
-            _infoNote(
-              'Report view only supports the latest version. Showing latest.',
-            ),
-          ],
-          const SizedBox(height: 13),
-          if (res.unsanitized) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(13),
-              decoration: BoxDecoration(
-                color: c.red.withValues(alpha: 0.09),
-                border: Border.all(color: c.red.withValues(alpha: 0.30)),
-                borderRadius: BorderRadius.circular(AppRadii.lg),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.warning_amber_rounded, size: 18, color: c.red),
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: Text(
-                      'This source contains unsanitized content. Exercise '
-                      'caution.',
-                      style: AppText.small.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: c.red,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 13),
-          ],
-          if (res.stripped.isNotEmpty) ...[
-            _ReportCard(
-              tone: PillTone.red,
-              icon: Icons.delete_outline,
-              title: 'Stripped on ingest (${res.stripped.length})',
-              items: res.stripped,
-              note: 'Removed before the document was ever rendered.',
-            ),
-            const SizedBox(height: 13),
-          ],
-          if (res.willNotRender.isNotEmpty) ...[
-            _ReportCard(
-              tone: PillTone.honey,
-              icon: Icons.warning_amber_rounded,
-              title: 'Will not render (${res.willNotRender.length})',
-              items: res.willNotRender,
-              note: 'Kept in source, blocked by the CSP.',
-            ),
-            const SizedBox(height: 13),
-          ],
-          if (res.stripped.isEmpty && res.willNotRender.isEmpty) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: c.surface,
-                border: Border.all(color: c.lineSoft),
-                borderRadius: BorderRadius.circular(AppRadii.lg),
-                boxShadow: c.shadow,
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.check_circle_outline, size: 17, color: c.green),
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: Text(
-                      'Clean plate — nothing stripped, nothing blocked.',
-                      style: AppText.body.copyWith(color: c.textDim),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 13),
-          ],
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _footerChip('Format ${res.sourceFormat}'),
-              _footerChip('Sanitizer ${res.sanitizerVersion}'),
-              _footerChip('v${res.versionNo}'),
-            ],
-          ),
-        ],
-      ),
-      loading: () => _loadingBox(),
-      error: (err, _) => _errorBox('Failed to load report', err),
-    );
-  }
-
   Widget _buildHistoricalBanner() {
     final c = context.colors;
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
         color: c.honey.withValues(alpha: 0.12),
@@ -1451,123 +1115,6 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             style: AppText.small.copyWith(color: c.textFaint),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildBottomBar() {
-    final c = context.colors;
-    final canShare = _baseUrl != null && !_currentDoc.isRevoked;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 30),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [c.bg.withValues(alpha: 0), c.bg],
-          stops: const [0, 0.28],
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _ActionBarButton(
-              icon: Icons.link,
-              label: 'Copy link',
-              onTap: canShare
-                  ? () => _copyToClipboard(
-                      '$_baseUrl/d/${_currentDoc.publicId}',
-                      'Link copied',
-                    )
-                  : null,
-            ),
-          ),
-          const SizedBox(width: 8),
-          _ActionBarButton(
-            icon: Icons.open_in_new,
-            onTap: canShare
-                ? () => _openExternalBrowser(
-                    '$_baseUrl/d/${_currentDoc.publicId}',
-                  )
-                : null,
-          ),
-          const SizedBox(width: 8),
-          _ActionBarButton(
-            icon: Icons.more_horiz,
-            primary: true,
-            onTap: _openMoreSheet,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ----------------------------------------------------------------
-  // Small shared builders
-  // ----------------------------------------------------------------
-
-  Widget _infoNote(String text) {
-    final c = context.colors;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(11),
-      decoration: BoxDecoration(
-        color: c.surface2,
-        border: Border.all(color: c.lineSoft),
-        borderRadius: BorderRadius.circular(AppRadii.md),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.info_outline, size: 16, color: c.textDim),
-          const SizedBox(width: 9),
-          Expanded(
-            child: Text(text, style: AppText.small.copyWith(color: c.textDim)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _footerChip(String label) {
-    final c = context.colors;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: c.surface,
-        border: Border.all(color: c.line),
-        borderRadius: BorderRadius.circular(AppRadii.pill),
-      ),
-      child: Text(
-        label,
-        style: AppText.monoLabel.copyWith(
-          fontWeight: FontWeight.w700,
-          color: c.textDim,
-        ),
-      ),
-    );
-  }
-
-  Widget _loadingBox() {
-    final c = context.colors;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 48),
-      child: Center(child: CircularProgressIndicator(color: c.clay)),
-    );
-  }
-
-  Widget _errorBox(String label, Object err) {
-    final c = context.colors;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: c.red.withValues(alpha: 0.09),
-        border: Border.all(color: c.red.withValues(alpha: 0.30)),
-        borderRadius: BorderRadius.circular(AppRadii.lg),
-      ),
-      child: Text(
-        '$label: ${err.toString()}',
-        style: AppText.small.copyWith(color: c.red),
       ),
     );
   }
@@ -1644,209 +1191,36 @@ class _CircleIconButton extends StatelessWidget {
   }
 }
 
-class _SegButton extends StatelessWidget {
-  const _SegButton({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-  final String label;
-  final bool selected;
+/// Compact version pill in the top bar — taps through to the version sheet.
+class _VersionChip extends StatelessWidget {
+  const _VersionChip({required this.version, required this.onTap});
+  final int version;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
-        padding: const EdgeInsets.symmetric(vertical: 8),
+    return PressCard(
+      onPress: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
-          color: selected ? c.surface : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadii.sm + 1),
-          boxShadow: selected ? c.shadow : null,
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: AppText.pill.copyWith(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w600,
-            color: selected ? c.text : c.textFaint,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ActionBarButton extends StatelessWidget {
-  const _ActionBarButton({
-    required this.icon,
-    this.label,
-    this.onTap,
-    this.primary = false,
-  });
-  final IconData icon;
-  final String? label;
-  final VoidCallback? onTap;
-  final bool primary;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final disabled = onTap == null;
-    final Color bg = primary ? c.clay : c.surface;
-    final Color fg = primary ? c.onAccent : c.text;
-    final Color border = primary ? c.clay : c.line;
-    return Opacity(
-      opacity: disabled ? 0.5 : 1,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
+          color: c.surface,
+          border: Border.all(color: c.line),
+          borderRadius: BorderRadius.circular(AppRadii.pill),
           boxShadow: c.shadow,
-          borderRadius: BorderRadius.circular(AppRadii.lg),
         ),
-        child: Material(
-          color: bg,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.lg),
-            side: BorderSide(color: border),
-          ),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(AppRadii.lg),
-            child: SizedBox(
-              height: 48,
-              width: label == null ? 52 : null,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, size: 17, color: fg),
-                  if (label != null) ...[
-                    const SizedBox(width: 8),
-                    Text(
-                      label!,
-                      style: AppText.title.copyWith(fontSize: 14, color: fg),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CodeBlock extends StatelessWidget {
-  const _CodeBlock({required this.title, required this.code});
-  final String title;
-  final String code;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
+            Icon(Icons.layers_outlined, size: 14, color: c.textDim),
+            const SizedBox(width: 6),
             Text(
-              title.toUpperCase(),
-              style: AppText.monoLabel.copyWith(
-                letterSpacing: 0.6,
-                color: c.textFaint,
-              ),
+              'v$version',
+              style: AppText.titleSm.copyWith(fontSize: 12.5, color: c.textDim),
             ),
-            const SizedBox(width: 8),
-            const Pill('Debug', tone: PillTone.honey, small: true),
           ],
         ),
-        const SizedBox(height: 12),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: c.bgDeep,
-            border: Border.all(color: c.line),
-            borderRadius: BorderRadius.circular(AppRadii.xl),
-          ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SelectableText(
-              code,
-              style: AppText.mono.copyWith(color: c.textDim),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ReportCard extends StatelessWidget {
-  const _ReportCard({
-    required this.tone,
-    required this.icon,
-    required this.title,
-    required this.items,
-    required this.note,
-  });
-  final PillTone tone;
-  final IconData icon;
-  final String title;
-  final List<String> items;
-  final String note;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final accent = tone == PillTone.red ? c.red : c.honeyD;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: c.surface,
-        border: Border.all(color: c.lineSoft),
-        borderRadius: BorderRadius.circular(AppRadii.lg),
-        boxShadow: c.shadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: accent),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppText.titleSm.copyWith(color: accent),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          for (final item in items)
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-              decoration: BoxDecoration(
-                color: c.surface2,
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-              ),
-              child: Text(
-                item,
-                style: AppText.mono.copyWith(fontSize: 12, color: c.textDim),
-              ),
-            ),
-          const SizedBox(height: 3),
-          Text(note, style: AppText.small.copyWith(color: c.textFaint)),
-        ],
       ),
     );
   }

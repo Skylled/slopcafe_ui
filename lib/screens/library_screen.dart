@@ -4,15 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/api_client.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
-import '../core/document_cache.dart';
 import '../core/format.dart';
 import '../models/document.dart';
 import '../providers/agent_provider.dart';
 import '../providers/document_provider.dart';
-import '../widgets/pill.dart';
+import '../widgets/doc_feed_card.dart';
 import '../widgets/press_card.dart';
 import '../widgets/section_header.dart';
 import '../widgets/stat.dart';
+import 'collections_screen.dart';
+import 'document_list_screen.dart';
 import 'reader_screen.dart';
 import 'settings_screen.dart';
 
@@ -24,9 +25,7 @@ import 'settings_screen.dart';
 /// awareness mirrors the old DocumentsScreen (cache-backed list + per-doc
 /// "OFFLINE READY" badge derived from [DocumentCacheManager.getCachedVersion]).
 class LibraryScreen extends ConsumerStatefulWidget {
-  const LibraryScreen({super.key, required this.onOpenSearch});
-
-  final VoidCallback onOpenSearch;
+  const LibraryScreen({super.key});
 
   @override
   ConsumerState<LibraryScreen> createState() => _LibraryScreenState();
@@ -108,13 +107,16 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             _offlineBanner(c),
             const SizedBox(height: 14),
           ],
-          _searchBar(c),
-          const SizedBox(height: 22),
           _tickers(c, live.length, agentState.agents.length, publicCount),
           const SizedBox(height: 26),
           if (featured != null) ...[
             RiseIn(
-              child: _FeaturedCard(doc: featured, onOpen: _openDoc),
+              child: DocFeedCard(
+                doc: featured,
+                featured: true,
+                onOpen: _openDoc,
+                onTagTap: (t) => DocumentListScreen.openForTag(context, t),
+              ),
             ),
             const SizedBox(height: 26),
           ],
@@ -122,7 +124,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             SectionHeader(
               'Collections',
               action: 'All',
-              onAction: widget.onOpenSearch,
+              onAction: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const CollectionsScreen()),
+              ),
             ),
             _collections(c, collections, tagCounts),
             const SizedBox(height: 26),
@@ -130,7 +134,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           SectionHeader(
             'Recently plated',
             action: 'See all',
-            onAction: widget.onOpenSearch,
+            onAction: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const DocumentListScreen(
+                  title: 'Recently plated',
+                  eyebrow: 'Most recent first',
+                ),
+              ),
+            ),
           ),
           _recentlyPlated(c, recentTop, docState.isLoading),
         ],
@@ -247,33 +258,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     );
   }
 
-  // ---- Search affordance bar (delegates to the Search tab) ----
-  Widget _searchBar(AppColors c) {
-    return PressCard(
-      onPress: widget.onOpenSearch,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-        decoration: BoxDecoration(
-          color: c.surface,
-          border: Border.all(color: c.line),
-          borderRadius: BorderRadius.circular(AppRadii.xl),
-          boxShadow: c.shadow,
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.search, size: 18, color: c.textFaint),
-            const SizedBox(width: 10),
-            Text(
-              'Search every document…',
-              style: AppText.bodyLg.copyWith(fontSize: 15, color: c.textFaint),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ---- Three MiniStat tickers ----
   Widget _tickers(AppColors c, int liveDocs, int agents, int publicDocs) {
     return IntrinsicHeight(
@@ -312,7 +296,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           return RiseIn(
             delay: Duration(milliseconds: (i * 30).clamp(0, 300)),
             child: PressCard(
-              onPress: widget.onOpenSearch,
+              onPress: () => DocumentListScreen.openForTag(context, tag),
               child: Container(
                 width: 132,
                 padding: const EdgeInsets.all(14),
@@ -336,7 +320,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      _titleCase(tag),
+                      titleCase(tag),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppText.title.copyWith(color: c.text),
@@ -417,135 +401,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               ),
             ),
         ],
-      ),
-    );
-  }
-
-  static String _titleCase(String s) {
-    if (s.isEmpty) return s;
-    return s[0].toUpperCase() + s.substring(1);
-  }
-}
-
-// ============================================================
-// Featured "Today's Special" card
-// ============================================================
-class _FeaturedCard extends StatelessWidget {
-  const _FeaturedCard({required this.doc, required this.onOpen});
-
-  final DocumentListing doc;
-  final void Function(DocumentListing) onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final firstTag = doc.tags.isNotEmpty ? doc.tags.first : null;
-    final (tintBg, tintFg) = c.tagTint(firstTag);
-    final coverBlend = Color.alphaBlend(
-      tintBg.withValues(alpha: 0.4),
-      c.surface,
-    );
-
-    return PressCard(
-      onPress: () => onOpen(doc),
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: c.surface,
-          border: Border.all(color: c.lineSoft),
-          borderRadius: BorderRadius.circular(AppRadii.card),
-          boxShadow: c.shadow,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Cover with gradient tint + "TODAY'S SPECIAL" badge.
-            Container(
-              height: 124,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [tintBg, coverBlend],
-                ),
-              ),
-              child: Stack(
-                children: [
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Pill(
-                      "TODAY'S SPECIAL",
-                      tone: PillTone.solid,
-                      icon: Icons.star_rounded,
-                      small: true,
-                    ),
-                  ),
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Icon(
-                      Icons.local_cafe_outlined,
-                      size: 56,
-                      color: tintFg.withValues(alpha: 0.45),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Body.
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    doc.title ?? '[Untitled]',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.featured.copyWith(color: c.text),
-                  ),
-                  if (doc.description != null &&
-                      doc.description!.trim().isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      doc.description!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.body.copyWith(color: c.textDim),
-                    ),
-                  ],
-                  const SizedBox(height: 13),
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          doc.createdByName ?? 'Unknown agent',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppText.small.copyWith(
-                            color: c.textDim,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const MetaDot(),
-                      Text(
-                        fmtBytes(doc.currentSize),
-                        style: AppText.monoLabel.copyWith(color: c.textFaint),
-                      ),
-                      const MetaDot(),
-                      Text(
-                        relTime(doc.createdAt),
-                        style: AppText.small.copyWith(color: c.textFaint),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -638,17 +493,6 @@ class _DocRow extends StatelessWidget {
                         ),
                       ),
                     ],
-                  ),
-                  // OFFLINE READY badge when a cached version exists.
-                  FutureBuilder<int?>(
-                    future: DocumentCacheManager.getCachedVersion(doc.publicId),
-                    builder: (context, snapshot) {
-                      if (snapshot.data == null) return const SizedBox.shrink();
-                      return const Padding(
-                        padding: EdgeInsets.only(top: 6),
-                        child: OfflineReadyBadge(),
-                      );
-                    },
                   ),
                 ],
               ),

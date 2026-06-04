@@ -33,3 +33,7 @@ String greeting() {
   if (h < 18) return 'Good afternoon';
   return 'Good evening';
 }
+
+/// Capitalize the first letter — used for tag / collection display names.
+String titleCase(String s) =>
+    s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);

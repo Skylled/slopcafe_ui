@@ -308,8 +308,14 @@ class _SearchField extends StatelessWidget {
               style: AppText.bodyLg.copyWith(fontSize: 16, color: c.text),
               decoration: InputDecoration(
                 isCollapsed: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                // The card itself is the visual field; opt out of the global
+                // InputDecorationTheme's fill *and* its outline borders so
+                // there's no inner box of another color inside the search bar.
+                filled: false,
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 hintText: 'Titles, body, tags, slugs…',
                 hintStyle: AppText.bodyLg.copyWith(
                   fontSize: 16,

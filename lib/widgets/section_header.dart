@@ -35,6 +35,70 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
+/// Header for a pushed browse screen: a circular back button beside a serif
+/// title with an optional uppercase eyebrow. Mirrors the Library display type.
+class BackHeader extends StatelessWidget {
+  const BackHeader(this.title, {super.key, this.eyebrow});
+  final String title;
+  final String? eyebrow;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _CircleBack(onTap: () => Navigator.of(context).maybePop()),
+        const SizedBox(width: 13),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (eyebrow != null) ...[
+                Eyebrow(eyebrow!),
+                const SizedBox(height: 3),
+              ],
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.display.copyWith(fontSize: 30, color: c.text),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CircleBack extends StatelessWidget {
+  const _CircleBack({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return DecoratedBox(
+      decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: c.shadow),
+      child: Material(
+        color: c.surface,
+        shape: CircleBorder(side: BorderSide(color: c.line)),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: SizedBox(
+            width: 40,
+            height: 40,
+            child: Icon(Icons.chevron_left, size: 22, color: c.clayD),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// The faint "·" separator used between inline metadata.
 class MetaDot extends StatelessWidget {
   const MetaDot({super.key});

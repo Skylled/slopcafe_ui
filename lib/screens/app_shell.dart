@@ -24,8 +24,6 @@ class _AppShellState extends ConsumerState<AppShell> {
   int _index = 0;
   bool _settingsOpen = false;
 
-  void _goToSearch() => setState(() => _index = 1);
-
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
@@ -51,11 +49,7 @@ class _AppShellState extends ConsumerState<AppShell> {
         children: [
           IndexedStack(
             index: _index,
-            children: [
-              LibraryScreen(onOpenSearch: _goToSearch),
-              const SearchScreen(),
-              const OperateScreen(),
-            ],
+            children: const [LibraryScreen(), SearchScreen(), OperateScreen()],
           ),
           Positioned(
             left: 0,
