@@ -7,10 +7,9 @@ import '../core/api_client.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/format.dart';
+import '../api/api.dart';
 import '../core/secure_storage.dart';
 import '../l10n/l10n.dart';
-import '../models/agent.dart';
-import '../models/document.dart';
 import '../providers/agent_provider.dart';
 import '../providers/document_provider.dart';
 import '../widgets/app_button.dart';
@@ -70,15 +69,15 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
       final res = await dio.get('/healthz');
       final data = res.data;
       if (data is Map) {
-        final sanitizer = data['sanitizer_version'];
-        final cap = data['storage_cap_bytes'];
-        // No canonical "used" field is documented; read it opportunistically so
-        // the bar fills in if the backend ever exposes one, but never invent it.
-        final used = data['storage_used_bytes'] ?? data['storage_bytes_used'];
+        final map = Map<String, dynamic>.from(data);
+        final health = HealthzResponse.fromJson(map);
+        // No canonical "used" field is in the contract; read it opportunistically
+        // so the bar fills in if the backend ever exposes one, but never invent it.
+        final used = map['storage_used_bytes'] ?? map['storage_bytes_used'];
         if (mounted) {
           setState(() {
-            _sanitizerVersion = sanitizer?.toString();
-            _storageCapBytes = cap is int ? cap : int.tryParse('${cap ?? ''}');
+            _sanitizerVersion = health.sanitizerVersion;
+            _storageCapBytes = health.storageCapBytes;
             _storageUsedBytes = used is int
                 ? used
                 : int.tryParse('${used ?? ''}');
@@ -921,7 +920,11 @@ class _NewAgentSheetState extends State<_NewAgentSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _submitting = false);
-        showToast(context, l10n.failedHireAgent('$e'), danger: true);
+        showToast(
+          context,
+          l10n.failedHireAgent(ApiError.describe(e)),
+          danger: true,
+        );
       }
     }
   }
@@ -1028,7 +1031,11 @@ class _UnboundClientsSheetState extends State<_UnboundClientsSheet> {
       );
     } catch (e) {
       if (mounted) {
-        showToast(context, l10n.failedMintUnbound('$e'), danger: true);
+        showToast(
+          context,
+          l10n.failedMintUnbound(ApiError.describe(e)),
+          danger: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -1057,7 +1064,11 @@ class _UnboundClientsSheetState extends State<_UnboundClientsSheet> {
       }
     } catch (e) {
       if (mounted) {
-        showToast(context, l10n.failedDeleteClient('$e'), danger: true);
+        showToast(
+          context,
+          l10n.failedDeleteClient(ApiError.describe(e)),
+          danger: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -1200,7 +1211,13 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
         note: res.note.isEmpty ? null : res.note,
       );
     } catch (e) {
-      if (mounted) showToast(context, l10n.failedMintKey('$e'), danger: true);
+      if (mounted) {
+        showToast(
+          context,
+          l10n.failedMintKey(ApiError.describe(e)),
+          danger: true,
+        );
+      }
     }
   }
 
@@ -1220,7 +1237,13 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
         showToast(widget.host, l10n.keyRevoked(key.keyPrefix));
       }
     } catch (e) {
-      if (mounted) showToast(context, l10n.failedRevokeKey('$e'), danger: true);
+      if (mounted) {
+        showToast(
+          context,
+          l10n.failedRevokeKey(ApiError.describe(e)),
+          danger: true,
+        );
+      }
     }
   }
 
@@ -1251,19 +1274,23 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
         );
       }
     } on DioException catch (e) {
-      if (e.response?.statusCode == 409) {
-        final data = e.response?.data as Map<String, dynamic>?;
+      final apiError = ApiError.fromException(e);
+      if (apiError.code == ErrorCode.clientExists) {
         if (mounted) {
           setState(() {
             _knowsOAuthExistence = true;
-            _existingClientId = data?['client_id'] as String?;
-            _oAuthHint = data?['hint'] as String?;
+            _existingClientId = apiError.clientId;
+            _oAuthHint = apiError.hint;
           });
           showToast(context, l10n.oauthAlreadyExists);
         }
       } else {
         if (mounted) {
-          showToast(context, l10n.failedMintOAuth('$e'), danger: true);
+          showToast(
+            context,
+            l10n.failedMintOAuth(ApiError.describe(e)),
+            danger: true,
+          );
         }
       }
     } finally {
@@ -1297,7 +1324,11 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
       }
     } catch (e) {
       if (mounted) {
-        showToast(context, l10n.failedDeleteOAuth('$e'), danger: true);
+        showToast(
+          context,
+          l10n.failedDeleteOAuth(ApiError.describe(e)),
+          danger: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _oauthBusy = false);
@@ -1335,16 +1366,19 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
       if (widget.host.mounted) {
         showToast(
           widget.host,
-          l10n.agentKilled(
-            res['keys_revoked'] ?? 0,
-            res['oauth_clients_deleted'] ?? 0,
-          ),
+          l10n.agentKilled(res.keysRevoked, res.oauthClientsDeleted),
           danger: true,
         );
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      if (mounted) showToast(context, l10n.failedKillAgent('$e'), danger: true);
+      if (mounted) {
+        showToast(
+          context,
+          l10n.failedKillAgent(ApiError.describe(e)),
+          danger: true,
+        );
+      }
     }
   }
 
@@ -1526,7 +1560,7 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
               ),
             ),
             error: (e, _) => Text(
-              l10n.errorFetchingKeys('$e'),
+              l10n.errorFetchingKeys(ApiError.describe(e)),
               style: AppText.small.copyWith(color: c.red),
             ),
           ),
@@ -1666,7 +1700,11 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
       }
     } catch (e) {
       if (mounted) {
-        showToast(context, l10n.failedUpdateVisibility('$e'), danger: true);
+        showToast(
+          context,
+          l10n.failedUpdateVisibility(ApiError.describe(e)),
+          danger: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -1721,8 +1759,9 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
     try {
       final dio = widget.ref.read(dioProvider);
       final response = await dio.delete('/d/${_doc.publicId}');
-      final data = response.data as Map<String, dynamic>;
-      final r2Purged = data['r2_objects_purged'] ?? 0;
+      final revoke = RevokeResponse.fromJson(
+        response.data as Map<String, dynamic>,
+      );
 
       final now = DateTime.now();
       widget.ref
@@ -1732,7 +1771,7 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
       if (widget.host.mounted) {
         showToast(
           widget.host,
-          l10n.documentRevokedPurged(r2Purged),
+          l10n.documentRevokedPurged(revoke.r2ObjectsPurged),
           danger: true,
         );
       }
@@ -1740,7 +1779,11 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _busy = false);
-        showToast(context, l10n.revocationFailed('$e'), danger: true);
+        showToast(
+          context,
+          l10n.revocationFailed(ApiError.describe(e)),
+          danger: true,
+        );
       }
     }
   }
@@ -1872,7 +1915,11 @@ class _EditSlugTagsSheetState extends State<_EditSlugTagsSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _busy = false);
-        showToast(context, l10n.failedUpdate('$e'), danger: true);
+        showToast(
+          context,
+          l10n.failedUpdate(ApiError.describe(e)),
+          danger: true,
+        );
       }
     }
   }

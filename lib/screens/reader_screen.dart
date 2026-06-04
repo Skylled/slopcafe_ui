@@ -11,9 +11,9 @@ import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/document_cache.dart';
 import '../core/format.dart';
+import '../api/api.dart';
 import '../core/secure_storage.dart';
 import '../l10n/l10n.dart';
-import '../models/document.dart';
 import '../providers/document_provider.dart';
 import '../widgets/app_button.dart';
 import '../widgets/pill.dart';
@@ -97,7 +97,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     await _loadHtmlIntoWebview();
   }
 
-  Future<DocumentListing?> _resolveDocumentListing(String? publicId, String? slug) async {
+  Future<DocumentListing?> _resolveDocumentListing(
+    String? publicId,
+    String? slug,
+  ) async {
     final docsList = ref.read(documentsListProvider).documents;
     if (publicId != null) {
       for (final d in docsList) {
@@ -115,11 +118,15 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     // Try fetching by slug
     if (slug != null) {
       try {
-        final response = await dio.get('/admin/documents', queryParameters: {'slug': slug});
-        final data = response.data as Map<String, dynamic>;
-        final List<dynamic> docsJson = data['documents'] ?? [];
-        if (docsJson.isNotEmpty) {
-          return DocumentListing.fromJson(docsJson.first);
+        final response = await dio.get(
+          '/admin/documents',
+          queryParameters: {'slug': slug},
+        );
+        final docs = ListDocumentsResponse.fromJson(
+          response.data as Map<String, dynamic>,
+        ).documents;
+        if (docs.isNotEmpty) {
+          return docs.first;
         }
       } catch (e) {
         // Fallback
@@ -131,7 +138,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       try {
         final response = await dio.get('/admin/documents/$publicId');
         if (response.statusCode == 200) {
-          return DocumentListing.fromJson(response.data as Map<String, dynamic>);
+          return DocumentListing.fromJson(
+            response.data as Map<String, dynamic>,
+          );
         }
       } catch (e) {
         // Fallback
@@ -162,7 +171,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       baseUri = Uri.tryParse(baseUrlStr);
     }
 
-    final bool isHostMatch = baseUri != null &&
+    final bool isHostMatch =
+        baseUri != null &&
         reqUri.host.isNotEmpty &&
         reqUri.host.toLowerCase() == baseUri.host.toLowerCase();
 
@@ -182,9 +192,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       if (publicId != null || slug != null) {
         final doc = await _resolveDocumentListing(publicId, slug);
         if (doc != null && mounted) {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => ReaderScreen(doc: doc)),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => ReaderScreen(doc: doc)));
           return;
         }
       }
@@ -299,20 +309,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       if (_selectedVersion == 0 && _currentDoc.currentVer != newVersion) {
         if (mounted) {
           setState(() {
-            _currentDoc = DocumentListing(
-              publicId: _currentDoc.publicId,
-              createdAt: _currentDoc.createdAt,
-              tags: _currentDoc.tags,
-              createdById: _currentDoc.createdById,
-              createdByName: _currentDoc.createdByName,
-              currentSize: _currentDoc.currentSize,
-              currentVer: newVersion,
-              description: _currentDoc.description,
-              slug: _currentDoc.slug,
-              title: _currentDoc.title,
-              visibility: _currentDoc.visibility,
-              revokedAt: _currentDoc.revokedAt,
-            );
+            _currentDoc = _currentDoc.copyWith(currentVer: newVersion);
           });
         }
       }
@@ -347,7 +344,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       }
     } catch (e) {
       if (cachedHtml == null) {
-        final errorHtml = _buildErrorHtml(l10n.errorTitle, e.toString());
+        final errorHtml = _buildErrorHtml(
+          l10n.errorTitle,
+          ApiError.describe(e),
+        );
         await _webViewController.loadHtmlString(errorHtml);
       }
     }
@@ -465,8 +465,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final dio = ref.read(dioProvider);
     try {
       final response = await dio.delete('/d/${_currentDoc.publicId}');
-      final data = response.data as Map<String, dynamic>;
-      final r2Purged = data['r2_objects_purged'] ?? 0;
+      final revoke = RevokeResponse.fromJson(
+        response.data as Map<String, dynamic>,
+      );
 
       final now = DateTime.now();
       ref
@@ -476,17 +477,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       final revokedTitle = _currentDoc.title ?? l10n.untitledPlain;
 
       setState(() {
-        _currentDoc = DocumentListing(
-          publicId: _currentDoc.publicId,
-          createdAt: _currentDoc.createdAt,
-          tags: _currentDoc.tags,
-          createdById: _currentDoc.createdById,
-          createdByName: _currentDoc.createdByName,
+        // The backend clears ver/size/slug on revoke; mirror that locally.
+        _currentDoc = _currentDoc.copyWith(
           currentSize: null,
           currentVer: null,
-          description: _currentDoc.description,
           slug: null,
-          title: _currentDoc.title,
           revokedAt: now,
         );
         _isRevoking = false;
@@ -495,7 +490,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       if (!mounted) return;
       showToast(
         context,
-        l10n.documentRevokedToast(revokedTitle, r2Purged),
+        l10n.documentRevokedToast(revokedTitle, revoke.r2ObjectsPurged),
         danger: true,
       );
 
@@ -504,7 +499,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     } catch (e) {
       setState(() => _isRevoking = false);
       if (!mounted) return;
-      showToast(context, l10n.revocationFailed(e.toString()), danger: true);
+      showToast(
+        context,
+        l10n.revocationFailed(ApiError.describe(e)),
+        danger: true,
+      );
     }
   }
 
@@ -563,7 +562,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       if (!mounted) return;
       showToast(
         context,
-        l10n.failedUpdateVisibility(e.toString()),
+        l10n.failedUpdateVisibility(ApiError.describe(e)),
         danger: true,
       );
     }
@@ -738,7 +737,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     } catch (e) {
       setState(() => _updatingProperties = false);
       if (!mounted) return;
-      showToast(context, l10n.failedUpdate(e.toString()), danger: true);
+      showToast(context, l10n.failedUpdate(ApiError.describe(e)), danger: true);
     }
   }
 
@@ -760,20 +759,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
       setState(() {
         _selectedVersion = 0; // reset to latest
-        _currentDoc = DocumentListing(
-          publicId: _currentDoc.publicId,
-          createdAt: _currentDoc.createdAt,
-          tags: _currentDoc.tags,
-          createdById: _currentDoc.createdById,
-          createdByName: _currentDoc.createdByName,
-          currentSize: _currentDoc.currentSize,
-          currentVer: newVer,
-          description: _currentDoc.description,
-          slug: _currentDoc.slug,
-          title: _currentDoc.title,
-          revokedAt: _currentDoc.revokedAt,
-          visibility: _currentDoc.visibility,
-        );
+        _currentDoc = _currentDoc.copyWith(currentVer: newVer);
         _updatingProperties = false;
       });
 
@@ -784,7 +770,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     } catch (e) {
       setState(() => _updatingProperties = false);
       if (!mounted) return;
-      showToast(context, l10n.restoreFailed(e.toString()), danger: true);
+      showToast(
+        context,
+        l10n.restoreFailed(ApiError.describe(e)),
+        danger: true,
+      );
     }
   }
 

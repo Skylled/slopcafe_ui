@@ -2,6 +2,7 @@ import 'dart:developer' as dev;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../api/api.dart';
 import 'secure_storage.dart';
 
 /// Slopcafe API Client.
@@ -41,10 +42,11 @@ class ApiConnectionState {
   }
 }
 
-/// State notifier to track connection/auth errors globally.
-class ConnectionStateNotifier extends StateNotifier<ApiConnectionState> {
-  ConnectionStateNotifier()
-    : super(ApiConnectionState(status: ConnectionStatus.initial));
+/// Notifier to track connection/auth errors globally.
+class ConnectionStateNotifier extends Notifier<ApiConnectionState> {
+  @override
+  ApiConnectionState build() =>
+      ApiConnectionState(status: ConnectionStatus.initial);
 
   void setStatus(ConnectionStatus status, [String? errorMessage]) {
     state = ApiConnectionState(status: status, errorMessage: errorMessage);
@@ -56,9 +58,9 @@ class ConnectionStateNotifier extends StateNotifier<ApiConnectionState> {
 }
 
 final connectionStateProvider =
-    StateNotifierProvider<ConnectionStateNotifier, ApiConnectionState>((ref) {
-      return ConnectionStateNotifier();
-    });
+    NotifierProvider<ConnectionStateNotifier, ApiConnectionState>(
+      ConnectionStateNotifier.new,
+    );
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio();
@@ -119,14 +121,16 @@ final dioProvider = Provider<Dio>((ref) {
           );
         }
 
-        // Trigger unauthorized connection state on 401. The user-facing message
-        // is supplied by the UI layer (localized `tokenRejectedDetail`) so no
-        // copy lives in this context-less service; `errorMessage` stays a
-        // carrier for any future server-supplied detail.
+        // Trigger unauthorized connection state on 401. No app copy lives in
+        // this context-less service — the UI layer renders the localized
+        // `tokenRejectedDetail` fallback. We do forward the backend's own
+        // `ErrorBody.message` (server-supplied detail, parsed via the typed
+        // envelope) when present; `errorMessage` stays null otherwise.
         if (e.response?.statusCode == 401) {
+          final apiError = ApiError.fromException(e);
           ref
               .read(connectionStateProvider.notifier)
-              .setStatus(ConnectionStatus.unauthorized);
+              .setStatus(ConnectionStatus.unauthorized, apiError.message);
         }
 
         return handler.next(e);

@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/design/tokens.dart';
+import '../api/api.dart';
 import '../core/design/typography.dart';
 import '../l10n/l10n.dart';
-import '../models/document.dart';
 import '../providers/document_provider.dart';
 import '../widgets/pill.dart';
 import '../widgets/press_card.dart';
@@ -258,7 +258,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         );
       },
       loading: () => const _LoadingState(),
-      error: (err, _) => _ErrorState(message: err.toString()),
+      error: (err, _) => _ErrorState(message: ApiError.describe(err)),
     );
   }
 }

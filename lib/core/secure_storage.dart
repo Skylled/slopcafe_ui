@@ -4,9 +4,12 @@ class SecureStorageService {
   SecureStorageService._internal();
   static final SecureStorageService instance = SecureStorageService._internal();
 
-  final FlutterSecureStorage _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-  );
+  // flutter_secure_storage 10 dropped the EncryptedSharedPreferences-backed
+  // Android implementation (Jetpack Security was deprecated by Google). The
+  // plugin now uses custom ciphers by default and transparently migrates any
+  // values written by earlier versions on first access, so no options are
+  // required here.
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   static const String _keyBaseUrl = 'slopcafe_base_url';
   static const String _keyOperatorToken = 'slopcafe_operator_token';

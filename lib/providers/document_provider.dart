@@ -1,8 +1,8 @@
 import 'dart:developer' as dev;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+import '../api/api.dart';
 import '../core/api_client.dart';
-import '../models/document.dart';
 import '../core/document_cache.dart';
 
 class DocumentsListState {
@@ -45,10 +45,9 @@ class DocumentsListState {
   }
 }
 
-class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
-  final Ref _ref;
-
-  DocumentsListNotifier(this._ref) : super(DocumentsListState());
+class DocumentsListNotifier extends Notifier<DocumentsListState> {
+  @override
+  DocumentsListState build() => DocumentsListState();
 
   Future<void> loadNextPage({
     String? tag,
@@ -64,7 +63,7 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
     state = state.copyWith(isLoading: true, hasError: false);
 
     try {
-      final dio = _ref.read(dioProvider);
+      final dio = ref.read(dioProvider);
       final queryParams = <String, dynamic>{'limit': 50};
 
       if (!clear && state.nextCursor != null) {
@@ -81,11 +80,11 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
         '/admin/documents',
         queryParameters: queryParams,
       );
-      final data = response.data as Map<String, dynamic>;
-      final List<dynamic> docsJson = data['documents'] ?? [];
-      final nextCursor = data['next_cursor'] as String?;
-
-      final newDocs = docsJson.map((j) => DocumentListing.fromJson(j)).toList();
+      final parsed = ListDocumentsResponse.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+      final newDocs = parsed.documents;
+      final nextCursor = parsed.nextCursor;
       final currentDocs = clear
           ? <DocumentListing>[]
           : List<DocumentListing>.from(state.documents);
@@ -119,7 +118,7 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
       // A successful authenticated fetch means we're connected — surface it so
       // the Library status pill reads "Live" (the symmetric complement to the
       // dio interceptor flipping to `unauthorized` on a 401).
-      _ref
+      ref
           .read(connectionStateProvider.notifier)
           .setStatus(ConnectionStatus.connected);
 
@@ -153,7 +152,7 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
       state = state.copyWith(
         isLoading: false,
         hasError: true,
-        errorMessage: e.toString(),
+        errorMessage: ApiError.describe(e),
       );
     }
   }
@@ -161,19 +160,12 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
   void revokeDocumentLocally(String publicId, DateTime revokedAt) {
     final updatedDocs = state.documents.map((doc) {
       if (doc.publicId == publicId) {
-        return DocumentListing(
-          publicId: doc.publicId,
-          createdAt: doc.createdAt,
-          tags: doc.tags,
-          createdById: doc.createdById,
-          createdByName: doc.createdByName,
-          currentSize: null, // bytes is null when revoked
-          currentVer: null, // ver is null when revoked
-          description: doc.description,
-          slug: null, // slug is cleared when revoked
-          title: doc.title,
+        // On revoke the backend clears ver/size/slug; mirror that locally.
+        return doc.copyWith(
+          currentSize: null,
+          currentVer: null,
+          slug: null,
           revokedAt: revokedAt,
-          visibility: doc.visibility,
         );
       }
       return doc;
@@ -195,28 +187,18 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
     String publicId,
     String visibility,
   ) async {
-    final dio = _ref.read(dioProvider);
-    await dio.post(
+    final dio = ref.read(dioProvider);
+    final response = await dio.post(
       '/admin/documents/$publicId/visibility',
       data: {'visibility': visibility},
     );
+    final returnedVisibility = SetDocumentVisibilityResponse.fromJson(
+      response.data as Map<String, dynamic>,
+    ).visibility;
 
     final updatedDocs = state.documents.map((doc) {
       if (doc.publicId == publicId) {
-        return DocumentListing(
-          publicId: doc.publicId,
-          createdAt: doc.createdAt,
-          tags: doc.tags,
-          createdById: doc.createdById,
-          createdByName: doc.createdByName,
-          currentSize: doc.currentSize,
-          currentVer: doc.currentVer,
-          description: doc.description,
-          slug: doc.slug,
-          title: doc.title,
-          revokedAt: doc.revokedAt,
-          visibility: visibility,
-        );
+        return doc.copyWith(visibility: returnedVisibility);
       }
       return doc;
     }).toList();
@@ -236,30 +218,18 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
   }
 
   Future<DocumentListing> updateSlug(String publicId, String slug) async {
-    final dio = _ref.read(dioProvider);
+    final dio = ref.read(dioProvider);
     final response = await dio.post(
       '/admin/documents/$publicId/slug',
       data: {'slug': slug},
     );
-    final data = response.data as Map<String, dynamic>;
-    final returnedSlug = data['slug'] as String?;
+    final returnedSlug = SetDocumentSlugResponse.fromJson(
+      response.data as Map<String, dynamic>,
+    ).slug;
 
     final updatedDocs = state.documents.map((doc) {
       if (doc.publicId == publicId) {
-        return DocumentListing(
-          publicId: doc.publicId,
-          createdAt: doc.createdAt,
-          tags: doc.tags,
-          createdById: doc.createdById,
-          createdByName: doc.createdByName,
-          currentSize: doc.currentSize,
-          currentVer: doc.currentVer,
-          description: doc.description,
-          slug: returnedSlug,
-          title: doc.title,
-          revokedAt: doc.revokedAt,
-          visibility: doc.visibility,
-        );
+        return doc.copyWith(slug: returnedSlug);
       }
       return doc;
     }).toList();
@@ -279,30 +249,18 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
   }
 
   Future<DocumentListing> updateTags(String publicId, List<String> tags) async {
-    final dio = _ref.read(dioProvider);
+    final dio = ref.read(dioProvider);
     final response = await dio.post(
       '/admin/documents/$publicId/tags',
       data: {'tags': tags},
     );
-    final data = response.data as Map<String, dynamic>;
-    final returnedTags = List<String>.from(data['tags'] ?? const []);
+    final returnedTags = SetDocumentTagsResponse.fromJson(
+      response.data as Map<String, dynamic>,
+    ).tags;
 
     final updatedDocs = state.documents.map((doc) {
       if (doc.publicId == publicId) {
-        return DocumentListing(
-          publicId: doc.publicId,
-          createdAt: doc.createdAt,
-          tags: returnedTags,
-          createdById: doc.createdById,
-          createdByName: doc.createdByName,
-          currentSize: doc.currentSize,
-          currentVer: doc.currentVer,
-          description: doc.description,
-          slug: doc.slug,
-          title: doc.title,
-          revokedAt: doc.revokedAt,
-          visibility: doc.visibility,
-        );
+        return doc.copyWith(tags: returnedTags);
       }
       return doc;
     }).toList();
@@ -325,7 +283,7 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
   }
 
   Future<int> restoreVersion(String publicId, int version) async {
-    final dio = _ref.read(dioProvider);
+    final dio = ref.read(dioProvider);
     final response = await dio.post(
       '/d/$publicId/restore',
       data: FormData.fromMap({'version': version}),
@@ -349,9 +307,9 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
 }
 
 final documentsListProvider =
-    StateNotifierProvider<DocumentsListNotifier, DocumentsListState>((ref) {
-      return DocumentsListNotifier(ref);
-    });
+    NotifierProvider<DocumentsListNotifier, DocumentsListState>(
+      DocumentsListNotifier.new,
+    );
 
 class SearchQueryParams {
   final String query;
@@ -394,10 +352,9 @@ final documentSearchProvider =
           '/admin/documents/search',
           queryParameters: queryParams,
         );
-        final data = response.data as Map<String, dynamic>;
-        final List<dynamic> hitsJson = data['documents'] ?? [];
-
-        return hitsJson.map((j) => SearchHit.fromJson(j)).toList();
+        return SearchDocumentsResponse.fromJson(
+          response.data as Map<String, dynamic>,
+        ).documents;
       } catch (e, stack) {
         dev.log(
           'Search online query failed, attempting local search fallback',
@@ -463,8 +420,8 @@ final documentSearchProvider =
                 highlightedSnippet = '$prefix[$matchText]$suffix';
               }
               localHits.add(
-                SearchHit(
-                  document: doc,
+                SearchHit.fromDocument(
+                  doc,
                   score: 1.0,
                   matchedField: matchedField,
                   snippet: highlightedSnippet,

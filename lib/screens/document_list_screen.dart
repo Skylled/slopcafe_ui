@@ -5,7 +5,7 @@ import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/format.dart';
 import '../l10n/l10n.dart';
-import '../models/document.dart';
+import '../api/api.dart';
 import '../providers/document_provider.dart';
 import '../widgets/doc_feed_card.dart';
 import '../widgets/press_card.dart';

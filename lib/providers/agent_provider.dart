@@ -1,7 +1,7 @@
 import 'dart:developer' as dev;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../api/api.dart';
 import '../core/api_client.dart';
-import '../models/agent.dart';
 
 class AgentsListState {
   final List<AgentListing> agents;
@@ -35,10 +35,9 @@ class AgentsListState {
   }
 }
 
-class AgentsListNotifier extends StateNotifier<AgentsListState> {
-  final Ref _ref;
-
-  AgentsListNotifier(this._ref) : super(AgentsListState());
+class AgentsListNotifier extends Notifier<AgentsListState> {
+  @override
+  AgentsListState build() => AgentsListState();
 
   Future<void> loadNextPage({bool clear = false}) async {
     if (state.isLoading) return;
@@ -49,7 +48,7 @@ class AgentsListNotifier extends StateNotifier<AgentsListState> {
     state = state.copyWith(isLoading: true, hasError: false);
 
     try {
-      final dio = _ref.read(dioProvider);
+      final dio = ref.read(dioProvider);
       final queryParams = <String, dynamic>{'limit': 50};
 
       if (!clear && state.nextCursor != null) {
@@ -60,13 +59,11 @@ class AgentsListNotifier extends StateNotifier<AgentsListState> {
         '/admin/agents',
         queryParameters: queryParams,
       );
-      final data = response.data as Map<String, dynamic>;
-      final List<dynamic> agentsJson = data['agents'] ?? [];
-      final nextCursor = data['next_cursor'] as String?;
-
-      final newAgents = agentsJson
-          .map((j) => AgentListing.fromJson(j))
-          .toList();
+      final parsed = ListAgentsResponse.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+      final newAgents = parsed.agents;
+      final nextCursor = parsed.nextCursor;
       final currentAgents = clear
           ? <AgentListing>[]
           : List<AgentListing>.from(state.agents);
@@ -89,16 +86,17 @@ class AgentsListNotifier extends StateNotifier<AgentsListState> {
       state = state.copyWith(
         isLoading: false,
         hasError: true,
-        errorMessage: e.toString(),
+        errorMessage: ApiError.describe(e),
       );
     }
   }
 
-  Future<MintAgentResponse> createAgent(String name) async {
-    final dio = _ref.read(dioProvider);
+  Future<MintAgentKeyResponse> createAgent(String name) async {
+    final dio = ref.read(dioProvider);
     final response = await dio.post('/admin/agents', data: {'name': name});
-    final responseData = response.data as Map<String, dynamic>;
-    final mintResponse = MintAgentResponse.fromJson(responseData);
+    final mintResponse = MintAgentKeyResponse.fromJson(
+      response.data as Map<String, dynamic>,
+    );
 
     // Trigger immediate reload to catch the new agent and updated fleet statistics
     await loadNextPage(clear: true);
@@ -106,38 +104,28 @@ class AgentsListNotifier extends StateNotifier<AgentsListState> {
     return mintResponse;
   }
 
-  Future<Map<String, dynamic>> killAgent(String agentId) async {
-    final dio = _ref.read(dioProvider);
+  Future<RevokeAgentResponse> killAgent(String agentId) async {
+    final dio = ref.read(dioProvider);
     final response = await dio.delete('/admin/agents/$agentId');
-    final data = response.data as Map<String, dynamic>;
+    final result = RevokeAgentResponse.fromJson(
+      response.data as Map<String, dynamic>,
+    );
 
     // Remove locally
     final updatedList = state.agents.where((a) => a.id != agentId).toList();
     state = state.copyWith(agents: updatedList);
 
-    return data;
+    return result;
   }
 }
 
 final agentsListProvider =
-    StateNotifierProvider<AgentsListNotifier, AgentsListState>((ref) {
-      return AgentsListNotifier(ref);
-    });
-
-class AgentKeysResult {
-  final String agentId;
-  final String name;
-  final List<AgentKey> keys;
-
-  AgentKeysResult({
-    required this.agentId,
-    required this.name,
-    required this.keys,
-  });
-}
+    NotifierProvider<AgentsListNotifier, AgentsListState>(
+      AgentsListNotifier.new,
+    );
 
 // Fetch all keys for an agent (limit 100 for display purposes)
-final agentKeysProvider = FutureProvider.family<AgentKeysResult, String>((
+final agentKeysProvider = FutureProvider.family<ListAgentKeysResponse, String>((
   ref,
   agentId,
 ) async {
@@ -146,15 +134,7 @@ final agentKeysProvider = FutureProvider.family<AgentKeysResult, String>((
     '/admin/agents/$agentId/keys',
     queryParameters: {'limit': 100},
   );
-
-  final data = response.data as Map<String, dynamic>;
-  final keysJson = data['keys'] as List<dynamic>? ?? [];
-
-  return AgentKeysResult(
-    agentId: data['agent_id'] as String? ?? agentId,
-    name: data['name'] as String? ?? '',
-    keys: keysJson.map((k) => AgentKey.fromJson(k)).toList(),
-  );
+  return ListAgentKeysResponse.fromJson(response.data as Map<String, dynamic>);
 });
 
 // Helper provider/service class for standalone modifications (keys, OAuth clients)
@@ -162,10 +142,10 @@ class AgentManagerService {
   final Ref _ref;
   AgentManagerService(this._ref);
 
-  Future<MintKeyResponse> mintAgentKey(String agentId) async {
+  Future<MintAgentKeyResponse> mintAgentKey(String agentId) async {
     final dio = _ref.read(dioProvider);
     final response = await dio.post('/admin/agents/$agentId/keys');
-    return MintKeyResponse.fromJson(response.data as Map<String, dynamic>);
+    return MintAgentKeyResponse.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<void> revokeAgentKey(String keyId) async {
@@ -173,16 +153,20 @@ class AgentManagerService {
     await dio.delete('/admin/keys/$keyId');
   }
 
-  Future<MintOAuthResponse> mintOAuthClient(String agentId) async {
+  Future<CreateOAuthClientResponse> mintOAuthClient(String agentId) async {
     final dio = _ref.read(dioProvider);
     final response = await dio.post('/admin/agents/$agentId/oauth-clients');
-    return MintOAuthResponse.fromJson(response.data as Map<String, dynamic>);
+    return CreateOAuthClientResponse.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
-  Future<MintOAuthResponse> mintUnboundOAuthClient() async {
+  Future<CreateUnboundOAuthClientResponse> mintUnboundOAuthClient() async {
     final dio = _ref.read(dioProvider);
     final response = await dio.post('/admin/oauth-clients');
-    return MintOAuthResponse.fromJson(response.data as Map<String, dynamic>);
+    return CreateUnboundOAuthClientResponse.fromJson(
+      response.data as Map<String, dynamic>,
+    );
   }
 
   Future<void> deleteOAuthClient(String clientId) async {

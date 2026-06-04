@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../api/api.dart';
 import '../core/api_client.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
@@ -87,11 +88,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       );
 
       if (healthResponse.statusCode == 200 && authResponse.statusCode == 200) {
+        final health = HealthzResponse.fromJson(
+          healthResponse.data as Map<String, dynamic>,
+        );
         setState(() {
           _resultIsError = false;
           _testResult = l10n.connectionSuccessResult(
-            '${healthResponse.data['sanitizer_version']}',
-            '${healthResponse.data['storage_cap_bytes']}',
+            health.sanitizerVersion,
+            '${health.storageCapBytes}',
           );
         });
         ref
@@ -106,7 +110,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } catch (e) {
       setState(() {
         _resultIsError = true;
-        _testResult = l10n.connectionFailed(e.toString());
+        _testResult = l10n.connectionFailed(ApiError.describe(e));
       });
     } finally {
       if (mounted) {

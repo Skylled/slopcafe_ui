@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
-import '../models/document.dart';
+import '../api/api.dart';
 
 class DocumentCacheManager {
   static Future<Directory> get _cacheDir async {

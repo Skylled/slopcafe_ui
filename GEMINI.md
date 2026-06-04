@@ -13,14 +13,26 @@ It communicates with the Slopcafe Backend API to perform fleet management tasks,
 
 ## 🛠️ Technology Stack
 - **Framework**: Flutter SDK (>=3.0.0)
-- **State Management**: `flutter_riverpod` (Riverpod 2.x)
+- **State Management**: `flutter_riverpod` (Riverpod 3.x). The mutable stores
+  (`connectionStateProvider`, `documentsListProvider`, `agentsListProvider`) use
+  the modern `Notifier`/`NotifierProvider` API — each overrides `build()` for its
+  initial state and reads `ref` directly (Riverpod 3 dropped the legacy
+  `StateNotifier`/`StateNotifierProvider` from the default barrel).
 - **HTTP Client**: `dio` (with custom interceptors for auth and status monitoring)
 - **Local Persistence**: 
-  - `flutter_secure_storage` (secure storage of base URLs and API operator tokens)
+  - `flutter_secure_storage` (v10; secure storage of base URLs and API operator
+    tokens). v10 dropped the Jetpack-Security/`EncryptedSharedPreferences` Android
+    backend (deprecated by Google) for default custom ciphers; values written by
+    earlier builds auto-migrate on first access, so no `AndroidOptions` are set.
   - Custom SQLite or local file-based database for offline document caching
 - **Localization**: `flutter_localizations` + `intl` via Flutter's `gen-l10n` ARB
   pipeline. Every user-facing string is centralized in `lib/l10n/app_en.arb`
   (see the **Localization (i18n)** section below).
+- **API Models & Error Codes**: **generated** from the backend's canonical
+  **OpenAPI 3.1** contract — `freezed` + `json_serializable` data classes plus an
+  `ErrorCode` enum — by a bespoke pure-Dart emitter (`tool/generate_api.dart`)
+  feeding the existing `build_runner` pipeline. The hand-written `lib/models/`
+  classes are gone; see **API layer (generated from the OpenAPI contract)** below.
 - **URL Launching**: `url_launcher` for external browser navigation on mobile platforms (Android/iOS).
 - **Platform Targets**: macOS, iOS, Android, and Web
 
@@ -87,7 +99,7 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
 ### 2. Core Services
 * **[lib/core/api_client.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/api_client.dart)**
   * Sets up the global `dioProvider` and defines custom interceptors.
-  * Implements `connectionStateProvider` to track whether the app is in `connected`, `disconnected`, or `unauthorized` states. On a 401 it flips to `unauthorized` **without** a copy string — `errorMessage` stays a carrier for any future server-supplied detail, and the UI layer renders the localized `tokenRejectedDetail` fallback (this service has no `BuildContext`).
+  * Implements `connectionStateProvider` to track whether the app is in `connected`, `disconnected`, or `unauthorized` states. On a 401 it flips to `unauthorized` carrying **no app copy** — it parses the typed `ApiError` envelope and forwards the backend's own `ErrorBody.message` (server-supplied detail) into `errorMessage`, leaving it null otherwise; the UI layer renders the localized `tokenRejectedDetail` fallback (this service has no `BuildContext`).
   * Appends authorization headers dynamically to all requests sent to the configured Base URL.
 * **[lib/core/secure_storage.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/secure_storage.dart)**
   * Wraps `flutter_secure_storage` to encrypt and store the API Base URL and Operator Token.
@@ -104,11 +116,13 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
   * Shared display formatters: `fmtBytes`, `fmtDate`, `relTime`, `greeting`, `titleCase` (tag/collection display names). The copy-bearing helpers take an `AppLocalizations`: `relTime(l10n, date)` and `greeting(l10n)`; the rest stay locale-neutral.
 * **[lib/l10n/](file:///Users/kyle/Repos/slopcafe_ui/lib/l10n/)** — localization. `app_en.arb` (the single editable copy file), `l10n.dart` (the `context.l10n` extension), and the generated `app_localizations*.dart`. See the **Localization (i18n)** section above.
 
-### 3. Data Models
-* **[lib/models/document.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/models/document.dart)**
-  * Represents document metadata (slug, title, body content, status, tags, and timestamps).
-* **[lib/models/agent.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/models/agent.dart)**
-  * Represents fleet agents (IDs, active keys count, total keys minted, and live document counts).
+### 3. Data Models — `lib/api/` (GENERATED — see the API layer section below)
+The hand-written `lib/models/document.dart` / `lib/models/agent.dart` have been
+**replaced by code generated from the OpenAPI contract**. App code imports the
+barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dart)**.
+* **[lib/api/models.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/models.dart)** *(generated, do not edit)* — `freezed` + `json_serializable` data classes for every JSON request/response body in the spec: `DocumentListing`, `SearchHit`, `AgentListing`, `AgentKey`, `ListDocumentsResponse`, `SearchDocumentsResponse`, `ListAgentsResponse`, `ListAgentKeysResponse`, `MintAgentKeyResponse`, `CreateOAuthClientResponse`, `CreateUnboundOAuthClientResponse`, `Revoke{,Agent,Key}Response`, `SetDocument{Visibility,Slug,Tags}Response`, `HealthzResponse`, etc. Nullable (OpenAPI-3.1 `anyOf`-null) fields generate as nullable Dart; `created_at`/`revoked_at` (plain spec strings) are typed `DateTime`; `visibility`/`matched_field` stay `String` (not enums) to avoid call-site churn. `DocumentListing`/`AgentKey` expose an `isRevoked` getter; `SearchHit` is flat with a `.document` view + `SearchHit.fromDocument(...)` (used by the offline local-search fallback). `toJson` emits the same snake_case keys as before, so the offline document cache stays compatible.
+* **[lib/api/error_code.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/error_code.dart)** *(generated, do not edit)* — the `ErrorCode` enum: the 28 `error` discriminants of the `ErrorBody` oneOf union, plus `unknown` (forward-compat). `ErrorCode.fromWire(String?)` maps a wire value to a code.
+* **[lib/api/api_error.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api_error.dart)** *(hand-written glue)* — `ApiError`: a typed view over the `ErrorBody` envelope. `ApiError.fromException(e)` parses a `DioException`; `ApiError.describe(e)` returns the backend's `message` (falling back to the raw error) for toasts; discriminant extras are exposed as getters (`clientId`, `hint`, `slug`). The OAuth-exists path keys on `ErrorCode.clientExists`.
 
 ### 4. State Management (Providers)
 * **[lib/providers/document_provider.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/providers/document_provider.dart)**
@@ -144,10 +158,60 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
 
 ## 🔗 External Integration Dependencies
 
-* **Canonical HTTP API Reference**:
+* **Canonical OpenAPI spec (machine source of truth)**:
+  * Served live at **[https://slopcafe.com/openapi.json](https://slopcafe.com/openapi.json)** — OpenAPI **3.1.0**, `info.version` tracked in `tool/CONTRACT_VERSION` (currently **1.0.0**). The app's models + `ErrorCode` are generated from a pinned copy at `tool/openapi.json`. See the **API layer** section below.
+* **Canonical HTTP API Reference (human reference)**:
   * **Document Slug**: `slopcafe-http-api`
   * **URL**: [https://slopcafe.com/s/slopcafe-http-api](https://slopcafe.com/s/slopcafe-http-api)
-  * Always consult this live document when modifying request/response schemas or endpoint paths.
+  * Consult this live document for behavioral/narrative contract the spec can't encode.
+
+---
+
+## 🔌 API layer (generated from the OpenAPI contract)
+
+The app's API models and error codes are **generated from the backend's canonical
+OpenAPI 3.1 spec** rather than hand-maintained, so they stay in sync with the
+backend automatically (this was "Phase 3 — consumer adoption" of the backend's
+code-first API-contract effort).
+
+* **Pinned spec**: `tool/openapi.json` — an exact copy of what prod serves at
+  `https://slopcafe.com/openapi.json`. Generating from the pin (not the live URL)
+  keeps builds reproducible. `tool/CONTRACT_VERSION` records the `info.version`
+  generated against. **Re-pin + regenerate when `info.version` bumps:**
+  ```sh
+  curl -s https://slopcafe.com/openapi.json -o tool/openapi.json
+  # update tool/CONTRACT_VERSION if info.version changed
+  dart run tool/generate_api.dart        # spec -> lib/api/models.dart + error_code.dart
+  dart run build_runner build            # -> models.freezed.dart + models.g.dart
+  ```
+* **Generator**: [tool/generate_api.dart](file:///Users/kyle/Repos/slopcafe_ui/tool/generate_api.dart)
+  — a dev-only, pure-Dart script (no Flutter imports) that walks
+  `components.schemas` and emits `lib/api/models.dart` (freezed) + `lib/api/error_code.dart`.
+  Its header documents **why a bespoke emitter** rather than an off-the-shelf
+  generator: `swagger_dart_code_generator` doesn't support 3.1 and emits
+  non-nullable fields for `anyOf`-null (a runtime crash on revoked docs);
+  `swagger_parser`/`swagger_to_dart` handle 3.1 nullability but force a Retrofit
+  dep, `String` (not `DateTime`) timestamps, an enum (not `String`) `visibility`,
+  and **still** require a hand-written 28-code error enum — net *more* churn. The
+  bespoke emitter is ~thin: the real serialization/`copyWith`/equality is produced
+  by the standard `freezed` + `json_serializable` + `build_runner` pipeline.
+  Small app-specific config lives at the top of the script (string-enum schemas
+  kept as `String`, `score` typed `double`, `_at` strings typed `DateTime`,
+  inline-item name overrides `agents→AgentListing` / `keys→AgentKey`).
+* **Generated outputs** (committed, **do not hand-edit**): `lib/api/models.dart`,
+  `lib/api/error_code.dart`, and the `build_runner` products `models.freezed.dart`
+  / `models.g.dart`. Hand-written glue: `lib/api/api_error.dart`; barrel: `lib/api/api.dart`.
+* **Non-JSON routes stay hand-rolled** (by spec design): content-negotiated /
+  raw-bytes / HTML reads (`/d/{id}`, `/d/{id}/raw`, `/d/{id}/text`, `/s/{slug}`,
+  the version `/raw` reads, restore) and `/mcp` are not JSON-modelled — the
+  Reader's WebView + ETag conditional-GET cache and the 404/410 status-code
+  handling there are intentionally **not** routed through `ErrorCode` (the bodies
+  aren't the JSON envelope).
+* **Smoke test**: [tool/smoke_test.dart](file:///Users/kyle/Repos/slopcafe_ui/tool/smoke_test.dart)
+  validates the generated layer against the **live** backend (public `/healthz`
+  + an unauthenticated 401 → `ErrorCode.unauthorized`) and a revoked-doc fixture
+  (the 3.1-nullable risk). Run `dart run tool/smoke_test.dart`; set
+  `OPERATOR_TOKEN=…` to also exercise the authenticated list → search flow.
 
 ---
 
