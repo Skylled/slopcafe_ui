@@ -21,6 +21,7 @@ It communicates with the Slopcafe Backend API to perform fleet management tasks,
 - **Localization**: `flutter_localizations` + `intl` via Flutter's `gen-l10n` ARB
   pipeline. Every user-facing string is centralized in `lib/l10n/app_en.arb`
   (see the **Localization (i18n)** section below).
+- **URL Launching**: `url_launcher` for external browser navigation on mobile platforms (Android/iOS).
 - **Platform Targets**: macOS, iOS, Android, and Web
 
 ---

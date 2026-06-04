@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
 
 import '../core/api_client.dart';
@@ -424,11 +425,18 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Future<void> _openExternalBrowser(String url) async {
-    // The original screen had no url_launcher dependency: it shells out to
-    // `open` on macOS and otherwise copies the URL. We keep that exact
-    // behavior, surfacing feedback via the Craft toast instead of a SnackBar.
     final l10n = context.l10n;
     try {
+      final uri = Uri.tryParse(url);
+      if (uri != null && (Platform.isAndroid || Platform.isIOS)) {
+        if (await canLaunchUrl(uri)) {
+          if (!mounted) return;
+          showToast(context, l10n.openingInBrowser);
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      }
+
       if (Platform.isMacOS) {
         await Process.run('open', [url]);
         if (!mounted) return;
