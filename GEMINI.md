@@ -22,16 +22,27 @@ It communicates with the Slopcafe Backend API to perform fleet management tasks,
 
 ---
 
+## 🎨 Design Language — "Craft"
+The mobile UI follows the **Craft** design language (a warm café metaphor): a terracotta **clay** +
+**honey** OKLCH-derived palette, serif display type, emoji-free tinted cover tiles, press-cards, and a
+floating pill tab bar. The information architecture is three tabs — **Library** ("The Café"),
+**Search**, and **Operate** ("The Pass") — plus a full-screen document **Reader** and a pushed
+**Settings** screen. Copy uses "light café flavor": café-flavored section/screen titles, professional
+functional copy. Both **Craft-light** and a derived **Craft-dark** are supported via `ThemeMode.system`.
+
+---
+
 ## 📂 Codebase Map & Key Functionalities
 
 Below is the directory mapping of the core functionalities within the `lib/` directory:
 
 ### 1. Entry & Bootstrapping
 * **[lib/main.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/main.dart)**
-  * Initializes the `ProviderScope` and runs the application.
-  * Contains the `MainNavigationShell` widget, which manages the application's top-level navigation layout (supporting sidebar NavigationRail on desktop/tablets and BottomNavigationBar on mobile).
-  * Implements `SettingsScreen` which allows operators to configure and test the Base URL and Operator Token via a double-probe check (checking `GET /healthz` and then `GET /admin/agents`).
-  * Houses connection state listeners that automatically intercept `401 Unauthorized` token rejections and redirect users to the Settings Screen.
+  * Initializes the `ProviderScope`, builds the `MaterialApp` (Craft light/dark themes, `ThemeMode.system`), and runs the application.
+  * Contains `RootGate`: the first-launch gate that routes to `SettingsScreen` when the deployment is unconfigured (no Base URL/Operator Token in secure storage), otherwise to `AppShell`.
+* **[lib/screens/app_shell.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/app_shell.dart)**
+  * The three-tab shell: an `IndexedStack` of Library / Search / Operate beneath a floating pill tab bar.
+  * Houses the global connection-state listener that intercepts `401 Unauthorized` token rejections and pushes the Settings screen.
 
 ### 2. Core Services
 * **[lib/core/api_client.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/api_client.dart)**
@@ -44,7 +55,13 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
   * Manages the storage and retrieval of offline-cached documents to support running the app in disconnected mode.
   * Encapsulates saving and loading the global documents metadata listing (`documents_list.json`), checking if specific document versions exist in the cache, and scanning the cache directory for version resolution.
 * **[lib/core/theme.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/theme.dart)**
-  * Defines the color schemes and typographic parameters for the light and dark visual themes.
+  * Assembles the Craft `ThemeData` (light + dark) from the design tokens: maps the palette onto a Material `ColorScheme` AND registers the raw token set as a `ThemeExtension`, plus component themes (cards, inputs, buttons, sheets).
+* **[lib/core/design/tokens.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/design/tokens.dart)**
+  * `AppColors` (a `ThemeExtension`) — the Craft-light + Craft-dark palettes (OKLCH→sRGB), shadows, tag tints, and decorative accents. Read anywhere via `context.colors`. Also `AppRadii` and `AppSpacing`.
+* **[lib/core/design/typography.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/design/typography.dart)**
+  * `AppText` — named serif/sans/mono text styles (system-font fallback stacks) + the Material `TextTheme` builder.
+* **[lib/core/format.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/format.dart)**
+  * Shared display formatters: `fmtBytes`, `fmtDate`, `relTime`, `greeting`.
 
 ### 3. Data Models
 * **[lib/models/document.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/models/document.dart)**
@@ -63,20 +80,20 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
 * **[lib/providers/agent_provider.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/providers/agent_provider.dart)**
   * Manages agent lists, agent creation, key minting/rotation, and key revocation actions.
 
-### 5. UI & Screens
-* **[lib/screens/documents_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/documents_screen.dart)**
-  * Renders the documents index, including search bars, tag selectors, and infinite scrolling feeds.
-  * Displays a premium offline status banner when operating in offline fallback mode.
-  * Queries cache state dynamically to append `OFFLINE READY` badges to cached document list cards and search hit items.
-* **[lib/screens/document_detail_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/document_detail_screen.dart)**
-  * Displays the content of individual documents across three formats: a native WebView/iframe renderer, raw HTML source, and parsed GitHub-Flavored Markdown (GFM).
-  * Implements a version-first load strategy that serves local cached content instantly, checks backend status using conditional `If-None-Match`/`304 Not Modified` headers, and triggers refreshes or reloads only when a version mismatch is detected.
-  * Houses the document revocation action.
-* **[lib/screens/agents_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/agents_screen.dart)**
-  * Displays a global directory of all active fleet agents with real-time status counters.
-  * Provides actions for new agent registration.
-* **[lib/screens/agent_detail_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/agent_detail_screen.dart)**
-  * Detail view for individual agents, allowing administrators to rotate access keys, view active API secrets, and decommission the agent.
+### 5. UI & Screens (Craft IA)
+* **[lib/screens/library_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/library_screen.dart)** — Library ("The Café") tab.
+  * Greeting + connection-status pill (taps through to Settings), search affordance, fleet/menu tickers, a "Today's Special" featured document, a tag-based Collections carousel, and a "Recently plated" list. Offline banner + per-doc `OFFLINE READY` badge from cache state.
+* **[lib/screens/search_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/search_screen.dart)** — Search tab.
+  * Autofocus query field, debounced live results via `documentSearchProvider` (with local cached fallback), relevance bars, matched-field pills, and highlighted snippets. Suggestion chips when idle.
+* **[lib/screens/operate_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/operate_screen.dart)** — Operate ("The Pass") tab.
+  * Fleet stat grid + R2 storage bar; a "Kitchen" segment (agent rows → an agent bottom-sheet with keys, mint key, OAuth client, kill; plus mint-agent and unbound-OAuth flows) and a "Documents" segment (admin doc list with include-revoked + a per-doc actions sheet: visibility/slug/tags/revoke).
+* **[lib/screens/reader_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/reader_screen.dart)** — full-screen document Reader ("the plate"), pushed as a route.
+  * Cover + tags + serif title/description + byline + version sheet. View modes Read (WebView) / HTML / Markdown / Report (sanitizer report). Preserves the version-first offline cache strategy (conditional `If-None-Match`/`304`, instant cached render, reload only on version change). Houses copy-link, more-actions sheet, version restore, and the document revocation action. Pops `true` after a mutation so list/search callers can refresh.
+* **[lib/screens/settings_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/settings_screen.dart)** — pushed Settings ("Connection") screen.
+  * Configure + double-probe test the Base URL and Operator Token (`GET /healthz` then `GET /admin/agents`), save (optional `onSaved` callback, used by the first-launch gate), and clear secure storage. Shows the unauthorized banner.
+
+### 6. Shared Widgets
+* **[lib/widgets/](file:///Users/kyle/Repos/slopcafe_ui/lib/widgets/)** — Craft primitives composed by every screen: `pill.dart` (`Pill`/`VisBadge`/`OfflineReadyBadge`), `app_button.dart` (`AppButton`/`AppIconButton`), `press_card.dart` (`PressCard`/`RiseIn`), `stat.dart` (`MiniStat`/`OpStat`), `section_header.dart`, `sheets.dart` (`AppSheet`/`SecretSheet`/`showConfirmSheet`/`CopyField`/`SheetActionRow`), `toast.dart`, `cafe_logo.dart`.
 
 ---
 

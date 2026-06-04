@@ -35,7 +35,11 @@ class DocumentCacheManager {
 
   /// Write HTML string to disk, clobbering any existing cached versions
   /// of the same document to avoid stale cache.
-  static Future<void> saveCachedHtml(String publicId, int version, String html) async {
+  static Future<void> saveCachedHtml(
+    String publicId,
+    int version,
+    String html,
+  ) async {
     try {
       // Evict any old cached versions of this document before writing new one
       await deleteCachedDoc(publicId);
@@ -97,7 +101,9 @@ class DocumentCacheManager {
   }
 
   /// Save the default/unfiltered list of documents to disk.
-  static Future<void> saveCachedDocumentList(List<DocumentListing> documents) async {
+  static Future<void> saveCachedDocumentList(
+    List<DocumentListing> documents,
+  ) async {
     try {
       final dir = await _cacheDir;
       final file = File('${dir.path}/documents_list.json');

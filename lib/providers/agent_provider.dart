@@ -56,13 +56,20 @@ class AgentsListNotifier extends StateNotifier<AgentsListState> {
         queryParams['cursor'] = state.nextCursor;
       }
 
-      final response = await dio.get('/admin/agents', queryParameters: queryParams);
+      final response = await dio.get(
+        '/admin/agents',
+        queryParameters: queryParams,
+      );
       final data = response.data as Map<String, dynamic>;
       final List<dynamic> agentsJson = data['agents'] ?? [];
       final nextCursor = data['next_cursor'] as String?;
 
-      final newAgents = agentsJson.map((j) => AgentListing.fromJson(j)).toList();
-      final currentAgents = clear ? <AgentListing>[] : List<AgentListing>.from(state.agents);
+      final newAgents = agentsJson
+          .map((j) => AgentListing.fromJson(j))
+          .toList();
+      final currentAgents = clear
+          ? <AgentListing>[]
+          : List<AgentListing>.from(state.agents);
 
       final Set<String> existingIds = currentAgents.map((a) => a.id).toSet();
       for (var agent in newAgents) {
@@ -89,16 +96,13 @@ class AgentsListNotifier extends StateNotifier<AgentsListState> {
 
   Future<MintAgentResponse> createAgent(String name) async {
     final dio = _ref.read(dioProvider);
-    final response = await dio.post(
-      '/admin/agents',
-      data: {'name': name},
-    );
+    final response = await dio.post('/admin/agents', data: {'name': name});
     final responseData = response.data as Map<String, dynamic>;
     final mintResponse = MintAgentResponse.fromJson(responseData);
-    
+
     // Trigger immediate reload to catch the new agent and updated fleet statistics
     await loadNextPage(clear: true);
-    
+
     return mintResponse;
   }
 
@@ -106,19 +110,19 @@ class AgentsListNotifier extends StateNotifier<AgentsListState> {
     final dio = _ref.read(dioProvider);
     final response = await dio.delete('/admin/agents/$agentId');
     final data = response.data as Map<String, dynamic>;
-    
+
     // Remove locally
     final updatedList = state.agents.where((a) => a.id != agentId).toList();
     state = state.copyWith(agents: updatedList);
-    
+
     return data;
   }
 }
 
 final agentsListProvider =
     StateNotifierProvider<AgentsListNotifier, AgentsListState>((ref) {
-  return AgentsListNotifier(ref);
-});
+      return AgentsListNotifier(ref);
+    });
 
 class AgentKeysResult {
   final String agentId;
@@ -133,17 +137,19 @@ class AgentKeysResult {
 }
 
 // Fetch all keys for an agent (limit 100 for display purposes)
-final agentKeysProvider =
-    FutureProvider.family<AgentKeysResult, String>((ref, agentId) async {
+final agentKeysProvider = FutureProvider.family<AgentKeysResult, String>((
+  ref,
+  agentId,
+) async {
   final dio = ref.read(dioProvider);
   final response = await dio.get(
     '/admin/agents/$agentId/keys',
     queryParameters: {'limit': 100},
   );
-  
+
   final data = response.data as Map<String, dynamic>;
   final keysJson = data['keys'] as List<dynamic>? ?? [];
-  
+
   return AgentKeysResult(
     agentId: data['agent_id'] as String? ?? agentId,
     name: data['name'] as String? ?? '',

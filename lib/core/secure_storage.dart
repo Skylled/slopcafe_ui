@@ -5,15 +5,14 @@ class SecureStorageService {
   static final SecureStorageService instance = SecureStorageService._internal();
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-    ),
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
 
   static const String _keyBaseUrl = 'slopcafe_base_url';
   static const String _keyOperatorToken = 'slopcafe_operator_token';
 
-  static const String _keyUnboundOAuthClientIds = 'slopcafe_unbound_oauth_client_ids';
+  static const String _keyUnboundOAuthClientIds =
+      'slopcafe_unbound_oauth_client_ids';
 
   Future<void> saveConnectionDetails({
     required String baseUrl,
@@ -24,7 +23,7 @@ class SecureStorageService {
     if (formattedUrl.endsWith('/')) {
       formattedUrl = formattedUrl.substring(0, formattedUrl.length - 1);
     }
-    
+
     await _storage.write(key: _keyBaseUrl, value: formattedUrl);
     await _storage.write(key: _keyOperatorToken, value: operatorToken.trim());
   }
@@ -40,14 +39,21 @@ class SecureStorageService {
   Future<List<String>> getUnboundOAuthClientIds() async {
     final raw = await _storage.read(key: _keyUnboundOAuthClientIds);
     if (raw == null || raw.isEmpty) return [];
-    return raw.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    return raw
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
   }
 
   Future<void> addUnboundOAuthClientId(String clientId) async {
     final ids = await getUnboundOAuthClientIds();
     if (!ids.contains(clientId)) {
       ids.add(clientId);
-      await _storage.write(key: _keyUnboundOAuthClientIds, value: ids.join(','));
+      await _storage.write(
+        key: _keyUnboundOAuthClientIds,
+        value: ids.join(','),
+      );
     }
   }
 
@@ -58,7 +64,10 @@ class SecureStorageService {
       if (ids.isEmpty) {
         await _storage.delete(key: _keyUnboundOAuthClientIds);
       } else {
-        await _storage.write(key: _keyUnboundOAuthClientIds, value: ids.join(','));
+        await _storage.write(
+          key: _keyUnboundOAuthClientIds,
+          value: ids.join(','),
+        );
       }
     }
   }

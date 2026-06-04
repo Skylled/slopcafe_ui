@@ -1,0 +1,468 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../core/api_client.dart';
+import '../core/design/tokens.dart';
+import '../core/design/typography.dart';
+import '../core/secure_storage.dart';
+import '../widgets/app_button.dart';
+import '../widgets/cafe_logo.dart';
+import '../widgets/section_header.dart';
+import '../widgets/toast.dart';
+
+/// The Pass — operator connection setup.
+///
+/// Pushed route (its own Scaffold + AppBar titled "Connection"). Ported from
+/// the legacy `SettingsScreen` in `lib/main.dart`: it stores the deployment
+/// Base URL + Operator Token, runs the double-probe connection test
+/// (`GET /healthz` then `GET /admin/agents?limit=1` with a Bearer token),
+/// persists credentials via [SecureStorageService], and can clear secure
+/// storage. The wiring is preserved exactly; only the presentation is restyled
+/// into the Craft language.
+class SettingsScreen extends ConsumerStatefulWidget {
+  const SettingsScreen({super.key, this.onSaved});
+
+  /// Optional callback fired after a successful save. When null, the screen
+  /// pops itself instead (preserving the legacy navigate-away behavior).
+  final VoidCallback? onSaved;
+
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _urlController = TextEditingController();
+  final _tokenController = TextEditingController();
+  bool _obscureToken = true;
+  bool _testingConnection = false;
+  String? _testResult;
+  bool _resultIsError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadConnectionSettings();
+  }
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    _tokenController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadConnectionSettings() async {
+    final storage = SecureStorageService.instance;
+    final url = await storage.getBaseUrl();
+    final token = await storage.getOperatorToken();
+    if (!mounted) return;
+    if (url != null) _urlController.text = url;
+    if (token != null) _tokenController.text = token;
+  }
+
+  Future<void> _testConnection() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() {
+      _testingConnection = true;
+      _testResult = null;
+      _resultIsError = false;
+    });
+
+    final dio = ref.read(dioProvider);
+    final url = _urlController.text.trim();
+    final token = _tokenController.text.trim();
+
+    try {
+      // 1. Health Probe (unauthenticated).
+      final healthResponse = await dio.get('$url/healthz');
+
+      // 2. Auth Probe (Bearer token).
+      final authResponse = await dio.get(
+        '$url/admin/agents?limit=1',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      if (healthResponse.statusCode == 200 && authResponse.statusCode == 200) {
+        setState(() {
+          _resultIsError = false;
+          _testResult =
+              'Connection successful!\n'
+              'Sanitizer version: ${healthResponse.data['sanitizer_version']}\n'
+              'Storage cap: ${healthResponse.data['storage_cap_bytes']} bytes';
+        });
+        ref
+            .read(connectionStateProvider.notifier)
+            .setStatus(ConnectionStatus.connected);
+      } else {
+        setState(() {
+          _resultIsError = true;
+          _testResult = 'Connection probe failed with unexpected codes.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _resultIsError = true;
+        _testResult = 'Connection failed: ${e.toString()}';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _testingConnection = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _saveSettings() async {
+    if (!_formKey.currentState!.validate()) return;
+    await SecureStorageService.instance.saveConnectionDetails(
+      baseUrl: _urlController.text,
+      operatorToken: _tokenController.text,
+    );
+    if (!mounted) return;
+    showToast(context, 'Connection saved');
+    final onSaved = widget.onSaved;
+    if (onSaved != null) {
+      onSaved();
+    } else {
+      Navigator.of(context).maybePop();
+    }
+  }
+
+  Future<void> _clearAll() async {
+    await SecureStorageService.instance.clearAll();
+    _urlController.clear();
+    _tokenController.clear();
+    ref.read(connectionStateProvider.notifier).reset();
+    if (!mounted) return;
+    setState(() {
+      _testResult = null;
+      _resultIsError = false;
+    });
+    showToast(context, 'Secure storage cleared');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final connectionState = ref.watch(connectionStateProvider);
+    final isUnauthorized =
+        connectionState.status == ConnectionStatus.unauthorized;
+
+    return Scaffold(
+      backgroundColor: c.bg,
+      appBar: AppBar(
+        leading: const BackButton(),
+        title: const Text('Connection'),
+      ),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.lg,
+            AppSpacing.xl,
+            AppSpacing.bottomInset,
+          ),
+          children: [
+            if (isUnauthorized) ...[
+              _UnauthorizedBanner(
+                message:
+                    connectionState.errorMessage ??
+                    'Operator token was rejected.',
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+            _IntroCard(),
+            const SizedBox(height: AppSpacing.xxl),
+            SectionHeader('Credentials'),
+            _FieldLabel('Base URL'),
+            const SizedBox(height: AppSpacing.sm),
+            TextFormField(
+              controller: _urlController,
+              keyboardType: TextInputType.url,
+              autocorrect: false,
+              style: AppText.body.copyWith(color: c.text),
+              decoration: const InputDecoration(
+                hintText: 'https://agent-web-host.skylled.workers.dev',
+                prefixIcon: Icon(Icons.link),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter a Base URL';
+                }
+                if (!value.startsWith('http://') &&
+                    !value.startsWith('https://')) {
+                  return 'Must start with http:// or https://';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _FieldLabel('Operator Token'),
+            const SizedBox(height: AppSpacing.sm),
+            TextFormField(
+              controller: _tokenController,
+              obscureText: _obscureToken,
+              autocorrect: false,
+              enableSuggestions: false,
+              style: AppText.mono.copyWith(color: c.text),
+              decoration: InputDecoration(
+                hintText: 'Operator-level admin token',
+                prefixIcon: const Icon(Icons.key_outlined),
+                suffixIcon: IconButton(
+                  tooltip: _obscureToken ? 'Show token' : 'Hide token',
+                  icon: Icon(
+                    _obscureToken
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: c.textDim,
+                  ),
+                  onPressed: () =>
+                      setState(() => _obscureToken = !_obscureToken),
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter the Operator token';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    _testingConnection ? 'Testing…' : 'Test Connection',
+                    variant: AppBtnVariant.outline,
+                    icon: Icons.bolt,
+                    expand: true,
+                    onPressed: _testingConnection ? null : _testConnection,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: AppButton(
+                    'Save & Continue',
+                    variant: AppBtnVariant.primary,
+                    icon: Icons.check,
+                    expand: true,
+                    onPressed: _testingConnection ? null : _saveSettings,
+                  ),
+                ),
+              ],
+            ),
+            if (_testResult != null) ...[
+              const SizedBox(height: AppSpacing.xl),
+              _ResultPanel(text: _testResult!, isError: _resultIsError),
+            ],
+            const SizedBox(height: AppSpacing.xxl),
+            Divider(color: c.lineSoft, height: 1),
+            const SizedBox(height: AppSpacing.xl),
+            _DangerCard(onClear: _clearAll),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Warm welcome card that frames what this screen configures.
+class _IntroCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        border: Border.all(color: c.lineSoft),
+        boxShadow: c.shadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: c.clay.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
+                  border: Border.all(color: c.clay.withValues(alpha: 0.22)),
+                ),
+                child: const CafeLogo(size: 24),
+              ),
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Eyebrow('The Pass', color: c.clayD),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Open the line',
+                      style: AppText.headline.copyWith(color: c.text),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Point the operator app at your Slopcafe deployment and provide an '
+            'admin token. Credentials are stored only on this device in secure '
+            'storage.',
+            style: AppText.body.copyWith(color: c.textDim),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Small uppercase label above an input field.
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Text(
+      text.toUpperCase(),
+      style: AppText.label.copyWith(color: c.textDim),
+    );
+  }
+}
+
+/// Banner shown when the global connection state is `unauthorized` (401).
+class _UnauthorizedBanner extends StatelessWidget {
+  const _UnauthorizedBanner({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: c.red.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        border: Border.all(color: c.red.withValues(alpha: 0.30)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.warning_amber_rounded, color: c.red, size: 20),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Token rejected',
+                  style: AppText.titleSm.copyWith(color: c.red),
+                ),
+                const SizedBox(height: 3),
+                Text(message, style: AppText.small.copyWith(color: c.text)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Mono panel that renders the result of the connection test.
+class _ResultPanel extends StatelessWidget {
+  const _ResultPanel({required this.text, required this.isError});
+  final String text;
+  final bool isError;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final accent = isError ? c.red : c.green;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: c.surface2,
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        border: Border.all(color: c.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isError
+                    ? Icons.warning_amber_rounded
+                    : Icons.check_circle_outline,
+                size: 15,
+                color: accent,
+              ),
+              const SizedBox(width: 7),
+              Text(
+                (isError ? 'Probe failed' : 'Probe result').toUpperCase(),
+                style: AppText.monoLabel.copyWith(color: accent),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SelectableText(text, style: AppText.mono.copyWith(color: c.text)),
+        ],
+      ),
+    );
+  }
+}
+
+/// Destructive zone: clears all locally-stored secure credentials.
+class _DangerCard extends StatelessWidget {
+  const _DangerCard({required this.onClear});
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        border: Border.all(color: c.red.withValues(alpha: 0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Clear secure storage',
+            style: AppText.title.copyWith(color: c.text),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Removes the saved Base URL and Operator Token from this device and '
+            'resets the connection state.',
+            style: AppText.small.copyWith(color: c.textDim),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppButton(
+            'Clear Secure Storage',
+            variant: AppBtnVariant.danger,
+            icon: Icons.delete_outline,
+            onPressed: onClear,
+          ),
+        ],
+      ),
+    );
+  }
+}

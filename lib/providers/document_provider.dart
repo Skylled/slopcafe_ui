@@ -50,7 +50,11 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
 
   DocumentsListNotifier(this._ref) : super(DocumentsListState());
 
-  Future<void> loadNextPage({String? tag, String? slug, bool clear = false}) async {
+  Future<void> loadNextPage({
+    String? tag,
+    String? slug,
+    bool clear = false,
+  }) async {
     if (state.isLoading) return;
     if (!clear && state.nextCursor == null && state.documents.isNotEmpty) {
       // End of pages reached
@@ -62,7 +66,7 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
     try {
       final dio = _ref.read(dioProvider);
       final queryParams = <String, dynamic>{'limit': 50};
-      
+
       if (!clear && state.nextCursor != null) {
         queryParams['cursor'] = state.nextCursor;
       }
@@ -73,15 +77,22 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
         queryParams['slug'] = slug;
       }
 
-      final response = await dio.get('/admin/documents', queryParameters: queryParams);
+      final response = await dio.get(
+        '/admin/documents',
+        queryParameters: queryParams,
+      );
       final data = response.data as Map<String, dynamic>;
       final List<dynamic> docsJson = data['documents'] ?? [];
       final nextCursor = data['next_cursor'] as String?;
 
       final newDocs = docsJson.map((j) => DocumentListing.fromJson(j)).toList();
-      final currentDocs = clear ? <DocumentListing>[] : List<DocumentListing>.from(state.documents);
+      final currentDocs = clear
+          ? <DocumentListing>[]
+          : List<DocumentListing>.from(state.documents);
 
-      final Set<String> existingIds = currentDocs.map((d) => d.publicId).toSet();
+      final Set<String> existingIds = currentDocs
+          .map((d) => d.publicId)
+          .toSet();
       for (var doc in newDocs) {
         if (!existingIds.contains(doc.publicId)) {
           currentDocs.add(doc);
@@ -89,7 +100,9 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
       }
 
       // Aggregate tags from all retrieved documents to assist client-side filtering suggestions
-      final Set<String> allTags = clear ? <String>{} : Set<String>.from(state.aggregatedTags);
+      final Set<String> allTags = clear
+          ? <String>{}
+          : Set<String>.from(state.aggregatedTags);
       for (var doc in newDocs) {
         allTags.addAll(doc.tags);
       }
@@ -102,6 +115,13 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
         aggregatedTags: allTags,
         isOffline: false,
       );
+
+      // A successful authenticated fetch means we're connected — surface it so
+      // the Library status pill reads "Live" (the symmetric complement to the
+      // dio interceptor flipping to `unauthorized` on a 401).
+      _ref
+          .read(connectionStateProvider.notifier)
+          .setStatus(ConnectionStatus.connected);
 
       // Save to local cache only if they are not filtering (canonical default list)
       if (tag == null && (slug == null || slug.isEmpty)) {
@@ -148,9 +168,9 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
           createdById: doc.createdById,
           createdByName: doc.createdByName,
           currentSize: null, // bytes is null when revoked
-          currentVer: null,  // ver is null when revoked
+          currentVer: null, // ver is null when revoked
           description: doc.description,
-          slug: null,        // slug is cleared when revoked
+          slug: null, // slug is cleared when revoked
           title: doc.title,
           revokedAt: revokedAt,
           visibility: doc.visibility,
@@ -171,13 +191,16 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
     DocumentCacheManager.saveCachedDocumentList(updatedDocs);
   }
 
-  Future<DocumentListing> updateVisibility(String publicId, String visibility) async {
+  Future<DocumentListing> updateVisibility(
+    String publicId,
+    String visibility,
+  ) async {
     final dio = _ref.read(dioProvider);
     await dio.post(
       '/admin/documents/$publicId/visibility',
       data: {'visibility': visibility},
     );
-    
+
     final updatedDocs = state.documents.map((doc) {
       if (doc.publicId == publicId) {
         return DocumentListing(
@@ -284,7 +307,8 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
       return doc;
     }).toList();
 
-    final Set<String> allTags = Set<String>.from(state.aggregatedTags)..addAll(returnedTags);
+    final Set<String> allTags = Set<String>.from(state.aggregatedTags)
+      ..addAll(returnedTags);
 
     state = DocumentsListState(
       documents: updatedDocs,
@@ -305,21 +329,20 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
     final response = await dio.post(
       '/d/$publicId/restore',
       data: FormData.fromMap({'version': version}),
-      options: Options(
-        contentType: Headers.formUrlEncodedContentType,
-      ),
+      options: Options(contentType: Headers.formUrlEncodedContentType),
     );
-    
+
     int newVer = version + 1;
     if (response.data is Map) {
-      newVer = response.data['version'] as int? ?? 
-               (response.data['new_version'] as int? ?? (version + 1));
+      newVer =
+          response.data['version'] as int? ??
+          (response.data['new_version'] as int? ?? (version + 1));
     } else if (response.data is int) {
       newVer = response.data as int;
     } else if (response.data is String) {
       newVer = int.tryParse(response.data.toString()) ?? (version + 1);
     }
-    
+
     await loadNextPage(clear: true);
     return newVer;
   }
@@ -327,19 +350,15 @@ class DocumentsListNotifier extends StateNotifier<DocumentsListState> {
 
 final documentsListProvider =
     StateNotifierProvider<DocumentsListNotifier, DocumentsListState>((ref) {
-  return DocumentsListNotifier(ref);
-});
+      return DocumentsListNotifier(ref);
+    });
 
 class SearchQueryParams {
   final String query;
   final String? tag;
   final String? slug;
 
-  SearchQueryParams({
-    required this.query,
-    this.tag,
-    this.slug,
-  });
+  SearchQueryParams({required this.query, this.tag, this.slug});
 
   @override
   bool operator ==(Object other) =>
@@ -355,93 +374,114 @@ class SearchQueryParams {
 }
 
 final documentSearchProvider =
-    FutureProvider.family<List<SearchHit>, SearchQueryParams>((ref, params) async {
-  if (params.query.trim().isEmpty) return const [];
+    FutureProvider.family<List<SearchHit>, SearchQueryParams>((
+      ref,
+      params,
+    ) async {
+      if (params.query.trim().isEmpty) return const [];
 
-  final dio = ref.read(dioProvider);
-  final queryParams = <String, dynamic>{
-    'q': params.query,
-    'limit': 50,
-  };
-  if (params.tag != null && params.tag!.isNotEmpty) {
-    queryParams['tag'] = params.tag;
-  }
-  if (params.slug != null && params.slug!.isNotEmpty) {
-    queryParams['slug'] = params.slug;
-  }
-
-  try {
-    final response = await dio.get('/admin/documents/search', queryParameters: queryParams);
-    final data = response.data as Map<String, dynamic>;
-    final List<dynamic> hitsJson = data['documents'] ?? [];
-
-    return hitsJson.map((j) => SearchHit.fromJson(j)).toList();
-  } catch (e, stack) {
-    dev.log('Search online query failed, attempting local search fallback', error: e, stackTrace: stack);
-    
-    // Fall back to local search over cached document list
-    final cachedList = await DocumentCacheManager.getCachedDocumentList();
-    if (cachedList != null) {
-      final queryLower = params.query.toLowerCase();
-      final List<SearchHit> localHits = [];
-      for (var doc in cachedList) {
-        // Apply tag/slug filters if present
-        if (params.tag != null && params.tag!.isNotEmpty && !doc.tags.contains(params.tag)) {
-          continue;
-        }
-        if (params.slug != null && params.slug!.isNotEmpty && doc.slug != params.slug) {
-          continue;
-        }
-
-        bool match = false;
-        String matchedField = '';
-        String snippet = '';
-
-        if (doc.title != null && doc.title!.toLowerCase().contains(queryLower)) {
-          match = true;
-          matchedField = 'title';
-          snippet = doc.title!;
-        } else if (doc.description != null && doc.description!.toLowerCase().contains(queryLower)) {
-          match = true;
-          matchedField = 'description';
-          snippet = doc.description!;
-        } else if (doc.slug != null && doc.slug!.toLowerCase().contains(queryLower)) {
-          match = true;
-          matchedField = 'slug';
-          snippet = doc.slug!;
-        } else if (doc.tags.any((t) => t.toLowerCase().contains(queryLower))) {
-          match = true;
-          matchedField = 'tags';
-          snippet = doc.tags.join(', ');
-        }
-
-        if (match) {
-          final int matchIdx = snippet.toLowerCase().indexOf(queryLower);
-          String highlightedSnippet = snippet;
-          if (matchIdx != -1) {
-            final prefix = snippet.substring(0, matchIdx);
-            final matchText = snippet.substring(matchIdx, matchIdx + queryLower.length);
-            final suffix = snippet.substring(matchIdx + queryLower.length);
-            highlightedSnippet = '$prefix[$matchText]$suffix';
-          }
-          localHits.add(
-            SearchHit(
-              document: doc,
-              score: 1.0,
-              matchedField: matchedField,
-              snippet: highlightedSnippet,
-            ),
-          );
-        }
+      final dio = ref.read(dioProvider);
+      final queryParams = <String, dynamic>{'q': params.query, 'limit': 50};
+      if (params.tag != null && params.tag!.isNotEmpty) {
+        queryParams['tag'] = params.tag;
       }
-      return localHits;
-    }
-    rethrow;
-  }
-});
+      if (params.slug != null && params.slug!.isNotEmpty) {
+        queryParams['slug'] = params.slug;
+      }
 
-final documentDetailHtmlProvider =
-    FutureProvider.family<String, String>((ref, publicId) async {
+      try {
+        final response = await dio.get(
+          '/admin/documents/search',
+          queryParameters: queryParams,
+        );
+        final data = response.data as Map<String, dynamic>;
+        final List<dynamic> hitsJson = data['documents'] ?? [];
+
+        return hitsJson.map((j) => SearchHit.fromJson(j)).toList();
+      } catch (e, stack) {
+        dev.log(
+          'Search online query failed, attempting local search fallback',
+          error: e,
+          stackTrace: stack,
+        );
+
+        // Fall back to local search over cached document list
+        final cachedList = await DocumentCacheManager.getCachedDocumentList();
+        if (cachedList != null) {
+          final queryLower = params.query.toLowerCase();
+          final List<SearchHit> localHits = [];
+          for (var doc in cachedList) {
+            // Apply tag/slug filters if present
+            if (params.tag != null &&
+                params.tag!.isNotEmpty &&
+                !doc.tags.contains(params.tag)) {
+              continue;
+            }
+            if (params.slug != null &&
+                params.slug!.isNotEmpty &&
+                doc.slug != params.slug) {
+              continue;
+            }
+
+            bool match = false;
+            String matchedField = '';
+            String snippet = '';
+
+            if (doc.title != null &&
+                doc.title!.toLowerCase().contains(queryLower)) {
+              match = true;
+              matchedField = 'title';
+              snippet = doc.title!;
+            } else if (doc.description != null &&
+                doc.description!.toLowerCase().contains(queryLower)) {
+              match = true;
+              matchedField = 'description';
+              snippet = doc.description!;
+            } else if (doc.slug != null &&
+                doc.slug!.toLowerCase().contains(queryLower)) {
+              match = true;
+              matchedField = 'slug';
+              snippet = doc.slug!;
+            } else if (doc.tags.any(
+              (t) => t.toLowerCase().contains(queryLower),
+            )) {
+              match = true;
+              matchedField = 'tags';
+              snippet = doc.tags.join(', ');
+            }
+
+            if (match) {
+              final int matchIdx = snippet.toLowerCase().indexOf(queryLower);
+              String highlightedSnippet = snippet;
+              if (matchIdx != -1) {
+                final prefix = snippet.substring(0, matchIdx);
+                final matchText = snippet.substring(
+                  matchIdx,
+                  matchIdx + queryLower.length,
+                );
+                final suffix = snippet.substring(matchIdx + queryLower.length);
+                highlightedSnippet = '$prefix[$matchText]$suffix';
+              }
+              localHits.add(
+                SearchHit(
+                  document: doc,
+                  score: 1.0,
+                  matchedField: matchedField,
+                  snippet: highlightedSnippet,
+                ),
+              );
+            }
+          }
+          return localHits;
+        }
+        rethrow;
+      }
+    });
+
+final documentDetailHtmlProvider = FutureProvider.family<String, String>((
+  ref,
+  publicId,
+) async {
   final dio = ref.read(dioProvider);
   // The raw HTML endpoint does not require auth, but can be reached
   // directly through the public URL structure on the backend.
@@ -462,20 +502,25 @@ class MarkdownDetailResponse {
 }
 
 final documentDetailTextProvider =
-    FutureProvider.family<MarkdownDetailResponse, String>((ref, publicId) async {
-  final dio = ref.read(dioProvider);
-  final response = await dio.get('/d/$publicId/text');
-  
-  final markdown = response.data as String;
-  final sanitizerVersion = response.headers.value('x-sanitizer-version') ?? 'unknown';
-  final converterVersion = response.headers.value('x-converter-version') ?? 'unknown';
+    FutureProvider.family<MarkdownDetailResponse, String>((
+      ref,
+      publicId,
+    ) async {
+      final dio = ref.read(dioProvider);
+      final response = await dio.get('/d/$publicId/text');
 
-  return MarkdownDetailResponse(
-    markdown: markdown,
-    sanitizerVersion: sanitizerVersion,
-    converterVersion: converterVersion,
-  );
-});
+      final markdown = response.data as String;
+      final sanitizerVersion =
+          response.headers.value('x-sanitizer-version') ?? 'unknown';
+      final converterVersion =
+          response.headers.value('x-converter-version') ?? 'unknown';
+
+      return MarkdownDetailResponse(
+        markdown: markdown,
+        sanitizerVersion: sanitizerVersion,
+        converterVersion: converterVersion,
+      );
+    });
 
 class ReadSourceOkResponse {
   final String source;
@@ -523,14 +568,19 @@ class ReadSourceOkResponse {
 
 final documentDetailSourceProvider =
     FutureProvider.family<ReadSourceOkResponse, String>((ref, publicId) async {
-  final dio = ref.read(dioProvider);
-  final response = await dio.get('/d/$publicId/source');
-  return ReadSourceOkResponse.fromJson(response.data as Map<String, dynamic>);
-});
+      final dio = ref.read(dioProvider);
+      final response = await dio.get('/d/$publicId/source');
+      return ReadSourceOkResponse.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+    });
 
 final documentDetailHistoryRawProvider =
-    FutureProvider.family<String, ({String publicId, int version})>((ref, arg) async {
-  final dio = ref.read(dioProvider);
-  final response = await dio.get('/d/${arg.publicId}/v/${arg.version}/raw');
-  return response.data as String;
-});
+    FutureProvider.family<String, ({String publicId, int version})>((
+      ref,
+      arg,
+    ) async {
+      final dio = ref.read(dioProvider);
+      final response = await dio.get('/d/${arg.publicId}/v/${arg.version}/raw');
+      return response.data as String;
+    });
