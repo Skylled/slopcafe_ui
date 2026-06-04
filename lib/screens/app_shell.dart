@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/api_client.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
+import '../l10n/l10n.dart';
 import '../widgets/toast.dart';
 import 'library_screen.dart';
 import 'search_screen.dart';
@@ -34,7 +35,7 @@ class _AppShellState extends ConsumerState<AppShell> {
         _settingsOpen = true;
         showToast(
           context,
-          next.errorMessage ?? 'Operator token rejected',
+          next.errorMessage ?? context.l10n.tokenRejectedDetail,
           danger: true,
         );
         Navigator.of(context)
@@ -71,15 +72,17 @@ class _FloatingTabBar extends StatelessWidget {
   final int index;
   final ValueChanged<int> onSelect;
 
-  static const _tabs = [
-    (Icons.coffee_outlined, 'Library'),
-    (Icons.search, 'Search'),
-    (Icons.notifications_outlined, 'Operate'),
+  static const _icons = [
+    Icons.coffee_outlined,
+    Icons.search,
+    Icons.notifications_outlined,
   ];
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l10n = context.l10n;
+    final labels = [l10n.tabLibrary, l10n.tabSearch, l10n.tabOperate];
     return Padding(
       padding: EdgeInsets.only(
         top: 8,
@@ -101,10 +104,10 @@ class _FloatingTabBar extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  for (var i = 0; i < _tabs.length; i++)
+                  for (var i = 0; i < _icons.length; i++)
                     _TabButton(
-                      icon: _tabs[i].$1,
-                      label: _tabs[i].$2,
+                      icon: _icons[i],
+                      label: labels[i],
                       active: index == i,
                       onTap: () => onSelect(i),
                     ),

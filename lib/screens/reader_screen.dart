@@ -11,6 +11,7 @@ import '../core/design/typography.dart';
 import '../core/document_cache.dart';
 import '../core/format.dart';
 import '../core/secure_storage.dart';
+import '../l10n/l10n.dart';
 import '../models/document.dart';
 import '../providers/document_provider.dart';
 import '../widgets/app_button.dart';
@@ -101,6 +102,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   Future<void> _loadHtmlIntoWebview() async {
     if (_baseUrl == null) return;
+    final l10n = context.l10n;
 
     final String publicId = _currentDoc.publicId;
     int versionToLoad = _selectedVersion == 0
@@ -219,11 +221,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         await DocumentCacheManager.deleteCachedDoc(publicId);
 
         final errorTitle = statusCode == 410
-            ? 'Document revoked'
-            : 'Document not found';
+            ? l10n.documentRevokedTitle
+            : l10n.documentNotFound;
         final errorMsg = statusCode == 410
-            ? 'This document has been permanently revoked.'
-            : 'This document could not be found on the server.';
+            ? l10n.documentRevokedHtmlBody
+            : l10n.documentNotFoundHtmlBody;
 
         final errorHtml = _buildErrorHtml(errorTitle, errorMsg);
         await _webViewController.loadHtmlString(errorHtml);
@@ -231,16 +233,15 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         // Network/connection/server error
         if (cachedHtml == null) {
           final errorHtml = _buildErrorHtml(
-            'Offline / connection error',
-            'Could not retrieve the document. Please check your internet '
-                'connection.',
+            l10n.offlineConnectionError,
+            l10n.couldNotRetrieve,
           );
           await _webViewController.loadHtmlString(errorHtml);
         }
       }
     } catch (e) {
       if (cachedHtml == null) {
-        final errorHtml = _buildErrorHtml('Error', e.toString());
+        final errorHtml = _buildErrorHtml(l10n.errorTitle, e.toString());
         await _webViewController.loadHtmlString(errorHtml);
       }
     }
@@ -321,24 +322,21 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     // The original screen had no url_launcher dependency: it shells out to
     // `open` on macOS and otherwise copies the URL. We keep that exact
     // behavior, surfacing feedback via the Craft toast instead of a SnackBar.
+    final l10n = context.l10n;
     try {
       if (Platform.isMacOS) {
         await Process.run('open', [url]);
         if (!mounted) return;
-        showToast(context, 'Opening in browser…');
+        showToast(context, l10n.openingInBrowser);
       } else {
         await Clipboard.setData(ClipboardData(text: url));
         if (!mounted) return;
-        showToast(context, 'URL copied — paste it in your browser');
+        showToast(context, l10n.urlCopiedPaste);
       }
     } catch (e) {
       await Clipboard.setData(ClipboardData(text: url));
       if (!mounted) return;
-      showToast(
-        context,
-        'Could not launch browser — URL copied instead',
-        danger: true,
-      );
+      showToast(context, l10n.couldNotLaunchBrowser, danger: true);
     }
   }
 
@@ -348,6 +346,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   Future<void> _revokeDocument() async {
     if (_baseUrl == null) return;
+    final l10n = context.l10n;
     setState(() => _isRevoking = true);
 
     final dio = ref.read(dioProvider);
@@ -361,7 +360,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           .read(documentsListProvider.notifier)
           .revokeDocumentLocally(_currentDoc.publicId, now);
 
-      final revokedTitle = _currentDoc.title ?? 'Untitled';
+      final revokedTitle = _currentDoc.title ?? l10n.untitledPlain;
 
       setState(() {
         _currentDoc = DocumentListing(
@@ -383,7 +382,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       if (!mounted) return;
       showToast(
         context,
-        'Revoked "$revokedTitle" · $r2Purged R2 object(s) purged',
+        l10n.documentRevokedToast(revokedTitle, r2Purged),
         danger: true,
       );
 
@@ -392,22 +391,23 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     } catch (e) {
       setState(() => _isRevoking = false);
       if (!mounted) return;
-      showToast(context, 'Revocation failed: ${e.toString()}', danger: true);
+      showToast(context, l10n.revocationFailed(e.toString()), danger: true);
     }
   }
 
   Future<void> _confirmRevoke() async {
     final c = context.colors;
+    final l10n = context.l10n;
     final confirmed = await showConfirmSheet(
       context,
-      title: 'Revoke document',
-      confirmWord: 'REVOKE',
-      cta: 'Revoke permanently',
+      title: l10n.revokeDocumentTitle,
+      confirmWord: l10n.revokeConfirmWord,
+      cta: l10n.revokePermanently,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'This action is permanent and irreversible.',
+            l10n.revokePermanentWarning,
             style: AppText.body.copyWith(
               fontSize: 14.5,
               fontWeight: FontWeight.w700,
@@ -415,10 +415,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Document files will be immediately purged from R2 storage. '
-            'Live slugs will be cleared for reuse.',
-          ),
+          Text(l10n.revokeDocumentBodyLong),
         ],
       ),
     );
@@ -428,6 +425,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Future<void> _toggleVisibility() async {
+    final l10n = context.l10n;
     final nextVisibility = _currentDoc.visibility == 'public'
         ? 'private'
         : 'public';
@@ -446,29 +444,28 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       await _reloadWebview();
 
       if (!mounted) return;
-      showToast(context, 'Now ${nextVisibility.toUpperCase()}');
+      showToast(context, l10n.nowVisibility(nextVisibility.toUpperCase()));
     } catch (e) {
       setState(() => _updatingProperties = false);
       if (!mounted) return;
       showToast(
         context,
-        'Failed to update visibility: ${e.toString()}',
+        l10n.failedUpdateVisibility(e.toString()),
         danger: true,
       );
     }
   }
 
   Future<void> _confirmToggleVisibility() async {
+    final l10n = context.l10n;
     final makingPublic = _currentDoc.visibility != 'public';
     final confirmed = await showConfirmSheet(
       context,
-      title: makingPublic ? 'Make public' : 'Make private',
-      cta: makingPublic ? 'Make public' : 'Make private',
+      title: makingPublic ? l10n.makePublic : l10n.makePrivate,
+      cta: makingPublic ? l10n.makePublic : l10n.makePrivate,
       danger: false,
       body: Text(
-        makingPublic
-            ? 'Anyone with the link will be able to read this document.'
-            : 'Only operators will be able to read this document.',
+        makingPublic ? l10n.makePublicBody : l10n.makePrivateBodyReader,
       ),
     );
     if (confirmed) {
@@ -477,6 +474,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Future<void> _editSlugAndTags() async {
+    final l10n = context.l10n;
     final slugController = TextEditingController(text: _currentDoc.slug ?? '');
     final tagsController = TextEditingController(
       text: _currentDoc.tags.join(', '),
@@ -511,21 +509,21 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         );
 
         return AppSheet(
-          title: 'Edit slug & tags',
-          subtitle: 'Document properties',
+          title: l10n.editSlugTags,
+          subtitle: l10n.documentProperties,
           icon: Icons.sell_outlined,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'SLUG',
+                l10n.slugLabel,
                 style: AppText.label.copyWith(fontSize: 11, color: c.textFaint),
               ),
               const SizedBox(height: 6),
               TextField(
                 controller: slugController,
                 style: AppText.mono.copyWith(fontSize: 14, color: c.text),
-                decoration: deco('e.g. my-cool-document'),
+                decoration: deco(l10n.slugHint),
               ),
               const SizedBox(height: 8),
               Container(
@@ -536,25 +534,24 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   borderRadius: BorderRadius.circular(AppRadii.md),
                 ),
                 child: Text(
-                  'Slugs are retired permanently when cleared or changed — the '
-                  'old slug then returns 410 Gone. Leave empty to clear.',
+                  l10n.slugRetiredNote,
                   style: AppText.small.copyWith(color: c.honeyD),
                 ),
               ),
               const SizedBox(height: 18),
               Text(
-                'TAGS',
+                l10n.tagsLabel,
                 style: AppText.label.copyWith(fontSize: 11, color: c.textFaint),
               ),
               const SizedBox(height: 6),
               TextField(
                 controller: tagsController,
                 style: AppText.body.copyWith(color: c.text),
-                decoration: deco('e.g. guide, tutorial, reference'),
+                decoration: deco(l10n.tagsHintReader),
               ),
               const SizedBox(height: 8),
               Text(
-                'Separate tags with commas.',
+                l10n.separateTagsWithCommas,
                 style: AppText.small.copyWith(color: c.textFaint),
               ),
               const SizedBox(height: 20),
@@ -562,7 +559,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 children: [
                   Expanded(
                     child: AppButton(
-                      'Cancel',
+                      l10n.cancel,
                       variant: AppBtnVariant.outline,
                       expand: true,
                       onPressed: () => Navigator.of(sheetContext).pop(false),
@@ -572,7 +569,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   Expanded(
                     flex: 2,
                     child: AppButton(
-                      'Save',
+                      l10n.save,
                       variant: AppBtnVariant.primary,
                       icon: Icons.check,
                       expand: true,
@@ -624,11 +621,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       if (slugChanged) await _reloadWebview();
 
       if (!mounted) return;
-      showToast(context, 'Document properties updated');
+      showToast(context, l10n.documentPropertiesUpdated);
     } catch (e) {
       setState(() => _updatingProperties = false);
       if (!mounted) return;
-      showToast(context, 'Failed to update: ${e.toString()}', danger: true);
+      showToast(context, l10n.failedUpdate(e.toString()), danger: true);
     }
   }
 
@@ -641,6 +638,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Future<void> _restoreVersion(int version) async {
+    final l10n = context.l10n;
     setState(() => _updatingProperties = true);
     try {
       final newVer = await ref
@@ -669,24 +667,22 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       await _reloadWebview();
 
       if (!mounted) return;
-      showToast(context, 'Restored v$version (now live as v$newVer)');
+      showToast(context, l10n.restoredVersion(version, newVer));
     } catch (e) {
       setState(() => _updatingProperties = false);
       if (!mounted) return;
-      showToast(context, 'Restore failed: ${e.toString()}', danger: true);
+      showToast(context, l10n.restoreFailed(e.toString()), danger: true);
     }
   }
 
   Future<void> _confirmRestore(int version) async {
+    final l10n = context.l10n;
     final confirmed = await showConfirmSheet(
       context,
-      title: 'Restore v$version',
-      cta: 'Restore v$version',
+      title: l10n.restoreVersionTitle(version),
+      cta: l10n.restoreVersionTitle(version),
       danger: false,
-      body: Text(
-        'This creates a new live version of the document with the exact '
-        'contents of v$version.',
-      ),
+      body: Text(l10n.restoreVersionBody(version)),
     );
     if (confirmed) {
       await _restoreVersion(version);
@@ -700,6 +696,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   void _openVersionSheet() {
     final maxVer = _currentDoc.currentVer;
     if (maxVer == null) return;
+    final l10n = context.l10n;
     showAppSheet<void>(
       context,
       builder: (sheetContext) {
@@ -707,8 +704,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         final count = maxVer < 6 ? maxVer : 6;
         final versions = List<int>.generate(count, (i) => maxVer - i);
         return AppSheet(
-          title: 'Version history',
-          subtitle: 'On the menu',
+          title: l10n.versionHistory,
+          subtitle: l10n.onTheMenu,
           icon: Icons.layers_outlined,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -728,8 +725,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                       const SizedBox(width: 9),
                       Expanded(
                         child: Text(
-                          'Viewing historical v$_selectedVersion — not the '
-                          'live version.',
+                          l10n.viewingHistoricalShort(_selectedVersion),
                           style: AppText.small.copyWith(
                             fontWeight: FontWeight.w600,
                             color: c.honeyD,
@@ -756,7 +752,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               if (_selectedVersion != 0) ...[
                 const SizedBox(height: 14),
                 AppButton(
-                  'Restore v$_selectedVersion',
+                  l10n.restoreVersionTitle(_selectedVersion),
                   variant: AppBtnVariant.primary,
                   icon: Icons.refresh,
                   expand: true,
@@ -777,32 +773,33 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   void _openMoreSheet() {
     final isPublic = _currentDoc.visibility == 'public';
+    final l10n = context.l10n;
     showAppSheet<void>(
       context,
       builder: (sheetContext) {
         final c = sheetContext.colors;
         final canEdit = !_currentDoc.isRevoked && !_updatingProperties;
         return AppSheet(
-          title: _currentDoc.title ?? 'Untitled',
-          subtitle: 'Operator actions',
+          title: _currentDoc.title ?? l10n.untitledPlain,
+          subtitle: l10n.operatorActions,
           child: Column(
             children: [
               SheetActionRow(
                 icon: Icons.link,
-                label: 'Copy link',
+                label: l10n.copyLink,
                 onTap: (_baseUrl != null && !_currentDoc.isRevoked)
                     ? () {
                         Navigator.of(sheetContext).pop();
                         _copyToClipboard(
                           '$_baseUrl/d/${_currentDoc.publicId}',
-                          'Link copied',
+                          l10n.linkCopied,
                         );
                       }
                     : null,
               ),
               SheetActionRow(
                 icon: isPublic ? Icons.lock_outline : Icons.public,
-                label: isPublic ? 'Make private' : 'Make public',
+                label: isPublic ? l10n.makePrivate : l10n.makePublic,
                 onTap: canEdit
                     ? () {
                         Navigator.of(sheetContext).pop();
@@ -812,7 +809,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               ),
               SheetActionRow(
                 icon: Icons.sell_outlined,
-                label: 'Edit slug & tags',
+                label: l10n.editSlugTags,
                 onTap: canEdit
                     ? () {
                         Navigator.of(sheetContext).pop();
@@ -822,20 +819,20 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               ),
               SheetActionRow(
                 icon: Icons.tag,
-                label: 'Copy slug URL',
+                label: l10n.copySlugUrl,
                 onTap: (_baseUrl != null && _currentDoc.slug != null)
                     ? () {
                         Navigator.of(sheetContext).pop();
                         _copyToClipboard(
                           '$_baseUrl/s/${_currentDoc.slug}',
-                          'Slug URL copied',
+                          l10n.slugUrlCopied,
                         );
                       }
                     : null,
               ),
               SheetActionRow(
                 icon: Icons.open_in_new,
-                label: 'Open in browser',
+                label: l10n.openInBrowser,
                 onTap: _baseUrl != null
                     ? () {
                         Navigator.of(sheetContext).pop();
@@ -852,7 +849,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               ),
               SheetActionRow(
                 icon: Icons.delete_outline,
-                label: 'Revoke document',
+                label: l10n.revokeDocumentTitle,
                 danger: true,
                 onTap: (!_currentDoc.isRevoked && !_isRevoking)
                     ? () {
@@ -893,7 +890,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(32),
                   child: Text(
-                    'No base URL configured. Open Settings to connect.',
+                    context.l10n.noBaseUrlConfigured,
                     textAlign: TextAlign.center,
                     style: AppText.body.copyWith(color: c.textDim),
                   ),
@@ -951,12 +948,13 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   Widget _buildHeader(AppColors c, bool isRevoked) {
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          _currentDoc.title ?? '[Untitled]',
+          _currentDoc.title ?? l10n.untitled,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: AppText.titleSerif.copyWith(
@@ -969,8 +967,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         Row(
           children: [
             if (isRevoked)
-              const Pill(
-                'REVOKED',
+              Pill(
+                l10n.revokedUpper,
                 tone: PillTone.red,
                 icon: Icons.block,
                 small: true,
@@ -980,7 +978,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             const MetaDot(),
             Flexible(
               child: Text(
-                _currentDoc.createdByName ?? 'Deleted agent',
+                _currentDoc.createdByName ?? l10n.deletedAgent,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppText.small.copyWith(
@@ -1063,8 +1061,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Viewing historical version v$_selectedVersion. This is not the '
-              'live version.',
+              context.l10n.viewingHistoricalLong(_selectedVersion),
               style: AppText.small.copyWith(
                 fontWeight: FontWeight.w600,
                 color: c.honeyD,
@@ -1073,7 +1070,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           ),
           const SizedBox(width: 8),
           AppButton(
-            'Restore',
+            context.l10n.restore,
             variant: AppBtnVariant.warm,
             icon: Icons.refresh,
             small: true,
@@ -1088,9 +1085,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   Widget _buildRevokedState() {
     final c = context.colors;
+    final l10n = context.l10n;
     final dateStr = _currentDoc.revokedAt != null
         ? fmtDate(_currentDoc.revokedAt)
-        : 'an unknown date';
+        : l10n.unknownDate;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 40),
       child: Column(
@@ -1098,19 +1096,18 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           Icon(Icons.delete_outline, size: 56, color: c.red),
           const SizedBox(height: 16),
           Text(
-            'Document revoked',
+            l10n.documentRevokedTitle,
             style: AppText.headline.copyWith(color: c.red),
           ),
           const SizedBox(height: 10),
           Text(
-            'This document was permanently revoked on $dateStr.',
+            l10n.documentRevokedOn(dateStr),
             textAlign: TextAlign.center,
             style: AppText.body.copyWith(color: c.textDim),
           ),
           const SizedBox(height: 8),
           Text(
-            'All R2 file bytes have been purged and slugs released. The public '
-            'and debug views now return 404.',
+            l10n.revokedStateDetail,
             textAlign: TextAlign.center,
             style: AppText.small.copyWith(color: c.textFaint),
           ),
@@ -1153,7 +1150,7 @@ class _BackPill extends StatelessWidget {
               Icon(Icons.chevron_left, size: 18, color: c.clayD),
               const SizedBox(width: 4),
               Text(
-                'Café',
+                context.l10n.cafeBack,
                 style: AppText.titleSm.copyWith(fontSize: 14, color: c.clayD),
               ),
             ],
@@ -1216,7 +1213,7 @@ class _VersionChip extends StatelessWidget {
             Icon(Icons.layers_outlined, size: 14, color: c.textDim),
             const SizedBox(width: 6),
             Text(
-              'v$version',
+              context.l10n.versionLabel('$version'),
               style: AppText.titleSm.copyWith(fontSize: 12.5, color: c.textDim),
             ),
           ],
@@ -1243,6 +1240,7 @@ class _VersionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l10n = context.l10n;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadii.lg),
@@ -1264,7 +1262,7 @@ class _VersionRow extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Text(
-              'v$version',
+              l10n.versionLabel('$version'),
               style: AppText.mono.copyWith(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -1273,10 +1271,10 @@ class _VersionRow extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             if (isLatest)
-              const Pill('CURRENT', tone: PillTone.honey, small: true),
+              Pill(l10n.currentBadge, tone: PillTone.honey, small: true),
             const Spacer(),
             Text(
-              isLatest ? relTime(createdAt) : 'earlier',
+              isLatest ? relTime(l10n, createdAt) : l10n.earlier,
               style: AppText.small.copyWith(color: c.textFaint),
             ),
           ],

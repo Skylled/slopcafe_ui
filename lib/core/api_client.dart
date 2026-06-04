@@ -119,14 +119,14 @@ final dioProvider = Provider<Dio>((ref) {
           );
         }
 
-        // Trigger unauthorized connection state on 401
+        // Trigger unauthorized connection state on 401. The user-facing message
+        // is supplied by the UI layer (localized `tokenRejectedDetail`) so no
+        // copy lives in this context-less service; `errorMessage` stays a
+        // carrier for any future server-supplied detail.
         if (e.response?.statusCode == 401) {
           ref
               .read(connectionStateProvider.notifier)
-              .setStatus(
-                ConnectionStatus.unauthorized,
-                'Operator token rejected. Please verify your credentials.',
-              );
+              .setStatus(ConnectionStatus.unauthorized);
         }
 
         return handler.next(e);

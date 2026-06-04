@@ -5,6 +5,7 @@ import '../core/api_client.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/format.dart';
+import '../l10n/l10n.dart';
 import '../models/document.dart';
 import '../providers/agent_provider.dart';
 import '../providers/document_provider.dart';
@@ -122,8 +123,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           ],
           if (collections.isNotEmpty) ...[
             SectionHeader(
-              'Collections',
-              action: 'All',
+              context.l10n.collectionsTitle,
+              action: context.l10n.actionAll,
               onAction: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const CollectionsScreen()),
               ),
@@ -132,13 +133,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             const SizedBox(height: 26),
           ],
           SectionHeader(
-            'Recently plated',
-            action: 'See all',
+            context.l10n.recentlyPlatedTitle,
+            action: context.l10n.actionSeeAll,
             onAction: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => const DocumentListScreen(
-                  title: 'Recently plated',
-                  eyebrow: 'Most recent first',
+                builder: (_) => DocumentListScreen(
+                  title: context.l10n.recentlyPlatedTitle,
+                  eyebrow: context.l10n.mostRecentFirst,
                 ),
               ),
             ),
@@ -164,13 +165,22 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   // ---- Header: greeting + "The Café" + connection-status pill ----
   Widget _header(AppColors c) {
+    final l10n = context.l10n;
     final conn = ref.watch(connectionStateProvider);
     final (String label, Color dot, Color textColor) = switch (conn.status) {
-      ConnectionStatus.connected => ('Live', c.green, c.textDim),
-      ConnectionStatus.unauthorized => ('Token rejected', c.red, c.red),
-      ConnectionStatus.disconnected => ('Disconnected', c.textFaint, c.textDim),
-      ConnectionStatus.connecting => ('Connecting', c.honey, c.textDim),
-      ConnectionStatus.initial => ('Connect', c.textFaint, c.textDim),
+      ConnectionStatus.connected => (l10n.statusLive, c.green, c.textDim),
+      ConnectionStatus.unauthorized => (l10n.statusTokenRejected, c.red, c.red),
+      ConnectionStatus.disconnected => (
+        l10n.statusDisconnected,
+        c.textFaint,
+        c.textDim,
+      ),
+      ConnectionStatus.connecting => (
+        l10n.statusConnecting,
+        c.honey,
+        c.textDim,
+      ),
+      ConnectionStatus.initial => (l10n.statusConnect, c.textFaint, c.textDim),
     };
 
     return Row(
@@ -181,14 +191,17 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${greeting()}, Operator',
+                l10n.libraryGreeting(greeting(l10n)),
                 style: AppText.titleSm.copyWith(
                   fontSize: 13.5,
                   color: c.textFaint,
                 ),
               ),
               const SizedBox(height: 3),
-              Text('The Café', style: AppText.display.copyWith(color: c.text)),
+              Text(
+                l10n.theCafe,
+                style: AppText.display.copyWith(color: c.text),
+              ),
             ],
           ),
         ),
@@ -246,7 +259,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           const SizedBox(width: 11),
           Expanded(
             child: Text(
-              'Offline — showing cached documents.',
+              context.l10n.offlineBanner,
               style: AppText.small.copyWith(
                 color: c.text,
                 fontWeight: FontWeight.w600,
@@ -260,20 +273,24 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   // ---- Three MiniStat tickers ----
   Widget _tickers(AppColors c, int liveDocs, int agents, int publicDocs) {
+    final l10n = context.l10n;
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: MiniStat(value: '$liveDocs', label: 'on the menu'),
+            child: MiniStat(value: '$liveDocs', label: l10n.tickerOnMenu),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: MiniStat(value: '$agents', label: 'cooks on the line'),
+            child: MiniStat(value: '$agents', label: l10n.tickerCooks),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: MiniStat(value: '$publicDocs', label: 'public plates'),
+            child: MiniStat(
+              value: '$publicDocs',
+              label: l10n.tickerPublicPlates,
+            ),
           ),
         ],
       ),
@@ -327,7 +344,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '$count document${count == 1 ? '' : 's'}',
+                      context.l10n.documentCount(count),
                       style: AppText.small.copyWith(
                         fontSize: 12.5,
                         color: c.textFaint,
@@ -372,7 +389,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     Icon(Icons.coffee_outlined, size: 30, color: c.textFaint),
                     const SizedBox(height: 12),
                     Text(
-                      'Nothing plated yet.',
+                      context.l10n.nothingPlatedYet,
                       style: AppText.titleSerif.copyWith(color: c.text),
                     ),
                   ],
@@ -423,6 +440,7 @@ class _DocRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l10n = context.l10n;
     final firstTag = doc.tags.isNotEmpty ? doc.tags.first : null;
     final (tintBg, tintFg) = c.tagTint(firstTag);
     final isPublic = doc.visibility == 'public';
@@ -459,7 +477,7 @@ class _DocRow extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    doc.title ?? '[Untitled]',
+                    doc.title ?? l10n.untitled,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppText.titleSerif.copyWith(color: c.text),
@@ -469,7 +487,7 @@ class _DocRow extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          firstTag ?? 'untagged',
+                          firstTag ?? l10n.untagged,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppText.small.copyWith(
@@ -481,12 +499,12 @@ class _DocRow extends StatelessWidget {
                       ),
                       const MetaDot(),
                       Text(
-                        'v${doc.currentVer ?? '—'}',
+                        l10n.versionLabel('${doc.currentVer ?? '—'}'),
                         style: AppText.monoLabel.copyWith(color: c.textFaint),
                       ),
                       const MetaDot(),
                       Text(
-                        relTime(doc.createdAt),
+                        relTime(l10n, doc.createdAt),
                         style: AppText.small.copyWith(
                           fontSize: 12.5,
                           color: c.textFaint,

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/format.dart';
+import '../l10n/l10n.dart';
 import '../models/document.dart';
 import '../providers/document_provider.dart';
 import '../widgets/doc_feed_card.dart';
@@ -42,7 +43,7 @@ class DocumentListScreen extends ConsumerWidget {
       MaterialPageRoute(
         builder: (_) => DocumentListScreen(
           title: titleCase(tag),
-          eyebrow: 'Collection',
+          eyebrow: context.l10n.collectionEyebrow,
           tag: tag,
         ),
       ),
@@ -82,12 +83,12 @@ class DocumentListScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(left: 2, bottom: 14),
             child: Text(
-              '${docs.length} document${docs.length == 1 ? '' : 's'}',
+              context.l10n.documentCount(docs.length),
               style: AppText.small.copyWith(color: c.textFaint),
             ),
           ),
           if (docs.isEmpty)
-            _empty(c)
+            _empty(context, c)
           else
             for (var i = 0; i < docs.length; i++)
               Padding(
@@ -106,7 +107,7 @@ class DocumentListScreen extends ConsumerWidget {
     );
   }
 
-  Widget _empty(AppColors c) {
+  Widget _empty(BuildContext context, AppColors c) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 18),
@@ -123,7 +124,7 @@ class DocumentListScreen extends ConsumerWidget {
             Icon(Icons.coffee_outlined, size: 30, color: c.textFaint),
             const SizedBox(height: 12),
             Text(
-              'Nothing plated here yet.',
+              context.l10n.nothingPlatedHere,
               style: AppText.titleSerif.copyWith(color: c.text),
             ),
           ],

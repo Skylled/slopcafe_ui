@@ -1,0 +1,467 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Slopcafe Operator",
+  "@appTitle": {
+    "description": "Application title shown in the OS task switcher / window title."
+  },
+
+  "tabLibrary": "Library",
+  "@tabLibrary": { "description": "Bottom tab bar label for the Library (\"The Cafe\") tab." },
+  "tabSearch": "Search",
+  "@tabSearch": { "description": "Bottom tab bar label for the Search tab." },
+  "tabOperate": "Operate",
+  "@tabOperate": { "description": "Bottom tab bar label for the Operate (\"The Pass\") tab." },
+
+  "untitled": "[Untitled]",
+  "@untitled": { "description": "Placeholder shown in lists/cards when a document has no title." },
+  "untitledPlain": "Untitled",
+  "@untitledPlain": { "description": "Plain (no brackets) untitled fallback used inside toasts and sheet titles." },
+  "untagged": "untagged",
+  "@untagged": { "description": "Shown in a document row when the document carries no tags." },
+
+  "versionLabel": "v{version}",
+  "@versionLabel": {
+    "description": "Compact version marker, e.g. v3. The {version} value may be a number or an em dash when unknown.",
+    "placeholders": { "version": { "type": "String" } }
+  },
+
+  "actionAll": "All",
+  "@actionAll": { "description": "Section-header trailing action that opens the full Collections list." },
+  "actionSeeAll": "See all",
+  "@actionSeeAll": { "description": "Section-header trailing action that opens the full document list." },
+  "retry": "Retry",
+  "cancel": "Cancel",
+  "save": "Save",
+  "saveChanges": "Save changes",
+  "saving": "Saving…",
+  "working": "Working…",
+  "revoke": "Revoke",
+  "restore": "Restore",
+  "deleteClient": "Delete client",
+
+  "greetingMorning": "Good morning",
+  "greetingAfternoon": "Good afternoon",
+  "greetingEvening": "Good evening",
+  "libraryGreeting": "{greeting}, Operator",
+  "@libraryGreeting": {
+    "description": "Library header greeting, e.g. \"Good morning, Operator\".",
+    "placeholders": { "greeting": { "type": "String" } }
+  },
+  "theCafe": "The Café",
+  "@theCafe": { "description": "Library tab display title (the home screen / \"The Café\")." },
+
+  "statusLive": "Live",
+  "statusTokenRejected": "Token rejected",
+  "statusDisconnected": "Disconnected",
+  "statusConnecting": "Connecting",
+  "statusConnect": "Connect",
+  "@statusConnect": { "description": "Connection-status pill label when no connection has been attempted yet." },
+
+  "offlineBanner": "Offline — showing cached documents.",
+  "tickerOnMenu": "on the menu",
+  "@tickerOnMenu": { "description": "Caption under the live-document count ticker on the Library screen." },
+  "tickerCooks": "cooks on the line",
+  "@tickerCooks": { "description": "Caption under the agent-count ticker (café metaphor for active agents)." },
+  "tickerPublicPlates": "public plates",
+  "@tickerPublicPlates": { "description": "Caption under the public-document count ticker." },
+
+  "collectionsTitle": "Collections",
+  "recentlyPlatedTitle": "Recently plated",
+  "@recentlyPlatedTitle": { "description": "Section/screen title for the newest documents (café metaphor for \"recently published\")." },
+  "mostRecentFirst": "Most recent first",
+  "nothingPlatedYet": "Nothing plated yet.",
+  "@nothingPlatedYet": { "description": "Empty state on the Library when no documents exist." },
+  "nothingPlatedHere": "Nothing plated here yet.",
+  "@nothingPlatedHere": { "description": "Empty state on a tag collection / document list." },
+  "noCollectionsYet": "No collections yet.",
+  "browseByTag": "Browse by tag",
+  "@browseByTag": { "description": "Eyebrow above the Collections screen title." },
+  "collectionEyebrow": "Collection",
+  "@collectionEyebrow": { "description": "Eyebrow shown above a single tag's document-list screen." },
+
+  "documentCount": "{count, plural, =1{1 document} other{{count} documents}}",
+  "@documentCount": {
+    "description": "Count of documents, e.g. \"3 documents\".",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "collectionCount": "{count, plural, =1{1 collection} other{{count} collections}}",
+  "@collectionCount": {
+    "description": "Count of tag collections, e.g. \"5 collections\".",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "searchTitle": "Search",
+  "searchHint": "Titles, body, tags, slugs…",
+  "@searchHint": { "description": "Placeholder text inside the search input field." },
+  "trySearching": "TRY SEARCHING",
+  "@trySearching": { "description": "Uppercase label above the search suggestion chips." },
+  "searchSuggestionSeeds": "sanitizer,recipe,oauth,espresso,revoke",
+  "@searchSuggestionSeeds": { "description": "Comma-separated seed search suggestions shown as chips when the field is empty. Edit/reorder freely; whitespace around commas is trimmed." },
+  "searchResultCount": "{count, plural, =1{1 result · ranked by relevance} other{{count} results · ranked by relevance}}",
+  "@searchResultCount": {
+    "description": "Header above search results, e.g. \"12 results · ranked by relevance\".",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "searchNoMatch": "Nothing matches “{query}”.",
+  "@searchNoMatch": {
+    "description": "Empty-results headline when a search yields nothing.",
+    "placeholders": { "query": { "type": "String" } }
+  },
+  "searchNoMatchHint": "Try a different keyword, tag, or slug.",
+  "searchError": "Search hit a snag.",
+  "searchCeilingHint": "Showing the top 50 plates. Refine your search to find the rest.",
+  "@searchCeilingHint": { "description": "Shown when search results hit the backend's 50-result ceiling." },
+
+  "backOfHouse": "Back of house",
+  "@backOfHouse": { "description": "Eyebrow above the Operate screen title (café metaphor)." },
+  "thePass": "The Pass",
+  "@thePass": { "description": "Operate screen / Settings intro title (café metaphor for the operator back office)." },
+  "liveDocuments": "Live documents",
+  "publicCountSub": "{count} public",
+  "@publicCountSub": {
+    "description": "Sub-label under the live-documents stat, e.g. \"4 public\".",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "activeAgents": "Active agents",
+  "ofCountSub": "of {count}",
+  "@ofCountSub": {
+    "description": "Sub-label under the active-agents stat, e.g. \"of 12\".",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "activeKeys": "Active keys",
+  "mintedSub": "{count} minted",
+  "@mintedSub": {
+    "description": "Sub-label under the active-keys stat, e.g. \"30 minted\".",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sanitizer": "Sanitizer",
+  "allGreen": "all green",
+  "@allGreen": { "description": "Sub-label under the Sanitizer stat when the backend health probe succeeds." },
+  "unavailable": "unavailable",
+  "@unavailable": { "description": "Sub-label under the Sanitizer stat when its version is unknown." },
+
+  "r2Storage": "R2 storage",
+  "storageCapLabel": "cap {cap}",
+  "@storageCapLabel": {
+    "description": "Storage bar trailing label when only the cap is known, e.g. \"cap 5.00 MB\".",
+    "placeholders": { "cap": { "type": "String" } }
+  },
+  "usageUnavailable": "Usage figure unavailable.",
+
+  "segKitchen": "The Kitchen",
+  "@segKitchen": { "description": "Operate segmented-control option for the agent/kitchen section." },
+  "segDocuments": "Documents",
+  "@segDocuments": { "description": "Operate segmented-control option for the admin document list." },
+
+  "agentCount": "{count, plural, =1{1 agent} other{{count} agents}}",
+  "@agentCount": {
+    "description": "Count of agents shown above the Kitchen list.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "newAgent": "New agent",
+  "unboundOAuthClients": "Unbound OAuth clients",
+  "unboundOAuthSubtitle": "Global clients not tied to any agent profile.",
+  "couldNotLoadFleet": "Could not load the fleet.",
+  "noAgentsYet": "No agents on the line yet. Hire one to begin.",
+  "allDocuments": "All documents",
+  "includeRevoked": "Include revoked",
+  "couldNotLoadDocuments": "Could not load documents.",
+  "noDocuments": "No documents to show.",
+  "revokedLower": "revoked",
+  "@revokedLower": { "description": "Lowercase \"revoked\" status shown under a document title in admin rows." },
+  "revokedBadge": "Revoked",
+  "@revokedBadge": { "description": "Title-case Revoked badge on admin document rows." },
+  "revokedUpper": "REVOKED",
+  "@revokedUpper": { "description": "Uppercase REVOKED pill on cards and the reader." },
+  "documentActionsTooltip": "Document actions",
+
+  "agentHiredTitle": "Agent hired",
+  "agentIdLabel": "Agent ID",
+  "plaintextBearerKeyLabel": "Plaintext bearer key",
+  "hireAgentTitle": "Hire an agent",
+  "newProfile": "New profile",
+  "hireAgentBody": "Creates a logical agent profile and mints its initial bearer key. The key is shown only once.",
+  "agentNameLabel": "AGENT NAME",
+  "agentNameHint": "e.g. Claude Writer",
+  "hiring": "Hiring…",
+  "hireAgent": "Hire agent",
+  "nameRequired": "Please enter a name.",
+  "nameTooLong": "Name must be 200 characters or less.",
+  "failedHireAgent": "Failed to hire agent: {error}",
+  "@failedHireAgent": { "placeholders": { "error": { "type": "String" } } },
+
+  "oauthClientCreated": "OAuth client created",
+  "clientIdLabel": "Client ID",
+  "clientSecretLabel": "Client secret (one-shot)",
+  "mcpUrlLabel": "MCP connection URL",
+  "globalConnections": "Global connections",
+  "unboundClientsBody": "Unbound clients are not tied to any single agent profile. They let operators authenticate valid agent flows dynamically.",
+  "mintUnboundClient": "Mint unbound client",
+  "mintedOnThisDevice": "MINTED ON THIS DEVICE",
+  "noUnboundClients": "No unbound clients recorded on this device.",
+  "failedMintUnbound": "Failed to mint unbound client: {error}",
+  "@failedMintUnbound": { "placeholders": { "error": { "type": "String" } } },
+  "deleteUnboundTitle": "Delete unbound client",
+  "deleteUnboundBody": "Delete unbound OAuth client \"{clientId}\"? This instantly revokes all live sessions and tokens issued under it.",
+  "@deleteUnboundBody": { "placeholders": { "clientId": { "type": "String" } } },
+  "unboundClientDeleted": "Unbound client deleted.",
+  "failedDeleteClient": "Failed to delete client: {error}",
+  "@failedDeleteClient": { "placeholders": { "error": { "type": "String" } } },
+
+  "agentProfile": "Agent profile",
+  "docsCountShort": "{count} docs",
+  "@docsCountShort": {
+    "description": "Compact \"N docs\" pill on the agent sheet.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "mintKey": "Mint key",
+  "oauthClientButton": "OAuth client",
+  "oauthClientRegistered": "OAuth client registered",
+  "deleteOAuthClientButton": "Delete OAuth client",
+  "apiKeysLabel": "API KEYS",
+  "noKeys": "No keys registered. Mint one to authorize clients.",
+  "revokedAudit": "REVOKED AUDIT ({count})",
+  "@revokedAudit": {
+    "description": "Header above the revoked-keys audit list.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "errorFetchingKeys": "Error fetching keys: {error}",
+  "@errorFetchingKeys": { "placeholders": { "error": { "type": "String" } } },
+  "bearerKeyMinted": "Bearer key minted",
+  "keyPlaintextLabel": "Key plaintext",
+  "failedMintKey": "Failed to mint key: {error}",
+  "@failedMintKey": { "placeholders": { "error": { "type": "String" } } },
+  "revokeKeyTitle": "Revoke key",
+  "revokeKeyBody": "Revoke key \"{keyPrefix}\"? This is irreversible — the worker using it is immediately locked out.",
+  "@revokeKeyBody": { "placeholders": { "keyPrefix": { "type": "String" } } },
+  "keyRevoked": "Key {keyPrefix} revoked.",
+  "@keyRevoked": { "placeholders": { "keyPrefix": { "type": "String" } } },
+  "failedRevokeKey": "Failed to revoke key: {error}",
+  "@failedRevokeKey": { "placeholders": { "error": { "type": "String" } } },
+  "oauthAlreadyExists": "OAuth client already exists for this agent.",
+  "failedMintOAuth": "Failed to mint OAuth client: {error}",
+  "@failedMintOAuth": { "placeholders": { "error": { "type": "String" } } },
+  "deleteOAuthTitle": "Delete OAuth client",
+  "deleteOAuthBody": "Delete OAuth client \"{clientId}\"? This instantly revokes every live access and refresh token issued to Claude or external MCP hosts.",
+  "@deleteOAuthBody": { "placeholders": { "clientId": { "type": "String" } } },
+  "oauthClientDeleted": "OAuth client deleted.",
+  "failedDeleteOAuth": "Failed to delete OAuth client: {error}",
+  "@failedDeleteOAuth": { "placeholders": { "error": { "type": "String" } } },
+  "killAgentTitle": "Kill agent profile",
+  "cascadingDestruction": "Cascading destruction. ",
+  "@cascadingDestruction": { "description": "Bold lead-in of the kill-agent confirmation (trailing space is intentional)." },
+  "killAgentBody": "This instantly revokes all bearer keys and deletes the agent's OAuth client.",
+  "killProfile": "Kill profile",
+  "agentKilled": "Agent killed. Revoked {keys} key(s), deleted {clients} client(s).",
+  "@agentKilled": {
+    "placeholders": { "keys": { "type": "Object" }, "clients": { "type": "Object" } }
+  },
+  "failedKillAgent": "Failed to kill agent: {error}",
+  "@failedKillAgent": { "placeholders": { "error": { "type": "String" } } },
+
+  "keyRevokedOn": "Revoked {date}",
+  "@keyRevokedOn": {
+    "description": "Sub-label on a revoked key row, e.g. \"Revoked Jan 4, 2026\".",
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "keyMintedOn": "Minted {date}",
+  "@keyMintedOn": {
+    "description": "Sub-label on an active key row, e.g. \"Minted Jan 4, 2026\".",
+    "placeholders": { "date": { "type": "String" } }
+  },
+
+  "makePublic": "Make public",
+  "makePrivate": "Make private",
+  "makePublicBody": "Anyone with the link will be able to read this document.",
+  "makePrivateBody": "Only authorized operators will be able to read this document.",
+  "@makePrivateBody": { "description": "Make-private confirmation body in the Operate document-actions sheet." },
+  "makePrivateBodyReader": "Only operators will be able to read this document.",
+  "@makePrivateBodyReader": { "description": "Make-private confirmation body in the Reader." },
+  "visibilitySet": "Visibility set to {visibility}.",
+  "@visibilitySet": {
+    "description": "Toast after toggling visibility, e.g. \"Visibility set to PUBLIC.\"",
+    "placeholders": { "visibility": { "type": "String" } }
+  },
+  "failedUpdateVisibility": "Failed to update visibility: {error}",
+  "@failedUpdateVisibility": { "placeholders": { "error": { "type": "String" } } },
+  "noSlugUrl": "No slug URL available.",
+  "slugUrlCopied": "Slug URL copied.",
+  "editSlugTags": "Edit slug & tags",
+  "copySlugUrl": "Copy slug URL",
+  "documentActions": "Document actions",
+  "documentMetadata": "Document metadata",
+  "documentProperties": "Document properties",
+  "slugLabel": "SLUG",
+  "slugHint": "e.g. my-cool-document",
+  "slugRetiredNote": "Slugs are retired permanently when cleared or changed — the old slug then returns 410 Gone. Leave empty to clear.",
+  "tagsLabel": "TAGS",
+  "tagsHint": "comma, separated, tags",
+  "tagsHintReader": "e.g. guide, tutorial, reference",
+  "separateTagsWithCommas": "Separate tags with commas.",
+  "slugTagsUpdated": "Slug & tags updated.",
+  "documentPropertiesUpdated": "Document properties updated",
+  "failedUpdate": "Failed to update: {error}",
+  "@failedUpdate": { "placeholders": { "error": { "type": "String" } } },
+
+  "revokeDocumentTitle": "Revoke document",
+  "revokePermanently": "Revoke permanently",
+  "revokeConfirmWord": "REVOKE",
+  "@revokeConfirmWord": { "description": "The exact word the operator must type to confirm a document revoke." },
+  "revokeDocumentBodyShort": "This is permanent and irreversible. Document files are purged from R2 storage and the slug is released for reuse.",
+  "@revokeDocumentBodyShort": { "description": "Revoke confirmation body in the Operate document-actions sheet." },
+  "revokePermanentWarning": "This action is permanent and irreversible.",
+  "revokeDocumentBodyLong": "Document files will be immediately purged from R2 storage. Live slugs will be cleared for reuse.",
+  "@revokeDocumentBodyLong": { "description": "Revoke confirmation detail in the Reader." },
+  "documentRevokedPurged": "Document revoked. {count} R2 object(s) purged.",
+  "@documentRevokedPurged": {
+    "description": "Toast after revoking from the Operate sheet.",
+    "placeholders": { "count": { "type": "Object" } }
+  },
+  "documentRevokedToast": "Revoked \"{title}\" · {count} R2 object(s) purged",
+  "@documentRevokedToast": {
+    "description": "Toast after revoking from the Reader.",
+    "placeholders": { "title": { "type": "String" }, "count": { "type": "Object" } }
+  },
+  "revocationFailed": "Revocation failed: {error}",
+  "@revocationFailed": { "placeholders": { "error": { "type": "String" } } },
+
+  "operatorActions": "Operator actions",
+  "copyLink": "Copy link",
+  "linkCopied": "Link copied",
+  "openInBrowser": "Open in browser",
+  "openingInBrowser": "Opening in browser…",
+  "urlCopiedPaste": "URL copied — paste it in your browser",
+  "couldNotLaunchBrowser": "Could not launch browser — URL copied instead",
+  "noBaseUrlConfigured": "No base URL configured. Open Settings to connect.",
+  "deletedAgent": "Deleted agent",
+  "@deletedAgent": { "description": "Author fallback in the Reader meta row when the creating agent no longer exists." },
+  "unknownAgent": "Unknown agent",
+  "@unknownAgent": { "description": "Author fallback on document cards when no author name is known." },
+  "cafeBack": "Café",
+  "@cafeBack": { "description": "Label on the Reader's back pill (returns to the Café)." },
+
+  "versionHistory": "Version history",
+  "onTheMenu": "On the menu",
+  "@onTheMenu": { "description": "Subtitle of the version-history sheet (café metaphor)." },
+  "currentBadge": "CURRENT",
+  "earlier": "earlier",
+  "@earlier": { "description": "Timestamp fallback for historical versions in the version list." },
+  "viewingHistoricalShort": "Viewing historical v{version} — not the live version.",
+  "@viewingHistoricalShort": {
+    "description": "Banner inside the version-history sheet when a historical version is selected.",
+    "placeholders": { "version": { "type": "int" } }
+  },
+  "viewingHistoricalLong": "Viewing historical version v{version}. This is not the live version.",
+  "@viewingHistoricalLong": {
+    "description": "Banner above the reader body when viewing a historical version.",
+    "placeholders": { "version": { "type": "int" } }
+  },
+  "restoreVersionTitle": "Restore v{version}",
+  "@restoreVersionTitle": {
+    "description": "Title/CTA/button for restoring a historical version, e.g. \"Restore v2\".",
+    "placeholders": { "version": { "type": "int" } }
+  },
+  "restoreVersionBody": "This creates a new live version of the document with the exact contents of v{version}.",
+  "@restoreVersionBody": { "placeholders": { "version": { "type": "int" } } },
+  "restoredVersion": "Restored v{version} (now live as v{newVer})",
+  "@restoredVersion": {
+    "description": "Toast after restoring a version.",
+    "placeholders": { "version": { "type": "int" }, "newVer": { "type": "int" } }
+  },
+  "restoreFailed": "Restore failed: {error}",
+  "@restoreFailed": { "placeholders": { "error": { "type": "String" } } },
+
+  "nowVisibility": "Now {visibility}",
+  "@nowVisibility": {
+    "description": "Toast after toggling visibility from the Reader, e.g. \"Now PUBLIC\".",
+    "placeholders": { "visibility": { "type": "String" } }
+  },
+
+  "documentRevokedTitle": "Document revoked",
+  "documentNotFound": "Document not found",
+  "documentRevokedHtmlBody": "This document has been permanently revoked.",
+  "documentNotFoundHtmlBody": "This document could not be found on the server.",
+  "offlineConnectionError": "Offline / connection error",
+  "couldNotRetrieve": "Could not retrieve the document. Please check your internet connection.",
+  "errorTitle": "Error",
+  "documentRevokedOn": "This document was permanently revoked on {date}.",
+  "@documentRevokedOn": {
+    "description": "Reader revoked-state body, e.g. \"…revoked on Jan 4, 2026.\"",
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "unknownDate": "an unknown date",
+  "@unknownDate": { "description": "Used in place of a date when a document's revoke timestamp is missing." },
+  "revokedStateDetail": "All R2 file bytes have been purged and slugs released. The public and debug views now return 404.",
+
+  "visibilityPublic": "PUBLIC",
+  "visibilityPrivate": "PRIVATE",
+
+  "shownOnce": "Shown once · never retrievable",
+  "@shownOnce": { "description": "Subtitle of the one-shot secret reveal sheet." },
+  "secretWarning": "This is the only time this secret is shown. Store it now — it is not kept in plaintext.",
+  "secretStoredAck": "I've securely stored this secret. I understand it can't be shown again.",
+  "dismissPurgeSecret": "Dismiss & purge secret",
+  "confirmAction": "Confirm action",
+  "typeToConfirmPrefix": "Type ",
+  "@typeToConfirmPrefix": { "description": "Lead-in before the highlighted confirmation word in a destructive confirm sheet (trailing space intentional)." },
+  "typeToConfirmSuffix": " to confirm:",
+  "@typeToConfirmSuffix": { "description": "Trailing text after the highlighted confirmation word (leading space intentional)." },
+
+  "connectionTitle": "Connection",
+  "@connectionTitle": { "description": "Settings screen app bar title." },
+  "credentialsSection": "Credentials",
+  "openTheLine": "Open the line",
+  "@openTheLine": { "description": "Settings intro card heading (café metaphor for connecting)." },
+  "connectionIntroBody": "Point the operator app at your Slopcafe deployment and provide an admin token. Credentials are stored only on this device in secure storage.",
+  "baseUrlLabel": "Base URL",
+  "baseUrlHint": "https://agent-web-host.skylled.workers.dev",
+  "@baseUrlHint": { "description": "Example placeholder shown in the Base URL field." },
+  "baseUrlRequired": "Please enter a Base URL",
+  "baseUrlInvalidScheme": "Must start with http:// or https://",
+  "operatorTokenLabel": "Operator Token",
+  "operatorTokenHint": "Operator-level admin token",
+  "operatorTokenRequired": "Please enter the Operator token",
+  "showToken": "Show token",
+  "hideToken": "Hide token",
+  "testingConnection": "Testing…",
+  "testConnection": "Test Connection",
+  "saveAndContinue": "Save & Continue",
+  "connectionSuccessResult": "Connection successful!\nSanitizer version: {sanitizer}\nStorage cap: {cap} bytes",
+  "@connectionSuccessResult": {
+    "description": "Result panel text after a successful connection probe.",
+    "placeholders": { "sanitizer": { "type": "String" }, "cap": { "type": "String" } }
+  },
+  "connectionProbeFailed": "Connection probe failed with unexpected codes.",
+  "connectionFailed": "Connection failed: {error}",
+  "@connectionFailed": { "placeholders": { "error": { "type": "String" } } },
+  "connectionSaved": "Connection saved",
+  "secureStorageCleared": "Secure storage cleared",
+  "probeFailed": "Probe failed",
+  "probeResult": "Probe result",
+  "tokenRejectedHeading": "Token rejected",
+  "@tokenRejectedHeading": { "description": "Heading of the unauthorized banner on the Settings screen." },
+  "tokenRejectedDetail": "Operator token rejected. Please verify your credentials.",
+  "@tokenRejectedDetail": { "description": "Unauthorized (401) message shown in the app-wide toast and the Settings banner body. Used as the fallback when the API layer carries no server-supplied detail." },
+  "clearSecureStorageTitle": "Clear secure storage",
+  "clearSecureStorageBody": "Removes the saved Base URL and Operator Token from this device and resets the connection state.",
+  "clearSecureStorageButton": "Clear Secure Storage",
+
+  "relativeToday": "today",
+  "relativeYesterday": "yesterday",
+  "relativeDaysAgo": "{days}d ago",
+  "@relativeDaysAgo": {
+    "description": "Relative time within the last month, e.g. \"5d ago\".",
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "relativeMonthsAgo": "{months}mo ago",
+  "@relativeMonthsAgo": {
+    "description": "Relative time within the last year, e.g. \"3mo ago\".",
+    "placeholders": { "months": { "type": "int" } }
+  },
+  "relativeYearsAgo": "{years}y ago",
+  "@relativeYearsAgo": {
+    "description": "Relative time over a year, e.g. \"2y ago\".",
+    "placeholders": { "years": { "type": "int" } }
+  }
+}

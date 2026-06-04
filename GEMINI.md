@@ -18,6 +18,9 @@ It communicates with the Slopcafe Backend API to perform fleet management tasks,
 - **Local Persistence**: 
   - `flutter_secure_storage` (secure storage of base URLs and API operator tokens)
   - Custom SQLite or local file-based database for offline document caching
+- **Localization**: `flutter_localizations` + `intl` via Flutter's `gen-l10n` ARB
+  pipeline. Every user-facing string is centralized in `lib/l10n/app_en.arb`
+  (see the **Localization (i18n)** section below).
 - **Platform Targets**: macOS, iOS, Android, and Web
 
 ---
@@ -34,6 +37,39 @@ professional functional copy. Both **Craft-light** and a derived **Craft-dark** 
 
 ---
 
+## 🌐 Localization (i18n)
+The app is wired for multiple languages using Flutter's **idiomatic `gen-l10n` ARB pipeline**, even
+though only English (`en`) currently ships. The driving goal is centralization: **all user-facing
+copy lives in a single editable file**, `lib/l10n/app_en.arb`, so wording can be tweaked without
+hunting through widgets.
+
+* **Single source of copy**: [lib/l10n/app_en.arb](file:///Users/kyle/Repos/slopcafe_ui/lib/l10n/app_en.arb)
+  — the template ARB. Edit values here to change any in-app text. Plurals (e.g. `documentCount`,
+  `searchResultCount`) use ICU syntax; placeholders (`{count}`, `{error}`, `{version}`) are typed in
+  the `@key` metadata. A few notable conventions: `searchSuggestionSeeds` is a comma-separated list
+  split at runtime into the Search idle chips; `revokeConfirmWord` is the word an operator must type
+  to confirm a document revoke; trailing/leading spaces in `cascadingDestruction`,
+  `typeToConfirmPrefix`, and `typeToConfirmSuffix` are intentional (they sit next to styled spans).
+* **Config**: [l10n.yaml](file:///Users/kyle/Repos/slopcafe_ui/l10n.yaml) (arb-dir `lib/l10n`,
+  output class `AppLocalizations`, `nullable-getter: false`). `pubspec.yaml` sets `generate: true`.
+* **Generated code** (committed, **do not hand-edit**): `lib/l10n/app_localizations.dart` +
+  `app_localizations_en.dart`. Regenerate after editing any ARB with **`flutter gen-l10n`** (also
+  runs on `flutter pub get`).
+* **Access pattern**: call sites read copy via the `context.l10n` extension defined in
+  [lib/l10n/l10n.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/l10n/l10n.dart) — e.g.
+  `context.l10n.searchTitle`, `context.l10n.documentCount(n)`. In `async` methods, capture
+  `final l10n = context.l10n;` *before* the first `await` to avoid `use_build_context_synchronously`.
+* **Wiring**: `MaterialApp` in `main.dart` registers `AppLocalizations.localizationsDelegates` /
+  `supportedLocales` and sets the OS title via `onGenerateTitle`.
+* **Context-less layers**: `lib/core/format.dart` helpers `relTime(l10n, date)` and `greeting(l10n)`
+  take an `AppLocalizations`; byte/date formatting (`fmtBytes`, `fmtDate`) and separators stay
+  locale-neutral. The `api_client` 401 handler intentionally carries **no** copy — the UI layer
+  supplies the localized `tokenRejectedDetail`.
+* **Adding a language**: copy `app_en.arb` to `app_<locale>.arb` (e.g. `app_es.arb`), translate the
+  values, run `flutter gen-l10n`. No Dart changes required.
+
+---
+
 ## 📂 Codebase Map & Key Functionalities
 
 Below is the directory mapping of the core functionalities within the `lib/` directory:
@@ -41,6 +77,7 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
 ### 1. Entry & Bootstrapping
 * **[lib/main.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/main.dart)**
   * Initializes the `ProviderScope`, builds the `MaterialApp` (Craft light/dark themes, `ThemeMode.system`), and runs the application.
+  * Registers the localization delegates (`AppLocalizations.localizationsDelegates` / `supportedLocales`) and sets the OS task-switcher title via `onGenerateTitle` (localized `appTitle`).
   * Contains `RootGate`: the first-launch gate that routes to `SettingsScreen` when the deployment is unconfigured (no Base URL/Operator Token in secure storage), otherwise to `AppShell`.
 * **[lib/screens/app_shell.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/app_shell.dart)**
   * The three-tab shell: an `IndexedStack` of Library / Search / Operate beneath a floating pill tab bar.
@@ -49,7 +86,7 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
 ### 2. Core Services
 * **[lib/core/api_client.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/api_client.dart)**
   * Sets up the global `dioProvider` and defines custom interceptors.
-  * Implements `connectionStateProvider` to track whether the app is in `connected`, `disconnected`, or `unauthorized` states.
+  * Implements `connectionStateProvider` to track whether the app is in `connected`, `disconnected`, or `unauthorized` states. On a 401 it flips to `unauthorized` **without** a copy string — `errorMessage` stays a carrier for any future server-supplied detail, and the UI layer renders the localized `tokenRejectedDetail` fallback (this service has no `BuildContext`).
   * Appends authorization headers dynamically to all requests sent to the configured Base URL.
 * **[lib/core/secure_storage.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/secure_storage.dart)**
   * Wraps `flutter_secure_storage` to encrypt and store the API Base URL and Operator Token.
@@ -63,7 +100,8 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
 * **[lib/core/design/typography.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/design/typography.dart)**
   * `AppText` — named serif/sans/mono text styles (system-font fallback stacks) + the Material `TextTheme` builder.
 * **[lib/core/format.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/format.dart)**
-  * Shared display formatters: `fmtBytes`, `fmtDate`, `relTime`, `greeting`, `titleCase` (tag/collection display names).
+  * Shared display formatters: `fmtBytes`, `fmtDate`, `relTime`, `greeting`, `titleCase` (tag/collection display names). The copy-bearing helpers take an `AppLocalizations`: `relTime(l10n, date)` and `greeting(l10n)`; the rest stay locale-neutral.
+* **[lib/l10n/](file:///Users/kyle/Repos/slopcafe_ui/lib/l10n/)** — localization. `app_en.arb` (the single editable copy file), `l10n.dart` (the `context.l10n` extension), and the generated `app_localizations*.dart`. See the **Localization (i18n)** section above.
 
 ### 3. Data Models
 * **[lib/models/document.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/models/document.dart)**

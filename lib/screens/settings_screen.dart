@@ -6,6 +6,7 @@ import '../core/api_client.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/secure_storage.dart';
+import '../l10n/l10n.dart';
 import '../widgets/app_button.dart';
 import '../widgets/cafe_logo.dart';
 import '../widgets/section_header.dart';
@@ -64,6 +65,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _testConnection() async {
     if (!_formKey.currentState!.validate()) return;
+    final l10n = context.l10n;
     setState(() {
       _testingConnection = true;
       _testResult = null;
@@ -87,10 +89,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (healthResponse.statusCode == 200 && authResponse.statusCode == 200) {
         setState(() {
           _resultIsError = false;
-          _testResult =
-              'Connection successful!\n'
-              'Sanitizer version: ${healthResponse.data['sanitizer_version']}\n'
-              'Storage cap: ${healthResponse.data['storage_cap_bytes']} bytes';
+          _testResult = l10n.connectionSuccessResult(
+            '${healthResponse.data['sanitizer_version']}',
+            '${healthResponse.data['storage_cap_bytes']}',
+          );
         });
         ref
             .read(connectionStateProvider.notifier)
@@ -98,13 +100,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       } else {
         setState(() {
           _resultIsError = true;
-          _testResult = 'Connection probe failed with unexpected codes.';
+          _testResult = l10n.connectionProbeFailed;
         });
       }
     } catch (e) {
       setState(() {
         _resultIsError = true;
-        _testResult = 'Connection failed: ${e.toString()}';
+        _testResult = l10n.connectionFailed(e.toString());
       });
     } finally {
       if (mounted) {
@@ -117,12 +119,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _saveSettings() async {
     if (!_formKey.currentState!.validate()) return;
+    final l10n = context.l10n;
     await SecureStorageService.instance.saveConnectionDetails(
       baseUrl: _urlController.text,
       operatorToken: _tokenController.text,
     );
     if (!mounted) return;
-    showToast(context, 'Connection saved');
+    showToast(context, l10n.connectionSaved);
     final onSaved = widget.onSaved;
     if (onSaved != null) {
       onSaved();
@@ -132,6 +135,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _clearAll() async {
+    final l10n = context.l10n;
     await SecureStorageService.instance.clearAll();
     _urlController.clear();
     _tokenController.clear();
@@ -141,12 +145,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _testResult = null;
       _resultIsError = false;
     });
-    showToast(context, 'Secure storage cleared');
+    showToast(context, l10n.secureStorageCleared);
   }
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l10n = context.l10n;
     final connectionState = ref.watch(connectionStateProvider);
     final isUnauthorized =
         connectionState.status == ConnectionStatus.unauthorized;
@@ -155,7 +160,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       backgroundColor: c.bg,
       appBar: AppBar(
         leading: const BackButton(),
-        title: const Text('Connection'),
+        title: Text(l10n.connectionTitle),
       ),
       body: Form(
         key: _formKey,
@@ -170,38 +175,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             if (isUnauthorized) ...[
               _UnauthorizedBanner(
                 message:
-                    connectionState.errorMessage ??
-                    'Operator token was rejected.',
+                    connectionState.errorMessage ?? l10n.tokenRejectedDetail,
               ),
               const SizedBox(height: AppSpacing.lg),
             ],
             _IntroCard(),
             const SizedBox(height: AppSpacing.xxl),
-            SectionHeader('Credentials'),
-            _FieldLabel('Base URL'),
+            SectionHeader(l10n.credentialsSection),
+            _FieldLabel(l10n.baseUrlLabel),
             const SizedBox(height: AppSpacing.sm),
             TextFormField(
               controller: _urlController,
               keyboardType: TextInputType.url,
               autocorrect: false,
               style: AppText.body.copyWith(color: c.text),
-              decoration: const InputDecoration(
-                hintText: 'https://agent-web-host.skylled.workers.dev',
-                prefixIcon: Icon(Icons.link),
+              decoration: InputDecoration(
+                hintText: l10n.baseUrlHint,
+                prefixIcon: const Icon(Icons.link),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a Base URL';
+                  return l10n.baseUrlRequired;
                 }
                 if (!value.startsWith('http://') &&
                     !value.startsWith('https://')) {
-                  return 'Must start with http:// or https://';
+                  return l10n.baseUrlInvalidScheme;
                 }
                 return null;
               },
             ),
             const SizedBox(height: AppSpacing.lg),
-            _FieldLabel('Operator Token'),
+            _FieldLabel(l10n.operatorTokenLabel),
             const SizedBox(height: AppSpacing.sm),
             TextFormField(
               controller: _tokenController,
@@ -210,10 +214,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               enableSuggestions: false,
               style: AppText.mono.copyWith(color: c.text),
               decoration: InputDecoration(
-                hintText: 'Operator-level admin token',
+                hintText: l10n.operatorTokenHint,
                 prefixIcon: const Icon(Icons.key_outlined),
                 suffixIcon: IconButton(
-                  tooltip: _obscureToken ? 'Show token' : 'Hide token',
+                  tooltip: _obscureToken ? l10n.showToken : l10n.hideToken,
                   icon: Icon(
                     _obscureToken
                         ? Icons.visibility_outlined
@@ -226,7 +230,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter the Operator token';
+                  return l10n.operatorTokenRequired;
                 }
                 return null;
               },
@@ -236,7 +240,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: [
                 Expanded(
                   child: AppButton(
-                    _testingConnection ? 'Testing…' : 'Test Connection',
+                    _testingConnection
+                        ? l10n.testingConnection
+                        : l10n.testConnection,
                     variant: AppBtnVariant.outline,
                     icon: Icons.bolt,
                     expand: true,
@@ -246,7 +252,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: AppButton(
-                    'Save & Continue',
+                    l10n.saveAndContinue,
                     variant: AppBtnVariant.primary,
                     icon: Icons.check,
                     expand: true,
@@ -303,10 +309,10 @@ class _IntroCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Eyebrow('The Pass', color: c.clayD),
+                    Eyebrow(context.l10n.thePass, color: c.clayD),
                     const SizedBox(height: 4),
                     Text(
-                      'Open the line',
+                      context.l10n.openTheLine,
                       style: AppText.headline.copyWith(color: c.text),
                     ),
                   ],
@@ -316,9 +322,7 @@ class _IntroCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'Point the operator app at your Slopcafe deployment and provide an '
-            'admin token. Credentials are stored only on this device in secure '
-            'storage.',
+            context.l10n.connectionIntroBody,
             style: AppText.body.copyWith(color: c.textDim),
           ),
         ],
@@ -367,7 +371,7 @@ class _UnauthorizedBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Token rejected',
+                  context.l10n.tokenRejectedHeading,
                   style: AppText.titleSm.copyWith(color: c.red),
                 ),
                 const SizedBox(height: 3),
@@ -413,7 +417,8 @@ class _ResultPanel extends StatelessWidget {
               ),
               const SizedBox(width: 7),
               Text(
-                (isError ? 'Probe failed' : 'Probe result').toUpperCase(),
+                (isError ? context.l10n.probeFailed : context.l10n.probeResult)
+                    .toUpperCase(),
                 style: AppText.monoLabel.copyWith(color: accent),
               ),
             ],
@@ -445,18 +450,17 @@ class _DangerCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Clear secure storage',
+            context.l10n.clearSecureStorageTitle,
             style: AppText.title.copyWith(color: c.text),
           ),
           const SizedBox(height: 4),
           Text(
-            'Removes the saved Base URL and Operator Token from this device and '
-            'resets the connection state.',
+            context.l10n.clearSecureStorageBody,
             style: AppText.small.copyWith(color: c.textDim),
           ),
           const SizedBox(height: AppSpacing.md),
           AppButton(
-            'Clear Secure Storage',
+            context.l10n.clearSecureStorageButton,
             variant: AppBtnVariant.danger,
             icon: Icons.delete_outline,
             onPressed: onClear,

@@ -1,0 +1,13 @@
+# Configuration for Flutter's gen-l10n localization pipeline.
+# Run automatically by `flutter pub get` / `flutter run` (pubspec `generate: true`),
+# or on demand via `flutter gen-l10n`.
+#
+# To add a language: copy lib/l10n/app_en.arb to lib/l10n/app_<locale>.arb
+# (e.g. app_es.arb), translate the values, and Flutter regenerates the rest.
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+# Non-nullable AppLocalizations.of(context) — paired with the context.l10n
+# extension in lib/l10n/l10n.dart so call sites read `context.l10n.someString`.
+nullable-getter: false

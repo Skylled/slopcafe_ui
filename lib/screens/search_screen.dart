@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
+import '../l10n/l10n.dart';
 import '../models/document.dart';
 import '../providers/document_provider.dart';
 import '../widgets/pill.dart';
@@ -32,15 +33,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// The committed (debounced) query that actually drives the provider.
   String _searchQuery = '';
   Timer? _debounceTimer;
-
-  /// Static seed suggestions, blended with a couple of real aggregated tags.
-  static const List<String> _staticSuggestions = [
-    'sanitizer',
-    'recipe',
-    'oauth',
-    'espresso',
-    'revoke',
-  ];
 
   @override
   void initState() {
@@ -124,7 +116,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Search',
+                  context.l10n.searchTitle,
                   style: AppText.display.copyWith(fontSize: 32, color: c.text),
                 ),
                 const SizedBox(height: 14),
@@ -154,15 +146,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Widget _buildSuggestions() {
     final c = context.colors;
-    // A few static seeds plus a couple of real tags from what we've loaded.
+    // A few static seeds (editable via the `searchSuggestionSeeds` ARB string)
+    // plus a couple of real tags from what we've loaded.
+    final staticSuggestions = context.l10n.searchSuggestionSeeds
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
     final tags = ref.watch(
       documentsListProvider.select((s) => s.aggregatedTags),
     );
     final tagSuggestions = tags
-        .where((t) => t.trim().isNotEmpty && !_staticSuggestions.contains(t))
+        .where((t) => t.trim().isNotEmpty && !staticSuggestions.contains(t))
         .take(2)
         .toList();
-    final suggestions = [..._staticSuggestions, ...tagSuggestions];
+    final suggestions = [...staticSuggestions, ...tagSuggestions];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
@@ -177,7 +175,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(2, 8, 2, 12),
             child: Text(
-              'TRY SEARCHING',
+              context.l10n.trySearching,
               style: AppText.label.copyWith(
                 fontSize: 12.5,
                 letterSpacing: 0.8,
@@ -232,7 +230,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               return Padding(
                 padding: const EdgeInsets.fromLTRB(2, 6, 2, 14),
                 child: Text(
-                  '${hits.length} result${hits.length == 1 ? '' : 's'} · ranked by relevance',
+                  context.l10n.searchResultCount(hits.length),
                   style: AppText.small.copyWith(color: c.textFaint),
                 ),
               );
@@ -316,7 +314,7 @@ class _SearchField extends StatelessWidget {
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                hintText: 'Titles, body, tags, slugs…',
+                hintText: context.l10n.searchHint,
                 hintStyle: AppText.bodyLg.copyWith(
                   fontSize: 16,
                   color: c.textFaint,
@@ -594,13 +592,13 @@ class _EmptyState extends StatelessWidget {
           Icon(Icons.search, size: 30, color: c.textFaint),
           const SizedBox(height: 12),
           Text(
-            'Nothing matches “$query”.',
+            context.l10n.searchNoMatch(query),
             textAlign: TextAlign.center,
             style: AppText.titleSerif.copyWith(fontSize: 20, color: c.text),
           ),
           const SizedBox(height: 6),
           Text(
-            'Try a different keyword, tag, or slug.',
+            context.l10n.searchNoMatchHint,
             textAlign: TextAlign.center,
             style: AppText.small.copyWith(color: c.textFaint),
           ),
@@ -648,7 +646,7 @@ class _ErrorState extends StatelessWidget {
           Icon(Icons.warning_amber_rounded, size: 30, color: c.red),
           const SizedBox(height: 12),
           Text(
-            'Search hit a snag.',
+            context.l10n.searchError,
             textAlign: TextAlign.center,
             style: AppText.titleSerif.copyWith(fontSize: 20, color: c.text),
           ),
@@ -682,7 +680,7 @@ class _CeilingHint extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Showing the top 50 plates. Refine your search to find the rest.',
+              context.l10n.searchCeilingHint,
               style: AppText.small.copyWith(color: c.textDim),
             ),
           ),

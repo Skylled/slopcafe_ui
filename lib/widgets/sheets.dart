@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
+import '../l10n/l10n.dart';
 import 'app_button.dart';
 import 'toast.dart';
 
@@ -321,9 +322,10 @@ class _SecretSheetState extends State<SecretSheet> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l10n = context.l10n;
     return AppSheet(
       title: widget.title,
-      subtitle: 'Shown once · never retrievable',
+      subtitle: l10n.shownOnce,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -342,8 +344,7 @@ class _SecretSheetState extends State<SecretSheet> {
                 const SizedBox(width: 9),
                 Expanded(
                   child: Text(
-                    'This is the only time this secret is shown. Store it now — '
-                    'it is not kept in plaintext.',
+                    l10n.secretWarning,
                     style: AppText.small.copyWith(
                       fontWeight: FontWeight.w600,
                       color: c.text,
@@ -375,12 +376,11 @@ class _SecretSheetState extends State<SecretSheet> {
           _Check(
             value: _stored,
             onChanged: (v) => setState(() => _stored = v),
-            label:
-                "I've securely stored this secret. I understand it can't be shown again.",
+            label: l10n.secretStoredAck,
           ),
           const SizedBox(height: 16),
           AppButton(
-            'Dismiss & purge secret',
+            l10n.dismissPurgeSecret,
             variant: AppBtnVariant.danger,
             icon: Icons.check,
             expand: true,
@@ -496,9 +496,10 @@ class _ConfirmSheetState extends State<_ConfirmSheet> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l10n = context.l10n;
     return AppSheet(
       title: widget.title,
-      subtitle: 'Confirm action',
+      subtitle: l10n.confirmAction,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -512,7 +513,7 @@ class _ConfirmSheetState extends State<_ConfirmSheet> {
               TextSpan(
                 style: AppText.small.copyWith(color: c.textDim),
                 children: [
-                  const TextSpan(text: 'Type '),
+                  TextSpan(text: l10n.typeToConfirmPrefix),
                   TextSpan(
                     text: widget.confirmWord,
                     style: AppText.mono.copyWith(
@@ -520,7 +521,7 @@ class _ConfirmSheetState extends State<_ConfirmSheet> {
                       color: c.red,
                     ),
                   ),
-                  const TextSpan(text: ' to confirm:'),
+                  TextSpan(text: l10n.typeToConfirmSuffix),
                 ],
               ),
             ),
@@ -538,7 +539,7 @@ class _ConfirmSheetState extends State<_ConfirmSheet> {
             children: [
               Expanded(
                 child: AppButton(
-                  'Cancel',
+                  l10n.cancel,
                   variant: AppBtnVariant.outline,
                   expand: true,
                   onPressed: () => Navigator.of(context).pop(false),

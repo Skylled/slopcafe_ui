@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/format.dart';
+import '../l10n/l10n.dart';
 import '../models/document.dart';
 import 'pill.dart';
 import 'press_card.dart';
@@ -31,6 +32,7 @@ class DocFeedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l10n = context.l10n;
     final isRevoked = doc.isRevoked;
     final isPublic = doc.visibility == 'public';
     final titleStyle = featured
@@ -56,7 +58,7 @@ class DocFeedCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    doc.title ?? '[Untitled]',
+                    doc.title ?? l10n.untitled,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: titleStyle.copyWith(
@@ -69,10 +71,10 @@ class DocFeedCard extends StatelessWidget {
                 // Visibility marker pinned to the top-right, optically aligned
                 // with the title's first line.
                 if (isRevoked)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 2),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
                     child: Pill(
-                      'REVOKED',
+                      l10n.revokedUpper,
                       tone: PillTone.red,
                       icon: Icons.block,
                       small: true,
@@ -105,7 +107,7 @@ class DocFeedCard extends StatelessWidget {
               children: [
                 Flexible(
                   child: Text(
-                    doc.createdByName ?? 'Unknown agent',
+                    doc.createdByName ?? l10n.unknownAgent,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppText.small.copyWith(
@@ -117,13 +119,13 @@ class DocFeedCard extends StatelessWidget {
                 if (doc.currentVer != null) ...[
                   const MetaDot(),
                   Text(
-                    'v${doc.currentVer}',
+                    l10n.versionLabel('${doc.currentVer}'),
                     style: AppText.monoLabel.copyWith(color: c.textFaint),
                   ),
                 ],
                 const MetaDot(),
                 Text(
-                  relTime(doc.createdAt),
+                  relTime(l10n, doc.createdAt),
                   style: AppText.small.copyWith(color: c.textFaint),
                 ),
               ],

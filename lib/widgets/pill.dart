@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
+import '../l10n/l10n.dart';
 import 'press_card.dart';
 
 enum PillTone { neutral, clay, honey, red, green, solid }
@@ -90,7 +91,7 @@ class VisBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final isPublic = visibility == 'public';
     return Pill(
-      isPublic ? 'PUBLIC' : 'PRIVATE',
+      isPublic ? context.l10n.visibilityPublic : context.l10n.visibilityPrivate,
       tone: isPublic ? PillTone.honey : PillTone.neutral,
       icon: isPublic ? Icons.public : Icons.lock_outline,
       small: small,

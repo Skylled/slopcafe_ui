@@ -8,6 +8,7 @@ import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/format.dart';
 import '../core/secure_storage.dart';
+import '../l10n/l10n.dart';
 import '../models/agent.dart';
 import '../models/document.dart';
 import '../providers/agent_provider.dart';
@@ -93,6 +94,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
   // Kitchen: mint agent (name -> createAgent -> one-shot secret).
   // -------------------------------------------------------------------------
   Future<void> _showNewAgentSheet() async {
+    final l10n = context.l10n;
     await showAppSheet<void>(
       context,
       builder: (sheetCtx) => _NewAgentSheet(
@@ -104,10 +106,10 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
           if (!mounted) return;
           await showSecretSheet(
             context,
-            title: 'Agent hired',
+            title: l10n.agentHiredTitle,
             fields: [
-              SecretField('Agent ID', mint.agentId),
-              SecretField('Plaintext bearer key', mint.key, secret: true),
+              SecretField(l10n.agentIdLabel, mint.agentId),
+              SecretField(l10n.plaintextBearerKeyLabel, mint.key, secret: true),
             ],
             note: mint.note.isEmpty ? null : mint.note,
           );
@@ -155,6 +157,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l10n = context.l10n;
     final agentsState = ref.watch(agentsListProvider);
     final docsState = ref.watch(documentsListProvider);
 
@@ -180,9 +183,9 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
         ),
         children: [
           // ---- Header ----
-          const Eyebrow('Back of house'),
+          Eyebrow(l10n.backOfHouse),
           const SizedBox(height: 3),
-          Text('The Pass', style: AppText.display.copyWith(color: c.text)),
+          Text(l10n.thePass, style: AppText.display.copyWith(color: c.text)),
           const SizedBox(height: 18),
 
           // ---- Stat grid (2x2) ----
@@ -191,18 +194,18 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
               Expanded(
                 child: OpStat(
                   icon: Icons.description_outlined,
-                  label: 'Live documents',
+                  label: l10n.liveDocuments,
                   value: '$liveDocs',
-                  sub: '$publicDocs public',
+                  sub: l10n.publicCountSub(publicDocs),
                 ),
               ),
               const SizedBox(width: 11),
               Expanded(
                 child: OpStat(
                   icon: Icons.person_outline,
-                  label: 'Active agents',
+                  label: l10n.activeAgents,
                   value: '$activeAgents',
-                  sub: 'of ${agents.length}',
+                  sub: l10n.ofCountSub(agents.length),
                 ),
               ),
             ],
@@ -213,18 +216,20 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
               Expanded(
                 child: OpStat(
                   icon: Icons.key_outlined,
-                  label: 'Active keys',
+                  label: l10n.activeKeys,
                   value: '$activeKeys',
-                  sub: '$mintedKeys minted',
+                  sub: l10n.mintedSub(mintedKeys),
                 ),
               ),
               const SizedBox(width: 11),
               Expanded(
                 child: OpStat(
                   icon: Icons.shield_outlined,
-                  label: 'Sanitizer',
+                  label: l10n.sanitizer,
                   value: _sanitizerVersion ?? '—',
-                  sub: _sanitizerVersion != null ? 'all green' : 'unavailable',
+                  sub: _sanitizerVersion != null
+                      ? l10n.allGreen
+                      : l10n.unavailable,
                   mono: true,
                 ),
               ),
@@ -278,7 +283,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
                   Icon(Icons.bolt, size: 15, color: c.honeyD),
                   const SizedBox(width: 7),
                   Text(
-                    'R2 storage',
+                    context.l10n.r2Storage,
                     style: AppText.titleSm.copyWith(color: c.text),
                   ),
                 ],
@@ -286,7 +291,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
               Text(
                 used != null
                     ? '${fmtBytes(used)} / ${fmtBytes(cap)}'
-                    : 'cap ${fmtBytes(cap)}',
+                    : context.l10n.storageCapLabel(fmtBytes(cap)),
                 style: AppText.mono.copyWith(color: c.textDim),
               ),
             ],
@@ -313,7 +318,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
           if (pct == null) ...[
             const SizedBox(height: 8),
             Text(
-              'Usage figure unavailable.',
+              context.l10n.usageUnavailable,
               style: AppText.small.copyWith(color: c.textFaint),
             ),
           ],
@@ -326,6 +331,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
   // Kitchen tab
   // -------------------------------------------------------------------------
   Widget _buildKitchen(AppColors c, AgentsListState state) {
+    final l10n = context.l10n;
     final agents = state.agents;
 
     return Column(
@@ -338,7 +344,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${agents.length} agents',
+                l10n.agentCount(agents.length),
                 style: AppText.label.copyWith(
                   fontSize: 12.5,
                   color: c.textFaint,
@@ -354,7 +360,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
                     Icon(Icons.add, size: 16, color: c.clayD),
                     const SizedBox(width: 6),
                     Text(
-                      'New agent',
+                      l10n.newAgent,
                       style: AppText.title.copyWith(
                         fontSize: 13.5,
                         color: c.clayD,
@@ -387,12 +393,12 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Unbound OAuth clients',
+                        l10n.unboundOAuthClients,
                         style: AppText.titleSm.copyWith(color: c.text),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Global clients not tied to any agent profile.',
+                        l10n.unboundOAuthSubtitle,
                         style: AppText.small.copyWith(color: c.textFaint),
                       ),
                     ],
@@ -410,17 +416,13 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
         else if (agents.isEmpty && state.hasError)
           _errorTile(
             c,
-            'Could not load the fleet.',
+            l10n.couldNotLoadFleet,
             state.errorMessage,
             () =>
                 ref.read(agentsListProvider.notifier).loadNextPage(clear: true),
           )
         else if (agents.isEmpty)
-          _emptyTile(
-            c,
-            Icons.person_outline,
-            'No agents on the line yet. Hire one to begin.',
-          )
+          _emptyTile(c, Icons.person_outline, l10n.noAgentsYet)
         else
           ...List.generate(agents.length, (i) {
             return Padding(
@@ -442,6 +444,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
   // Documents tab
   // -------------------------------------------------------------------------
   Widget _buildDocuments(AppColors c, DocumentsListState state) {
+    final l10n = context.l10n;
     final all = state.documents;
     final docs = _includeRevoked
         ? all
@@ -456,7 +459,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'All documents',
+                l10n.allDocuments,
                 style: AppText.label.copyWith(
                   fontSize: 12.5,
                   color: c.textFaint,
@@ -478,7 +481,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Include revoked',
+                      l10n.includeRevoked,
                       style: AppText.title.copyWith(
                         fontSize: 13,
                         color: _includeRevoked ? c.clayD : c.textDim,
@@ -496,14 +499,14 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
         else if (docs.isEmpty && state.hasError)
           _errorTile(
             c,
-            'Could not load documents.',
+            l10n.couldNotLoadDocuments,
             state.errorMessage,
             () => ref
                 .read(documentsListProvider.notifier)
                 .loadNextPage(clear: true),
           )
         else if (docs.isEmpty)
-          _emptyTile(c, Icons.description_outlined, 'No documents to show.')
+          _emptyTile(c, Icons.description_outlined, l10n.noDocuments)
         else
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -604,7 +607,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
           ],
           const SizedBox(height: 16),
           AppButton(
-            'Retry',
+            context.l10n.retry,
             variant: AppBtnVariant.outline,
             icon: Icons.refresh,
             onPressed: onRetry,
@@ -663,9 +666,9 @@ class _Segmented extends StatelessWidget {
       ),
       child: Row(
         children: [
-          seg(_OpSeg.kitchen, 'The Kitchen'),
+          seg(_OpSeg.kitchen, context.l10n.segKitchen),
           const SizedBox(width: 3),
-          seg(_OpSeg.docs, 'Documents'),
+          seg(_OpSeg.docs, context.l10n.segDocuments),
         ],
       ),
     );
@@ -782,6 +785,7 @@ class _AdminDocRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l10n = context.l10n;
     final revoked = doc.isRevoked;
     final (tintBg, tintFg) = c.tagTint(
       doc.tags.isEmpty ? null : doc.tags.first,
@@ -822,7 +826,7 @@ class _AdminDocRow extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            doc.title ?? '[Untitled]',
+                            doc.title ?? l10n.untitled,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: AppText.body.copyWith(
@@ -837,8 +841,8 @@ class _AdminDocRow extends StatelessWidget {
                           const SizedBox(height: 1),
                           Text(
                             revoked
-                                ? 'revoked'
-                                : 'v${doc.currentVer ?? 1} · ${fmtBytes(doc.currentSize)}',
+                                ? l10n.revokedLower
+                                : '${l10n.versionLabel('${doc.currentVer ?? 1}')} · ${fmtBytes(doc.currentSize)}',
                             style: AppText.monoLabel.copyWith(
                               fontSize: 11,
                               color: c.textFaint,
@@ -853,7 +857,7 @@ class _AdminDocRow extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             if (revoked)
-              Pill('Revoked', tone: PillTone.red, small: true)
+              Pill(l10n.revokedBadge, tone: PillTone.red, small: true)
             else ...[
               Icon(
                 doc.visibility == 'public' ? Icons.public : Icons.lock_outline,
@@ -865,7 +869,7 @@ class _AdminDocRow extends StatelessWidget {
                 Icons.more_horiz,
                 size: 18,
                 onPressed: onMore,
-                tooltip: 'Document actions',
+                tooltip: l10n.documentActionsTooltip,
               ),
             ],
           ],
@@ -898,13 +902,14 @@ class _NewAgentSheetState extends State<_NewAgentSheet> {
   }
 
   Future<void> _submit() async {
+    final l10n = context.l10n;
     final name = _controller.text.trim();
     if (name.isEmpty) {
-      setState(() => _error = 'Please enter a name.');
+      setState(() => _error = l10n.nameRequired);
       return;
     }
     if (name.length > 200) {
-      setState(() => _error = 'Name must be 200 characters or less.');
+      setState(() => _error = l10n.nameTooLong);
       return;
     }
     setState(() {
@@ -916,7 +921,7 @@ class _NewAgentSheetState extends State<_NewAgentSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _submitting = false);
-        showToast(context, 'Failed to hire agent: $e', danger: true);
+        showToast(context, l10n.failedHireAgent('$e'), danger: true);
       }
     }
   }
@@ -924,21 +929,21 @@ class _NewAgentSheetState extends State<_NewAgentSheet> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l10n = context.l10n;
     return AppSheet(
-      title: 'Hire an agent',
-      subtitle: 'New profile',
+      title: l10n.hireAgentTitle,
+      subtitle: l10n.newProfile,
       icon: Icons.person_outline,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Creates a logical agent profile and mints its initial bearer key. '
-            'The key is shown only once.',
+            l10n.hireAgentBody,
             style: AppText.body.copyWith(color: c.textDim),
           ),
           const SizedBox(height: 16),
           Text(
-            'AGENT NAME',
+            l10n.agentNameLabel,
             style: AppText.label.copyWith(fontSize: 11, color: c.textFaint),
           ),
           const SizedBox(height: 6),
@@ -947,7 +952,7 @@ class _NewAgentSheetState extends State<_NewAgentSheet> {
             enabled: !_submitting,
             autofocus: true,
             style: AppText.body.copyWith(color: c.text),
-            decoration: const InputDecoration(hintText: 'e.g. Claude Writer'),
+            decoration: InputDecoration(hintText: l10n.agentNameHint),
             onSubmitted: (_) => _submit(),
           ),
           if (_error != null) ...[
@@ -956,7 +961,7 @@ class _NewAgentSheetState extends State<_NewAgentSheet> {
           ],
           const SizedBox(height: 18),
           AppButton(
-            _submitting ? 'Hiring…' : 'Hire agent',
+            _submitting ? l10n.hiring : l10n.hireAgent,
             variant: AppBtnVariant.primary,
             icon: Icons.add,
             expand: true,
@@ -1002,6 +1007,7 @@ class _UnboundClientsSheetState extends State<_UnboundClientsSheet> {
   }
 
   Future<void> _mint() async {
+    final l10n = context.l10n;
     setState(() => _busy = true);
     try {
       final res = await widget.ref
@@ -1012,21 +1018,17 @@ class _UnboundClientsSheetState extends State<_UnboundClientsSheet> {
       if (!widget.host.mounted) return;
       await showSecretSheet(
         widget.host,
-        title: 'OAuth client created',
+        title: l10n.oauthClientCreated,
         fields: [
-          SecretField('Client ID', res.clientId),
-          SecretField(
-            'Client secret (one-shot)',
-            res.clientSecret,
-            secret: true,
-          ),
-          SecretField('MCP connection URL', res.mcpUrl),
+          SecretField(l10n.clientIdLabel, res.clientId),
+          SecretField(l10n.clientSecretLabel, res.clientSecret, secret: true),
+          SecretField(l10n.mcpUrlLabel, res.mcpUrl),
         ],
         note: res.note.isEmpty ? null : res.note,
       );
     } catch (e) {
       if (mounted) {
-        showToast(context, 'Failed to mint unbound client: $e', danger: true);
+        showToast(context, l10n.failedMintUnbound('$e'), danger: true);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -1034,14 +1036,12 @@ class _UnboundClientsSheetState extends State<_UnboundClientsSheet> {
   }
 
   Future<void> _delete(String clientId) async {
+    final l10n = context.l10n;
     final confirmed = await showConfirmSheet(
       widget.host,
-      title: 'Delete unbound client',
-      body: Text(
-        'Delete unbound OAuth client "$clientId"? This instantly revokes all '
-        'live sessions and tokens issued under it.',
-      ),
-      cta: 'Delete client',
+      title: l10n.deleteUnboundTitle,
+      body: Text(l10n.deleteUnboundBody(clientId)),
+      cta: l10n.deleteClient,
     );
     if (!confirmed) return;
 
@@ -1053,11 +1053,11 @@ class _UnboundClientsSheetState extends State<_UnboundClientsSheet> {
       await SecureStorageService.instance.removeUnboundOAuthClientId(clientId);
       await _load();
       if (widget.host.mounted) {
-        showToast(widget.host, 'Unbound client deleted.');
+        showToast(widget.host, l10n.unboundClientDeleted);
       }
     } catch (e) {
       if (mounted) {
-        showToast(context, 'Failed to delete client: $e', danger: true);
+        showToast(context, l10n.failedDeleteClient('$e'), danger: true);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -1067,21 +1067,21 @@ class _UnboundClientsSheetState extends State<_UnboundClientsSheet> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l10n = context.l10n;
     return AppSheet(
-      title: 'Unbound OAuth clients',
-      subtitle: 'Global connections',
+      title: l10n.unboundOAuthClients,
+      subtitle: l10n.globalConnections,
       icon: Icons.link,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Unbound clients are not tied to any single agent profile. They let '
-            'operators authenticate valid agent flows dynamically.',
+            l10n.unboundClientsBody,
             style: AppText.body.copyWith(color: c.textDim),
           ),
           const SizedBox(height: 16),
           AppButton(
-            _busy ? 'Working…' : 'Mint unbound client',
+            _busy ? l10n.working : l10n.mintUnboundClient,
             variant: AppBtnVariant.primary,
             icon: Icons.add,
             expand: true,
@@ -1089,7 +1089,7 @@ class _UnboundClientsSheetState extends State<_UnboundClientsSheet> {
           ),
           const SizedBox(height: 20),
           Text(
-            'MINTED ON THIS DEVICE',
+            l10n.mintedOnThisDevice,
             style: AppText.label.copyWith(fontSize: 11, color: c.textFaint),
           ),
           const SizedBox(height: 10),
@@ -1111,7 +1111,7 @@ class _UnboundClientsSheetState extends State<_UnboundClientsSheet> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 14),
               child: Text(
-                'No unbound clients recorded on this device.',
+                l10n.noUnboundClients,
                 style: AppText.small.copyWith(
                   fontStyle: FontStyle.italic,
                   color: c.textFaint,
@@ -1148,7 +1148,7 @@ class _UnboundClientsSheetState extends State<_UnboundClientsSheet> {
                       size: 17,
                       color: c.red,
                       onPressed: _busy ? null : () => _delete(id),
-                      tooltip: 'Delete client',
+                      tooltip: l10n.deleteClient,
                     ),
                   ],
                 ),
@@ -1186,6 +1186,7 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
   AgentListing get agent => widget.agent;
 
   Future<void> _mintKey() async {
+    final l10n = context.l10n;
     try {
       final res = await widget.ref
           .read(agentManagerServiceProvider)
@@ -1194,38 +1195,37 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
       if (!widget.host.mounted) return;
       await showSecretSheet(
         widget.host,
-        title: 'Bearer key minted',
-        fields: [SecretField('Key plaintext', res.key, secret: true)],
+        title: l10n.bearerKeyMinted,
+        fields: [SecretField(l10n.keyPlaintextLabel, res.key, secret: true)],
         note: res.note.isEmpty ? null : res.note,
       );
     } catch (e) {
-      if (mounted) showToast(context, 'Failed to mint key: $e', danger: true);
+      if (mounted) showToast(context, l10n.failedMintKey('$e'), danger: true);
     }
   }
 
   Future<void> _revokeKey(AgentKey key) async {
+    final l10n = context.l10n;
     final confirmed = await showConfirmSheet(
       widget.host,
-      title: 'Revoke key',
-      body: Text(
-        'Revoke key "${key.keyPrefix}"? This is irreversible — the worker using '
-        'it is immediately locked out.',
-      ),
-      cta: 'Revoke key',
+      title: l10n.revokeKeyTitle,
+      body: Text(l10n.revokeKeyBody(key.keyPrefix)),
+      cta: l10n.revokeKeyTitle,
     );
     if (!confirmed) return;
     try {
       await widget.ref.read(agentManagerServiceProvider).revokeAgentKey(key.id);
       widget.ref.invalidate(agentKeysProvider(agent.id));
       if (widget.host.mounted) {
-        showToast(widget.host, 'Key ${key.keyPrefix} revoked.');
+        showToast(widget.host, l10n.keyRevoked(key.keyPrefix));
       }
     } catch (e) {
-      if (mounted) showToast(context, 'Failed to revoke key: $e', danger: true);
+      if (mounted) showToast(context, l10n.failedRevokeKey('$e'), danger: true);
     }
   }
 
   Future<void> _mintOAuth() async {
+    final l10n = context.l10n;
     setState(() => _oauthBusy = true);
     try {
       final res = await widget.ref
@@ -1241,15 +1241,11 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
       if (widget.host.mounted) {
         await showSecretSheet(
           widget.host,
-          title: 'OAuth client created',
+          title: l10n.oauthClientCreated,
           fields: [
-            SecretField('Client ID', res.clientId),
-            SecretField(
-              'Client secret (one-shot)',
-              res.clientSecret,
-              secret: true,
-            ),
-            SecretField('MCP connection URL', res.mcpUrl),
+            SecretField(l10n.clientIdLabel, res.clientId),
+            SecretField(l10n.clientSecretLabel, res.clientSecret, secret: true),
+            SecretField(l10n.mcpUrlLabel, res.mcpUrl),
           ],
           note: res.note.isEmpty ? null : res.note,
         );
@@ -1263,11 +1259,11 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
             _existingClientId = data?['client_id'] as String?;
             _oAuthHint = data?['hint'] as String?;
           });
-          showToast(context, 'OAuth client already exists for this agent.');
+          showToast(context, l10n.oauthAlreadyExists);
         }
       } else {
         if (mounted) {
-          showToast(context, 'Failed to mint OAuth client: $e', danger: true);
+          showToast(context, l10n.failedMintOAuth('$e'), danger: true);
         }
       }
     } finally {
@@ -1276,14 +1272,12 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
   }
 
   Future<void> _deleteOAuth(String clientId) async {
+    final l10n = context.l10n;
     final confirmed = await showConfirmSheet(
       widget.host,
-      title: 'Delete OAuth client',
-      body: Text(
-        'Delete OAuth client "$clientId"? This instantly revokes every live '
-        'access and refresh token issued to Claude or external MCP hosts.',
-      ),
-      cta: 'Delete client',
+      title: l10n.deleteOAuthTitle,
+      body: Text(l10n.deleteOAuthBody(clientId)),
+      cta: l10n.deleteClient,
     );
     if (!confirmed) return;
     setState(() => _oauthBusy = true);
@@ -1299,11 +1293,11 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
         });
       }
       if (widget.host.mounted) {
-        showToast(widget.host, 'OAuth client deleted.');
+        showToast(widget.host, l10n.oauthClientDeleted);
       }
     } catch (e) {
       if (mounted) {
-        showToast(context, 'Failed to delete OAuth client: $e', danger: true);
+        showToast(context, l10n.failedDeleteOAuth('$e'), danger: true);
       }
     } finally {
       if (mounted) setState(() => _oauthBusy = false);
@@ -1312,29 +1306,26 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
 
   Future<void> _killAgent() async {
     final c = context.colors;
+    final l10n = context.l10n;
     final confirmed = await showConfirmSheet(
       widget.host,
-      title: 'Kill agent profile',
+      title: l10n.killAgentTitle,
       body: Text.rich(
         TextSpan(
           children: [
             TextSpan(
-              text: 'Cascading destruction. ',
+              text: l10n.cascadingDestruction,
               style: AppText.body.copyWith(
                 fontWeight: FontWeight.w700,
                 color: c.red,
               ),
             ),
-            const TextSpan(
-              text:
-                  'This instantly revokes all bearer keys and deletes the agent\'s '
-                  'OAuth client.',
-            ),
+            TextSpan(text: l10n.killAgentBody),
           ],
         ),
       ),
       confirmWord: agent.name,
-      cta: 'Kill profile',
+      cta: l10n.killProfile,
     );
     if (!confirmed) return;
     try {
@@ -1344,25 +1335,28 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
       if (widget.host.mounted) {
         showToast(
           widget.host,
-          'Agent killed. Revoked ${res['keys_revoked'] ?? 0} key(s), '
-          'deleted ${res['oauth_clients_deleted'] ?? 0} client(s).',
+          l10n.agentKilled(
+            res['keys_revoked'] ?? 0,
+            res['oauth_clients_deleted'] ?? 0,
+          ),
           danger: true,
         );
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      if (mounted) showToast(context, 'Failed to kill agent: $e', danger: true);
+      if (mounted) showToast(context, l10n.failedKillAgent('$e'), danger: true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l10n = context.l10n;
     final keysAsync = ref.watch(agentKeysProvider(agent.id));
 
     return AppSheet(
       title: agent.name,
-      subtitle: 'Agent profile',
+      subtitle: l10n.agentProfile,
       icon: Icons.person_outline,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1386,7 +1380,7 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
                   ),
                 ),
                 Pill(
-                  '${agent.liveDocs} docs',
+                  l10n.docsCountShort(agent.liveDocs),
                   tone: PillTone.neutral,
                   small: true,
                 ),
@@ -1400,7 +1394,7 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
             children: [
               Expanded(
                 child: AppButton(
-                  'Mint key',
+                  l10n.mintKey,
                   variant: AppBtnVariant.primary,
                   icon: Icons.add,
                   small: true,
@@ -1411,7 +1405,7 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
               const SizedBox(width: 10),
               Expanded(
                 child: AppButton(
-                  _oauthBusy ? 'Working…' : 'OAuth client',
+                  _oauthBusy ? l10n.working : l10n.oauthClientButton,
                   variant: AppBtnVariant.outline,
                   icon: Icons.link,
                   small: true,
@@ -1440,7 +1434,7 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
                       Icon(Icons.verified_outlined, size: 16, color: c.green),
                       const SizedBox(width: 7),
                       Text(
-                        'OAuth client registered',
+                        l10n.oauthClientRegistered,
                         style: AppText.titleSm.copyWith(color: c.text),
                       ),
                     ],
@@ -1462,7 +1456,7 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
                   ],
                   const SizedBox(height: 12),
                   AppButton(
-                    'Delete OAuth client',
+                    l10n.deleteOAuthClientButton,
                     variant: AppBtnVariant.danger,
                     icon: Icons.link_off,
                     small: true,
@@ -1478,7 +1472,7 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
 
           const SizedBox(height: 20),
           Text(
-            'API KEYS',
+            l10n.apiKeysLabel,
             style: AppText.label.copyWith(fontSize: 11, color: c.textFaint),
           ),
           const SizedBox(height: 10),
@@ -1489,7 +1483,7 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
               final revoked = result.keys.where((k) => k.isRevoked).toList();
               if (active.isEmpty && revoked.isEmpty) {
                 return Text(
-                  'No keys registered. Mint one to authorize clients.',
+                  l10n.noKeys,
                   style: AppText.small.copyWith(
                     fontStyle: FontStyle.italic,
                     color: c.textFaint,
@@ -1505,7 +1499,7 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'REVOKED AUDIT (${revoked.length})',
+                        l10n.revokedAudit(revoked.length),
                         style: AppText.label.copyWith(
                           fontSize: 10.5,
                           color: c.textFaint,
@@ -1532,14 +1526,14 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
               ),
             ),
             error: (e, _) => Text(
-              'Error fetching keys: $e',
+              l10n.errorFetchingKeys('$e'),
               style: AppText.small.copyWith(color: c.red),
             ),
           ),
 
           const SizedBox(height: 20),
           AppButton(
-            'Kill agent profile',
+            l10n.killAgentTitle,
             variant: AppBtnVariant.danger,
             icon: Icons.delete_outline,
             expand: true,
@@ -1559,6 +1553,7 @@ class _KeyRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l10n = context.l10n;
     final revoked = keyItem.isRevoked;
     return Opacity(
       opacity: revoked ? 0.55 : 1,
@@ -1592,8 +1587,8 @@ class _KeyRow extends StatelessWidget {
                   const SizedBox(height: 1),
                   Text(
                     revoked
-                        ? 'Revoked ${fmtDate(keyItem.revokedAt)}'
-                        : 'Minted ${fmtDate(keyItem.createdAt)}',
+                        ? l10n.keyRevokedOn(fmtDate(keyItem.revokedAt))
+                        : l10n.keyMintedOn(fmtDate(keyItem.createdAt)),
                     style: AppText.small.copyWith(
                       fontSize: 11,
                       color: c.textFaint,
@@ -1603,7 +1598,7 @@ class _KeyRow extends StatelessWidget {
               ),
             ),
             if (revoked)
-              Pill('REVOKED', tone: PillTone.red, small: true)
+              Pill(l10n.revokedUpper, tone: PillTone.red, small: true)
             else
               GestureDetector(
                 onTap: onRevoke,
@@ -1614,7 +1609,7 @@ class _KeyRow extends StatelessWidget {
                     vertical: 2,
                   ),
                   child: Text(
-                    'Revoke',
+                    l10n.revoke,
                     style: AppText.title.copyWith(fontSize: 13, color: c.red),
                   ),
                 ),
@@ -1650,16 +1645,13 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
   Future<String?> _baseUrl() => SecureStorageService.instance.getBaseUrl();
 
   Future<void> _toggleVisibility() async {
+    final l10n = context.l10n;
     final next = _doc.visibility == 'public' ? 'private' : 'public';
     final confirmed = await showConfirmSheet(
       widget.host,
-      title: next == 'public' ? 'Make public' : 'Make private',
-      body: Text(
-        next == 'public'
-            ? 'Anyone with the link will be able to read this document.'
-            : 'Only authorized operators will be able to read this document.',
-      ),
-      cta: next == 'public' ? 'Make public' : 'Make private',
+      title: next == 'public' ? l10n.makePublic : l10n.makePrivate,
+      body: Text(next == 'public' ? l10n.makePublicBody : l10n.makePrivateBody),
+      cta: next == 'public' ? l10n.makePublic : l10n.makePrivate,
       danger: false,
     );
     if (!confirmed) return;
@@ -1670,11 +1662,11 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
           .updateVisibility(_doc.publicId, next);
       if (mounted) setState(() => _doc = updated);
       if (widget.host.mounted) {
-        showToast(widget.host, 'Visibility set to ${next.toUpperCase()}.');
+        showToast(widget.host, l10n.visibilitySet(next.toUpperCase()));
       }
     } catch (e) {
       if (mounted) {
-        showToast(context, 'Failed to update visibility: $e', danger: true);
+        showToast(context, l10n.failedUpdateVisibility('$e'), danger: true);
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -1696,15 +1688,16 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
   }
 
   Future<void> _copySlugUrl() async {
+    final l10n = context.l10n;
     final base = await _baseUrl();
     if (base == null || _doc.slug == null) {
       if (widget.host.mounted) {
-        showToast(widget.host, 'No slug URL available.', danger: true);
+        showToast(widget.host, l10n.noSlugUrl, danger: true);
       }
       return;
     }
     final url = '$base/s/${_doc.slug}';
-    await _copy(url, 'Slug URL copied.');
+    await _copy(url, l10n.slugUrlCopied);
   }
 
   Future<void> _copy(String value, String msg) async {
@@ -1714,15 +1707,13 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
 
   // Revoke uses the exact dio DELETE + local revoke from document_detail_screen.
   Future<void> _revoke() async {
+    final l10n = context.l10n;
     final confirmed = await showConfirmSheet(
       widget.host,
-      title: 'Revoke document',
-      body: const Text(
-        'This is permanent and irreversible. Document files are purged from R2 '
-        'storage and the slug is released for reuse.',
-      ),
-      confirmWord: 'REVOKE',
-      cta: 'Revoke permanently',
+      title: l10n.revokeDocumentTitle,
+      body: Text(l10n.revokeDocumentBodyShort),
+      confirmWord: l10n.revokeConfirmWord,
+      cta: l10n.revokePermanently,
     );
     if (!confirmed) return;
 
@@ -1741,7 +1732,7 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
       if (widget.host.mounted) {
         showToast(
           widget.host,
-          'Document revoked. $r2Purged R2 object(s) purged.',
+          l10n.documentRevokedPurged(r2Purged),
           danger: true,
         );
       }
@@ -1749,7 +1740,7 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _busy = false);
-        showToast(context, 'Revocation failed: $e', danger: true);
+        showToast(context, l10n.revocationFailed('$e'), danger: true);
       }
     }
   }
@@ -1757,10 +1748,11 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l10n = context.l10n;
     final isPublic = _doc.visibility == 'public';
     return AppSheet(
-      title: _doc.title ?? '[Untitled]',
-      subtitle: 'Document actions',
+      title: _doc.title ?? l10n.untitled,
+      subtitle: l10n.documentActions,
       icon: Icons.description_outlined,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1794,23 +1786,23 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
             ),
           SheetActionRow(
             icon: isPublic ? Icons.lock_outline : Icons.public,
-            label: isPublic ? 'Make private' : 'Make public',
+            label: isPublic ? l10n.makePrivate : l10n.makePublic,
             onTap: _busy ? null : _toggleVisibility,
           ),
           SheetActionRow(
             icon: Icons.sell_outlined,
-            label: 'Edit slug & tags',
+            label: l10n.editSlugTags,
             onTap: _busy ? null : _editSlugAndTags,
           ),
           SheetActionRow(
             icon: Icons.link,
-            label: 'Copy slug URL',
+            label: l10n.copySlugUrl,
             onTap: _busy ? null : _copySlugUrl,
           ),
           Divider(color: c.lineSoft, height: 16),
           SheetActionRow(
             icon: Icons.delete_outline,
-            label: 'Revoke document',
+            label: l10n.revokeDocumentTitle,
             danger: true,
             onTap: _busy ? null : _revoke,
           ),
@@ -1856,6 +1848,7 @@ class _EditSlugTagsSheetState extends State<_EditSlugTagsSheet> {
   }
 
   Future<void> _save() async {
+    final l10n = context.l10n;
     setState(() => _busy = true);
     final notifier = widget.ref.read(documentsListProvider.notifier);
     final newSlug = _slug.text.trim();
@@ -1873,13 +1866,13 @@ class _EditSlugTagsSheetState extends State<_EditSlugTagsSheet> {
       updated = await notifier.updateTags(widget.doc.publicId, newTags);
       widget.onUpdated(updated);
       if (widget.host.mounted) {
-        showToast(widget.host, 'Slug & tags updated.');
+        showToast(widget.host, l10n.slugTagsUpdated);
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
         setState(() => _busy = false);
-        showToast(context, 'Failed to update: $e', danger: true);
+        showToast(context, l10n.failedUpdate('$e'), danger: true);
       }
     }
   }
@@ -1887,15 +1880,16 @@ class _EditSlugTagsSheetState extends State<_EditSlugTagsSheet> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final l10n = context.l10n;
     return AppSheet(
-      title: 'Edit slug & tags',
-      subtitle: 'Document metadata',
+      title: l10n.editSlugTags,
+      subtitle: l10n.documentMetadata,
       icon: Icons.sell_outlined,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'SLUG',
+            l10n.slugLabel,
             style: AppText.label.copyWith(fontSize: 11, color: c.textFaint),
           ),
           const SizedBox(height: 6),
@@ -1903,19 +1897,16 @@ class _EditSlugTagsSheetState extends State<_EditSlugTagsSheet> {
             controller: _slug,
             enabled: !_busy,
             style: AppText.body.copyWith(color: c.text),
-            decoration: const InputDecoration(
-              hintText: 'e.g. my-cool-document',
-            ),
+            decoration: InputDecoration(hintText: l10n.slugHint),
           ),
           const SizedBox(height: 8),
           Text(
-            'Slugs are retired permanently when cleared or changed — the old '
-            'slug then returns 410 Gone. Leave empty to clear.',
+            l10n.slugRetiredNote,
             style: AppText.small.copyWith(color: c.textFaint),
           ),
           const SizedBox(height: 16),
           Text(
-            'TAGS',
+            l10n.tagsLabel,
             style: AppText.label.copyWith(fontSize: 11, color: c.textFaint),
           ),
           const SizedBox(height: 6),
@@ -1923,13 +1914,11 @@ class _EditSlugTagsSheetState extends State<_EditSlugTagsSheet> {
             controller: _tags,
             enabled: !_busy,
             style: AppText.body.copyWith(color: c.text),
-            decoration: const InputDecoration(
-              hintText: 'comma, separated, tags',
-            ),
+            decoration: InputDecoration(hintText: l10n.tagsHint),
           ),
           const SizedBox(height: 18),
           AppButton(
-            _busy ? 'Saving…' : 'Save changes',
+            _busy ? l10n.saving : l10n.saveChanges,
             variant: AppBtnVariant.primary,
             icon: Icons.check,
             expand: true,

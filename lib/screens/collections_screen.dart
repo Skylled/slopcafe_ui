@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/format.dart';
+import '../l10n/l10n.dart';
 import '../providers/document_provider.dart';
 import '../widgets/press_card.dart';
 import '../widgets/section_header.dart';
@@ -43,17 +44,20 @@ class CollectionsScreen extends ConsumerWidget {
           AppSpacing.bottomInset,
         ),
         children: [
-          const BackHeader('Collections', eyebrow: 'Browse by tag'),
+          BackHeader(
+            context.l10n.collectionsTitle,
+            eyebrow: context.l10n.browseByTag,
+          ),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.only(left: 2, bottom: 14),
             child: Text(
-              '${tags.length} collection${tags.length == 1 ? '' : 's'}',
+              context.l10n.collectionCount(tags.length),
               style: AppText.small.copyWith(color: c.textFaint),
             ),
           ),
           if (tags.isEmpty)
-            _empty(c)
+            _empty(context, c)
           else
             for (var i = 0; i < tags.length; i++)
               Padding(
@@ -73,7 +77,7 @@ class CollectionsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _empty(AppColors c) {
+  Widget _empty(BuildContext context, AppColors c) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 18),
@@ -90,7 +94,7 @@ class CollectionsScreen extends ConsumerWidget {
             Icon(Icons.sell_outlined, size: 30, color: c.textFaint),
             const SizedBox(height: 12),
             Text(
-              'No collections yet.',
+              context.l10n.noCollectionsYet,
               style: AppText.titleSerif.copyWith(color: c.text),
             ),
           ],
@@ -149,7 +153,7 @@ class _CollectionRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '$count document${count == 1 ? '' : 's'}',
+                    context.l10n.documentCount(count),
                     style: AppText.small.copyWith(
                       fontSize: 12.5,
                       color: c.textFaint,
