@@ -21,7 +21,6 @@ import '../widgets/press_card.dart';
 import '../widgets/section_header.dart';
 import '../widgets/sheets.dart';
 import '../widgets/toast.dart';
-import '../widgets/webview_pull_to_refresh.dart';
 import 'document_list_screen.dart';
 
 /// ReaderScreen — the Craft "plate". A full-bleed pushed route built around a
@@ -51,25 +50,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   late DocumentListing _currentDoc;
 
-  /// Translates drags on the (natively-scrolling) WebView into the scroll
-  /// notifications a [RefreshIndicator] needs — only when the document is at
-  /// its top. See [WebViewPullToRefresh].
-  late final WebViewPullToRefresh _pullToRefresh;
-
   @override
   void initState() {
     super.initState();
     _currentDoc = widget.doc;
-    _pullToRefresh = WebViewPullToRefresh(
-      onRefresh: () => _reloadWebview(force: true),
-    );
     _initBaseUrlAndWebview();
-  }
-
-  @override
-  void dispose() {
-    _pullToRefresh.dispose();
-    super.dispose();
   }
 
   // ----------------------------------------------------------------
@@ -120,8 +105,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
   }
 
-  /// Re-render the document. [force] performs a *hard* refresh for explicit
-  /// user actions (pull-to-refresh, the more-sheet Refresh): it drops the
+  /// Re-render the document. [force] performs a *hard* refresh for the
+  /// more-sheet Refresh action: it drops the
   /// `If-None-Match` conditional so the server can never answer a 304, asks any
   /// intermediary to revalidate, and always re-renders the freshly fetched
   /// bytes. Without it, the bandwidth-saving conditional-GET path can resolve a
@@ -301,7 +286,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
     final String publicId = _currentDoc.publicId;
 
-    // A forced refresh (pull-to-refresh / the more-sheet Refresh) reconciles the
+    // A forced refresh (the more-sheet Refresh) reconciles the
     // canonical metadata record *first*, so the version, title, tags, size and
     // visibility shown in the chrome update too — not just the HTML body — and
     // the body below loads against the freshly resolved version.
@@ -1130,23 +1115,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       ],
     );
 
-    return Scaffold(
-      backgroundColor: c.bg,
-      // Pull-to-refresh sits at the Scaffold level so the spinner drops from the
-      // top of the screen (just clear of the status bar) instead of from the top
-      // edge of the embedded WebView card. The recognizer attached to the
-      // WebView dispatches the scroll notifications this indicator consumes.
-      // Revoked docs render a static card with no WebView, so they opt out.
-      body: isRevoked
-          ? body
-          : RefreshIndicator(
-              onRefresh: _pullToRefresh.refresh,
-              color: c.clay,
-              backgroundColor: c.surface,
-              edgeOffset: topPad,
-              child: body,
-            ),
-    );
+    return Scaffold(backgroundColor: c.bg, body: body);
   }
 
   Widget _buildHeader(AppColors c, bool isRevoked) {
@@ -1242,20 +1211,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         borderRadius: BorderRadius.circular(AppRadii.xl),
         boxShadow: c.shadow,
       ),
-      // Pull-to-refresh: the WebView scrolls natively, so a custom gesture
-      // recognizer feeds synthetic scroll notifications to the RefreshIndicator
-      // wrapping the whole screen (see build), engaging only when the document
-      // is at its top. The Builder context is the dispatch origin, so it must
-      // sit under that indicator. See WebViewPullToRefresh.
-      child: Builder(
-        builder: (refreshContext) {
-          _pullToRefresh.attach(refreshContext, _webViewController);
-          return WebViewWidget(
-            controller: _webViewController,
-            gestureRecognizers: _pullToRefresh.asGestureRecognizers,
-          );
-        },
-      ),
+      child: WebViewWidget(controller: _webViewController),
     );
   }
 
