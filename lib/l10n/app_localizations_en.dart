@@ -196,6 +196,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Showing the top 50 plates. Refine your search to find the rest.';
 
   @override
+  String get searchModeHybrid => 'Hybrid';
+
+  @override
+  String get searchModeKeyword => 'Keyword';
+
+  @override
+  String get searchModeSemantic => 'Semantic';
+
+  @override
   String get backOfHouse => 'Back of house';
 
   @override

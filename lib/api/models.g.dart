@@ -6,6 +6,26 @@ part of 'models.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+_BackfillResponse _$BackfillResponseFromJson(Map<String, dynamic> json) =>
+    _BackfillResponse(
+      mode: json['mode'] as String,
+      scanned: (json['scanned'] as num).toInt(),
+      embedded: (json['embedded'] as num).toInt(),
+      vectors: (json['vectors'] as num).toInt(),
+      skipped: (json['skipped'] as num).toInt(),
+      nextCursor: json['next_cursor'] as String?,
+    );
+
+Map<String, dynamic> _$BackfillResponseToJson(_BackfillResponse instance) =>
+    <String, dynamic>{
+      'mode': instance.mode,
+      'scanned': instance.scanned,
+      'embedded': instance.embedded,
+      'vectors': instance.vectors,
+      'skipped': instance.skipped,
+      'next_cursor': instance.nextCursor,
+    };
+
 _ClearSlugRedirectResponse _$ClearSlugRedirectResponseFromJson(
   Map<String, dynamic> json,
 ) => _ClearSlugRedirectResponse(

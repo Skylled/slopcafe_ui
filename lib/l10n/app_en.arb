@@ -112,6 +112,12 @@
   "searchError": "Search hit a snag.",
   "searchCeilingHint": "Showing the top 50 plates. Refine your search to find the rest.",
   "@searchCeilingHint": { "description": "Shown when search results hit the backend's 50-result ceiling." },
+  "searchModeHybrid": "Hybrid",
+  "@searchModeHybrid": { "description": "Search-mode selector segment: combined keyword + semantic (concept) ranking. The default." },
+  "searchModeKeyword": "Keyword",
+  "@searchModeKeyword": { "description": "Search-mode selector segment: exact keyword (full-text) matching only." },
+  "searchModeSemantic": "Semantic",
+  "@searchModeSemantic": { "description": "Search-mode selector segment: concept (vector) matching only." },
 
   "backOfHouse": "Back of house",
   "@backOfHouse": { "description": "Eyebrow above the Operate screen title (café metaphor)." },

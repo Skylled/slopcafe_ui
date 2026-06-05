@@ -34,6 +34,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   String _searchQuery = '';
   Timer? _debounceTimer;
 
+  /// The selected ranking mode (hybrid | keyword | semantic). Hybrid is the
+  /// backend default; the selector lets the operator force a pure leg.
+  SearchMode _mode = SearchMode.hybrid;
+
   @override
   void initState() {
     super.initState();
@@ -82,6 +86,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     _focusNode.requestFocus();
   }
 
+  void _setMode(SearchMode mode) {
+    if (mode == _mode) return;
+    setState(() => _mode = mode);
+  }
+
   Future<void> _openDoc(DocumentListing doc) async {
     // The reader pops `true` when it mutates a document (revoke / visibility /
     // slug / tags). Re-run the search so results don't show stale state.
@@ -127,6 +136,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   onChanged: _onSearchChanged,
                   onClear: _clear,
                 ),
+                if (searching) ...[
+                  const SizedBox(height: 11),
+                  _SearchModeSelector(mode: _mode, onChanged: _setMode),
+                ],
               ],
             ),
           ),
@@ -199,7 +212,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget _buildResults(String query) {
     final c = context.colors;
     final resultsAsync = ref.watch(
-      documentSearchProvider(SearchQueryParams(query: query)),
+      documentSearchProvider(SearchQueryParams(query: query, mode: _mode)),
     );
 
     return resultsAsync.when(
@@ -337,6 +350,90 @@ class _SearchField extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ========================================================= search-mode selector
+
+/// Segmented Hybrid / Keyword / Semantic ranking selector shown beneath the
+/// search field while a query is active. Hybrid (the backend default) fuses the
+/// keyword + semantic legs; the operator can force a single leg. The selected
+/// segment uses the Craft `PillTone.solid` fill (clay + onAccent).
+class _SearchModeSelector extends StatelessWidget {
+  const _SearchModeSelector({required this.mode, required this.onChanged});
+
+  final SearchMode mode;
+  final ValueChanged<SearchMode> onChanged;
+
+  String _label(BuildContext context, SearchMode m) => switch (m) {
+    SearchMode.hybrid => context.l10n.searchModeHybrid,
+    SearchMode.keyword => context.l10n.searchModeKeyword,
+    SearchMode.semantic => context.l10n.searchModeSemantic,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: c.surface2,
+        borderRadius: BorderRadius.circular(AppRadii.pill),
+        border: Border.all(color: c.lineSoft),
+      ),
+      child: Row(
+        children: [
+          for (final m in SearchMode.values)
+            Expanded(
+              child: _ModeSegment(
+                label: _label(context, m),
+                selected: m == mode,
+                onTap: () => onChanged(m),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModeSegment extends StatelessWidget {
+  const _ModeSegment({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        decoration: BoxDecoration(
+          color: selected ? c.clay : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadii.pill),
+          boxShadow: selected ? c.shadow : null,
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: AppText.label.copyWith(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: selected ? c.onAccent : c.textDim,
+          ),
+        ),
       ),
     );
   }

@@ -406,12 +406,37 @@ final documentsListProvider =
       DocumentsListNotifier.new,
     );
 
+/// Ranking mode for `GET /admin/documents/search` (the `mode` query param).
+///
+/// [hybrid] (the server default) fuses the BM25 keyword leg and the vector
+/// (Vectorize/Workers-AI) semantic leg via Reciprocal Rank Fusion — best
+/// recall. [keyword] is FTS-only (a deterministic exact-match escape hatch).
+/// [semantic] is vector-only (pure concept match). Server-side the query embed
+/// is best-effort: `hybrid`/`semantic` silently fall back to the keyword leg
+/// when embedding is briefly unavailable, so they never fail on that account.
+enum SearchMode {
+  hybrid('hybrid'),
+  keyword('keyword'),
+  semantic('semantic');
+
+  const SearchMode(this.wire);
+
+  /// The on-the-wire `mode` value sent to the backend.
+  final String wire;
+}
+
 class SearchQueryParams {
   final String query;
   final String? tag;
   final String? slug;
+  final SearchMode mode;
 
-  SearchQueryParams({required this.query, this.tag, this.slug});
+  SearchQueryParams({
+    required this.query,
+    this.tag,
+    this.slug,
+    this.mode = SearchMode.hybrid,
+  });
 
   @override
   bool operator ==(Object other) =>
@@ -420,10 +445,12 @@ class SearchQueryParams {
           runtimeType == other.runtimeType &&
           query == other.query &&
           tag == other.tag &&
-          slug == other.slug;
+          slug == other.slug &&
+          mode == other.mode;
 
   @override
-  int get hashCode => query.hashCode ^ tag.hashCode ^ slug.hashCode;
+  int get hashCode =>
+      query.hashCode ^ tag.hashCode ^ slug.hashCode ^ mode.hashCode;
 }
 
 final documentSearchProvider =
@@ -434,7 +461,13 @@ final documentSearchProvider =
       if (params.query.trim().isEmpty) return const [];
 
       final dio = ref.read(dioProvider);
-      final queryParams = <String, dynamic>{'q': params.query, 'limit': 50};
+      // `mode` selects the ranking leg (hybrid | keyword | semantic). Sent
+      // explicitly; the backend default is hybrid either way.
+      final queryParams = <String, dynamic>{
+        'q': params.query,
+        'limit': 50,
+        'mode': params.mode.wire,
+      };
       if (params.tag != null && params.tag!.isNotEmpty) {
         queryParams['tag'] = params.tag;
       }

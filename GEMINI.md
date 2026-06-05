@@ -120,7 +120,7 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
 The hand-written `lib/models/document.dart` / `lib/models/agent.dart` have been
 **replaced by code generated from the OpenAPI contract**. App code imports the
 barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dart)**.
-* **[lib/api/models.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/models.dart)** *(generated, do not edit)* — `freezed` + `json_serializable` data classes for every JSON request/response body in the spec: `DocumentListing`, `SearchHit`, `AgentListing`, `AgentKey`, `ListDocumentsResponse`, `SearchDocumentsResponse`, `ListAgentsResponse`, `ListAgentKeysResponse`, `MintAgentKeyResponse`, `CreateOAuthClientResponse`, `CreateUnboundOAuthClientResponse`, `Revoke{,Agent,Key}Response`, `SetDocument{Visibility,Slug,Tags}Response`, `HealthzResponse`, etc. Nullable (OpenAPI-3.1 `anyOf`-null) fields generate as nullable Dart; `created_at`/`revoked_at` (plain spec strings) are typed `DateTime`; `visibility`/`matched_field` stay `String` (not enums) to avoid call-site churn. `DocumentListing`/`AgentKey` expose an `isRevoked` getter; `SearchHit` is flat with a `.document` view + `SearchHit.fromDocument(...)` (used by the offline local-search fallback). `toJson` emits the same snake_case keys as before, so the offline document cache stays compatible (a stale cache missing a newly-required field just fails the parse and falls back to an online fetch — `getCachedDocumentList` swallows it). As of the authoring update both `DocumentListing` and `SearchHit` also carry a **required** `created_by_kind` (`agent`|`operator`, kept as `String`), distinguishing operator-authored documents.
+* **[lib/api/models.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/models.dart)** *(generated, do not edit)* — `freezed` + `json_serializable` data classes for every JSON request/response body in the spec: `DocumentListing`, `SearchHit`, `AgentListing`, `AgentKey`, `ListDocumentsResponse`, `SearchDocumentsResponse`, `ListAgentsResponse`, `ListAgentKeysResponse`, `MintAgentKeyResponse`, `CreateOAuthClientResponse`, `CreateUnboundOAuthClientResponse`, `Revoke{,Agent,Key}Response`, `SetDocument{Visibility,Slug,Tags}Response`, `HealthzResponse`, `BackfillResponse` (the `POST /admin/vectors/backfill` result — generated but not yet wired into any UI; see the **semantic search** note below), etc. Nullable (OpenAPI-3.1 `anyOf`-null) fields generate as nullable Dart; `created_at`/`revoked_at` (plain spec strings) are typed `DateTime`; `visibility`/`matched_field` stay `String` (not enums) to avoid call-site churn (the semantic-search update added `"semantic"` as a fourth `matched_field` value — a vector-only concept hit; because the field is kept as `String`, this was a no-op for the generated layer). `DocumentListing`/`AgentKey` expose an `isRevoked` getter; `SearchHit` is flat with a `.document` view + `SearchHit.fromDocument(...)` (used by the offline local-search fallback). `toJson` emits the same snake_case keys as before, so the offline document cache stays compatible (a stale cache missing a newly-required field just fails the parse and falls back to an online fetch — `getCachedDocumentList` swallows it). As of the authoring update both `DocumentListing` and `SearchHit` also carry a **required** `created_by_kind` (`agent`|`operator`, kept as `String`), distinguishing operator-authored documents.
 * **[lib/api/error_code.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/error_code.dart)** *(generated, do not edit)* — the `ErrorCode` enum: the 28 `error` discriminants of the `ErrorBody` oneOf union, plus `unknown` (forward-compat). `ErrorCode.fromWire(String?)` maps a wire value to a code.
 * **[lib/api/api_error.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api_error.dart)** *(hand-written glue)* — `ApiError`: a typed view over the `ErrorBody` envelope. `ApiError.fromException(e)` parses a `DioException`; `ApiError.describe(e)` returns the backend's `message` (falling back to the raw error) for toasts; discriminant extras are exposed as getters (`clientId`, `hint`, `slug`). The OAuth-exists path keys on `ErrorCode.clientExists`.
 
@@ -131,6 +131,7 @@ barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dar
   * Aggregates document tags for sidebar/filter widgets.
   * Integrates search algorithms (such as full-text BM25 keyword matching) to calculate relevance score indicators.
   * Implements local client-side search fallback over cached listings with highlight formatting when offline.
+  * `documentSearchProvider` (a `FutureProvider.family` keyed by `SearchQueryParams`) calls `GET /admin/documents/search`. `SearchQueryParams` carries the `SearchMode` enum (`hybrid` (default) · `keyword` · `semantic`) which is sent as the `mode` query param — the backend's hybrid leg fuses BM25 + vector (Vectorize/Workers-AI) search via RRF. The Search tab's segmented selector drives it. The offline cached fallback is keyword-only substring matching regardless of mode (mirroring the backend's own best-effort degrade-to-keyword behaviour when embedding is unavailable).
   * Provides triggers for revoking specific documents and caching them locally.
   * Exposes `authorDocument(...)` — the operator authoring write (`POST /admin/documents`). Builds the inline request body (`content`+`format` required; optional `title`/`description`/`tags`/`slug`/`visibility`), returns the backend's `WriteResponse`, and reloads the canonical first page on success.
 * **[lib/providers/agent_provider.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/providers/agent_provider.dart)**
@@ -144,7 +145,7 @@ barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dar
 * **[lib/screens/library_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/library_screen.dart)** — Library ("The Café") tab.
   * Greeting + connection-status pill (taps through to Settings), fleet/menu tickers, a text-forward "Today's Special" featured plate (`DocFeedCard`; currently the newest public doc — curated selection deferred to a future backend feature), a tag-based Collections carousel ("All" → `CollectionsScreen`, tiles → `DocumentListScreen`), and a "Recently plated" list ("See all" → `DocumentListScreen`). Offline banner from cache state. No search bar (Search is its own tab) and no per-doc `OFFLINE READY` badge. **Pull-to-refresh** (a `RefreshIndicator` over the `ListView`) runs the shared `refreshFleetData` — a full document + agent + health reload, identical to an Operate pull.
 * **[lib/screens/search_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/search_screen.dart)** — Search tab.
-  * Autofocus query field, debounced live results via `documentSearchProvider` (with local cached fallback), relevance bars, matched-field pills, and highlighted snippets. Suggestion chips when idle.
+  * Autofocus query field, debounced live results via `documentSearchProvider` (with local cached fallback), relevance bars, matched-field pills, and highlighted snippets. Suggestion chips when idle. A **segmented Hybrid/Keyword/Semantic mode selector** (`_SearchModeSelector`, styled like `PillTone.solid`) appears beneath the field while a query is active and drives `SearchQueryParams.mode`. Semantic-only hits surface as a `SEMANTIC` matched-field pill and an **un-bracketed** snippet (the backend deliberately omits the `[term]` brackets to signal "concept match, not term match"); the snippet parser already renders an un-bracketed string as plain text, and the relevance bar normalizes against the in-set max score (so the per-mode score scales — fused RRF / negated BM25 / cosine — stay comparable within a result set).
 * **[lib/screens/operate_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/operate_screen.dart)** — Operate ("The Pass") tab.
   * Fleet stat grid + R2 storage bar; a "Kitchen" segment (agent rows → an agent bottom-sheet with keys, mint key, OAuth client, kill; plus mint-agent and unbound-OAuth flows) and a "Documents" segment (an **"Author a document"** CTA that pushes the compose screen, the admin doc list with include-revoked + a per-doc actions sheet: visibility/slug/tags/revoke). After authoring it surfaces the outcome (incl. any sanitizer adjustments) via toast. The `/healthz` metrics come from `healthProvider` (no longer Operate-local state). **Pull-to-refresh** (a `RefreshIndicator` over the `ListView`) runs the shared `refreshFleetData` — the same full reload as a Library pull.
 * **[lib/screens/compose_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/compose_screen.dart)** — operator authoring / **Markdown composition** screen, pushed from Operate › Documents.
@@ -188,7 +189,10 @@ code-first API-contract effort).
   changes** — not only on an `info.version` bump. (The operator authoring
   endpoints + `created_by_kind` landed under an unchanged `info.version` of
   `1.0.0`, so `CONTRACT_VERSION` stayed `1.0.0`; only update it if `info.version`
-  actually changes.)
+  actually changes. The semantic-search surface — the `/admin/documents/search`
+  `mode` param, the new `POST /admin/vectors/backfill` path + `BackfillResponse`
+  schema, and the `"semantic"` `matched_field` value — landed the same way: pin
+  re-pulled, `CONTRACT_VERSION` left at `1.0.0`.)
   ```sh
   curl -s https://slopcafe.com/openapi.json -o tool/openapi.json
   # update tool/CONTRACT_VERSION if info.version changed
@@ -228,6 +232,26 @@ code-first API-contract effort).
   Reader's WebView + ETag conditional-GET cache and the 404/410 status-code
   handling there are intentionally **not** routed through `ErrorCode` (the bodies
   aren't the JSON envelope).
+* **Semantic search (`mode` + backfill)**: the backend added a hybrid
+  keyword+vector search. `GET /admin/documents/search` gained a `mode` query
+  param — `hybrid` (default; BM25 ⊕ Vectorize/Workers-AI fused via Reciprocal
+  Rank Fusion) · `keyword` (FTS only) · `semantic` (vector only). It's a query
+  param (not a `components.schemas` shape), so the generator emits nothing for
+  it — `documentSearchProvider` threads it by hand from the `SearchMode` enum,
+  surfaced by the Search tab's segmented selector. `SearchHit.matched_field`
+  gained `"semantic"` (un-bracketed snippet ⇒ concept match); kept as `String`,
+  so no codegen change. Behavioural notes from the contract: search is **not
+  paginated** (50-cap, raise `limit` up to 200 to widen), the query embed is
+  **best-effort** (a brief embedding outage degrades `hybrid`/`semantic` to the
+  keyword leg rather than erroring; the only hard failure is `422 bad_query`
+  when no leg can run), and `score` scale **differs by mode and is only
+  comparable within one result set** (already handled — the relevance bar
+  normalizes against the in-set max). **Backfill is deferred (follow-up):**
+  `POST /admin/vectors/backfill` (operator; `mode=missing|rebuild`, paginated by
+  `cursor`; → the generated `BackfillResponse`) re-embeds docs published before
+  semantic search shipped — they stay invisible to the semantic/hybrid legs
+  until backfilled. The endpoint + its response class are pinned/generated, but
+  no UI is wired yet (a natural Operate › Documents "Build search index" action).
 * **Smoke test**: [tool/smoke_test.dart](file:///Users/kyle/Repos/slopcafe_ui/tool/smoke_test.dart)
   validates the generated layer against the **live** backend (public `/healthz`
   + an unauthenticated 401 → `ErrorCode.unauthorized`) and a revoked-doc fixture

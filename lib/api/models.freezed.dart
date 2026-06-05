@@ -13,6 +13,284 @@ part of 'models.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
+mixin _$BackfillResponse {
+
+@JsonKey(name: 'mode') String get mode;@JsonKey(name: 'scanned') int get scanned;@JsonKey(name: 'embedded') int get embedded;@JsonKey(name: 'vectors') int get vectors;@JsonKey(name: 'skipped') int get skipped;@JsonKey(name: 'next_cursor') String? get nextCursor;
+/// Create a copy of BackfillResponse
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BackfillResponseCopyWith<BackfillResponse> get copyWith => _$BackfillResponseCopyWithImpl<BackfillResponse>(this as BackfillResponse, _$identity);
+
+  /// Serializes this BackfillResponse to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BackfillResponse&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.scanned, scanned) || other.scanned == scanned)&&(identical(other.embedded, embedded) || other.embedded == embedded)&&(identical(other.vectors, vectors) || other.vectors == vectors)&&(identical(other.skipped, skipped) || other.skipped == skipped)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,mode,scanned,embedded,vectors,skipped,nextCursor);
+
+@override
+String toString() {
+  return 'BackfillResponse(mode: $mode, scanned: $scanned, embedded: $embedded, vectors: $vectors, skipped: $skipped, nextCursor: $nextCursor)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $BackfillResponseCopyWith<$Res>  {
+  factory $BackfillResponseCopyWith(BackfillResponse value, $Res Function(BackfillResponse) _then) = _$BackfillResponseCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'mode') String mode,@JsonKey(name: 'scanned') int scanned,@JsonKey(name: 'embedded') int embedded,@JsonKey(name: 'vectors') int vectors,@JsonKey(name: 'skipped') int skipped,@JsonKey(name: 'next_cursor') String? nextCursor
+});
+
+
+
+
+}
+/// @nodoc
+class _$BackfillResponseCopyWithImpl<$Res>
+    implements $BackfillResponseCopyWith<$Res> {
+  _$BackfillResponseCopyWithImpl(this._self, this._then);
+
+  final BackfillResponse _self;
+  final $Res Function(BackfillResponse) _then;
+
+/// Create a copy of BackfillResponse
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? mode = null,Object? scanned = null,Object? embedded = null,Object? vectors = null,Object? skipped = null,Object? nextCursor = freezed,}) {
+  return _then(_self.copyWith(
+mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
+as String,scanned: null == scanned ? _self.scanned : scanned // ignore: cast_nullable_to_non_nullable
+as int,embedded: null == embedded ? _self.embedded : embedded // ignore: cast_nullable_to_non_nullable
+as int,vectors: null == vectors ? _self.vectors : vectors // ignore: cast_nullable_to_non_nullable
+as int,skipped: null == skipped ? _self.skipped : skipped // ignore: cast_nullable_to_non_nullable
+as int,nextCursor: freezed == nextCursor ? _self.nextCursor : nextCursor // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [BackfillResponse].
+extension BackfillResponsePatterns on BackfillResponse {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _BackfillResponse value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _BackfillResponse() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _BackfillResponse value)  $default,){
+final _that = this;
+switch (_that) {
+case _BackfillResponse():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _BackfillResponse value)?  $default,){
+final _that = this;
+switch (_that) {
+case _BackfillResponse() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'mode')  String mode, @JsonKey(name: 'scanned')  int scanned, @JsonKey(name: 'embedded')  int embedded, @JsonKey(name: 'vectors')  int vectors, @JsonKey(name: 'skipped')  int skipped, @JsonKey(name: 'next_cursor')  String? nextCursor)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _BackfillResponse() when $default != null:
+return $default(_that.mode,_that.scanned,_that.embedded,_that.vectors,_that.skipped,_that.nextCursor);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'mode')  String mode, @JsonKey(name: 'scanned')  int scanned, @JsonKey(name: 'embedded')  int embedded, @JsonKey(name: 'vectors')  int vectors, @JsonKey(name: 'skipped')  int skipped, @JsonKey(name: 'next_cursor')  String? nextCursor)  $default,) {final _that = this;
+switch (_that) {
+case _BackfillResponse():
+return $default(_that.mode,_that.scanned,_that.embedded,_that.vectors,_that.skipped,_that.nextCursor);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'mode')  String mode, @JsonKey(name: 'scanned')  int scanned, @JsonKey(name: 'embedded')  int embedded, @JsonKey(name: 'vectors')  int vectors, @JsonKey(name: 'skipped')  int skipped, @JsonKey(name: 'next_cursor')  String? nextCursor)?  $default,) {final _that = this;
+switch (_that) {
+case _BackfillResponse() when $default != null:
+return $default(_that.mode,_that.scanned,_that.embedded,_that.vectors,_that.skipped,_that.nextCursor);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _BackfillResponse implements BackfillResponse {
+  const _BackfillResponse({@JsonKey(name: 'mode') required this.mode, @JsonKey(name: 'scanned') required this.scanned, @JsonKey(name: 'embedded') required this.embedded, @JsonKey(name: 'vectors') required this.vectors, @JsonKey(name: 'skipped') required this.skipped, @JsonKey(name: 'next_cursor') this.nextCursor});
+  factory _BackfillResponse.fromJson(Map<String, dynamic> json) => _$BackfillResponseFromJson(json);
+
+@override@JsonKey(name: 'mode') final  String mode;
+@override@JsonKey(name: 'scanned') final  int scanned;
+@override@JsonKey(name: 'embedded') final  int embedded;
+@override@JsonKey(name: 'vectors') final  int vectors;
+@override@JsonKey(name: 'skipped') final  int skipped;
+@override@JsonKey(name: 'next_cursor') final  String? nextCursor;
+
+/// Create a copy of BackfillResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$BackfillResponseCopyWith<_BackfillResponse> get copyWith => __$BackfillResponseCopyWithImpl<_BackfillResponse>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$BackfillResponseToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BackfillResponse&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.scanned, scanned) || other.scanned == scanned)&&(identical(other.embedded, embedded) || other.embedded == embedded)&&(identical(other.vectors, vectors) || other.vectors == vectors)&&(identical(other.skipped, skipped) || other.skipped == skipped)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,mode,scanned,embedded,vectors,skipped,nextCursor);
+
+@override
+String toString() {
+  return 'BackfillResponse(mode: $mode, scanned: $scanned, embedded: $embedded, vectors: $vectors, skipped: $skipped, nextCursor: $nextCursor)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$BackfillResponseCopyWith<$Res> implements $BackfillResponseCopyWith<$Res> {
+  factory _$BackfillResponseCopyWith(_BackfillResponse value, $Res Function(_BackfillResponse) _then) = __$BackfillResponseCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'mode') String mode,@JsonKey(name: 'scanned') int scanned,@JsonKey(name: 'embedded') int embedded,@JsonKey(name: 'vectors') int vectors,@JsonKey(name: 'skipped') int skipped,@JsonKey(name: 'next_cursor') String? nextCursor
+});
+
+
+
+
+}
+/// @nodoc
+class __$BackfillResponseCopyWithImpl<$Res>
+    implements _$BackfillResponseCopyWith<$Res> {
+  __$BackfillResponseCopyWithImpl(this._self, this._then);
+
+  final _BackfillResponse _self;
+  final $Res Function(_BackfillResponse) _then;
+
+/// Create a copy of BackfillResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? mode = null,Object? scanned = null,Object? embedded = null,Object? vectors = null,Object? skipped = null,Object? nextCursor = freezed,}) {
+  return _then(_BackfillResponse(
+mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
+as String,scanned: null == scanned ? _self.scanned : scanned // ignore: cast_nullable_to_non_nullable
+as int,embedded: null == embedded ? _self.embedded : embedded // ignore: cast_nullable_to_non_nullable
+as int,vectors: null == vectors ? _self.vectors : vectors // ignore: cast_nullable_to_non_nullable
+as int,skipped: null == skipped ? _self.skipped : skipped // ignore: cast_nullable_to_non_nullable
+as int,nextCursor: freezed == nextCursor ? _self.nextCursor : nextCursor // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$ClearSlugRedirectResponse {
 
 @JsonKey(name: 'slug') String get slug;@JsonKey(name: 'redirect_to') dynamic get redirectTo;

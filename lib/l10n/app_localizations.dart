@@ -406,6 +406,24 @@ abstract class AppLocalizations {
   /// **'Showing the top 50 plates. Refine your search to find the rest.'**
   String get searchCeilingHint;
 
+  /// Search-mode selector segment: combined keyword + semantic (concept) ranking. The default.
+  ///
+  /// In en, this message translates to:
+  /// **'Hybrid'**
+  String get searchModeHybrid;
+
+  /// Search-mode selector segment: exact keyword (full-text) matching only.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyword'**
+  String get searchModeKeyword;
+
+  /// Search-mode selector segment: concept (vector) matching only.
+  ///
+  /// In en, this message translates to:
+  /// **'Semantic'**
+  String get searchModeSemantic;
+
   /// Eyebrow above the Operate screen title (café metaphor).
   ///
   /// In en, this message translates to:

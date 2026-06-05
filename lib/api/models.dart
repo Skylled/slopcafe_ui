@@ -11,6 +11,21 @@ part 'models.freezed.dart';
 part 'models.g.dart';
 
 @freezed
+abstract class BackfillResponse with _$BackfillResponse {
+  const factory BackfillResponse({
+    @JsonKey(name: 'mode') required String mode,
+    @JsonKey(name: 'scanned') required int scanned,
+    @JsonKey(name: 'embedded') required int embedded,
+    @JsonKey(name: 'vectors') required int vectors,
+    @JsonKey(name: 'skipped') required int skipped,
+    @JsonKey(name: 'next_cursor') String? nextCursor,
+  }) = _BackfillResponse;
+
+  factory BackfillResponse.fromJson(Map<String, dynamic> json) =>
+      _$BackfillResponseFromJson(json);
+}
+
+@freezed
 abstract class ClearSlugRedirectResponse with _$ClearSlugRedirectResponse {
   const factory ClearSlugRedirectResponse({
     @JsonKey(name: 'slug') required String slug,
