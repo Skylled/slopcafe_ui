@@ -60,7 +60,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   void initState() {
     super.initState();
     _currentDoc = widget.doc;
-    _pullToRefresh = WebViewPullToRefresh(onRefresh: _reloadWebview);
+    _pullToRefresh = WebViewPullToRefresh(
+      onRefresh: () => _reloadWebview(force: true),
+    );
     _initBaseUrlAndWebview();
   }
 
@@ -109,9 +111,16 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
   }
 
-  Future<void> _reloadWebview() async {
+  /// Re-render the document. [force] performs a *hard* refresh for explicit
+  /// user actions (pull-to-refresh, the more-sheet Refresh): it drops the
+  /// `If-None-Match` conditional so the server can never answer a 304, asks any
+  /// intermediary to revalidate, and always re-renders the freshly fetched
+  /// bytes. Without it, the bandwidth-saving conditional-GET path can resolve a
+  /// just-published version as "unchanged" and leave stale HTML on screen until
+  /// the app is restarted.
+  Future<void> _reloadWebview({bool force = false}) async {
     if (_baseUrl == null) return;
-    await _loadHtmlIntoWebview();
+    await _loadHtmlIntoWebview(force: force);
   }
 
   Future<DocumentListing?> _resolveDocumentListing(
@@ -250,7 +259,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
   }
 
-  Future<void> _loadHtmlIntoWebview() async {
+  Future<void> _loadHtmlIntoWebview({bool force = false}) async {
     if (_baseUrl == null) return;
     final l10n = context.l10n;
 
@@ -280,7 +289,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         ? await DocumentCacheManager.getCachedHtml(publicId, cachedVersion)
         : null;
 
-    if (cachedHtml != null) {
+    // On a forced refresh the current document is already on screen, so skip
+    // the instant cached re-render — it would only flicker and reset the scroll
+    // position before the fresh bytes arrive.
+    if (!force && cachedHtml != null) {
       final securedHtml = _injectCspMeta(cachedHtml);
       await _webViewController.loadHtmlString(securedHtml, baseUrl: _baseUrl);
     }
@@ -296,7 +308,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         path,
         options: Options(
           headers: {
-            if (cachedVersion != null) 'If-None-Match': '"v$cachedVersion"',
+            // A hard refresh sends no validator (forcing a 200 body) and asks
+            // intermediaries to revalidate; otherwise we send the cached
+            // version's ETag so an unchanged document comes back as a cheap 304.
+            if (!force && cachedVersion != null)
+              'If-None-Match': '"v$cachedVersion"',
+            if (force) 'Cache-Control': 'no-cache',
           },
           validateStatus: (status) => status == 200 || status == 304,
         ),
@@ -327,8 +344,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       }
 
       // Client-side guard: if the version matches the cached version, we don't
-      // need to reload or save.
-      if (newVersion == cachedVersion && cachedHtml != null) {
+      // need to reload or save. A forced refresh always re-renders.
+      if (!force && newVersion == cachedVersion && cachedHtml != null) {
         return;
       }
 
@@ -927,7 +944,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 onTap: (!_currentDoc.isRevoked && _baseUrl != null)
                     ? () {
                         Navigator.of(sheetContext).pop();
-                        _reloadWebview();
+                        _reloadWebview(force: true);
                       }
                     : null,
               ),
