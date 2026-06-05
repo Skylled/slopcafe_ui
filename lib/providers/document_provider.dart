@@ -399,6 +399,51 @@ class DocumentsListNotifier extends Notifier<DocumentsListState> {
     await loadNextPage(clear: true);
     return newVer;
   }
+
+  /// Walks `POST /admin/vectors/backfill` to completion, populating the semantic
+  /// search index. [VectorBackfillMode.missing] embeds only documents whose
+  /// vectors are absent (cheap, incremental); [VectorBackfillMode.rebuild]
+  /// re-embeds the entire live corpus (expensive — after an embedding model /
+  /// chunk-size change, or to repair a suspected-stale index). The endpoint is
+  /// cursor-paginated and idempotent/resumable, so this loops over every page
+  /// and returns the summed totals. Touches no document state — vectors are a
+  /// search-side index, not part of the listing.
+  Future<BackfillSummary> backfillVectors(VectorBackfillMode mode) async {
+    final dio = ref.read(dioProvider);
+    var scanned = 0, embedded = 0, vectors = 0, skipped = 0, pages = 0;
+    String? cursor;
+    // Pull the largest page the contract allows to minimise round-trips; the
+    // page cap is a defensive backstop against a pathological non-advancing
+    // cursor (200 docs/page × 1000 pages = 200k docs).
+    do {
+      final response = await dio.post(
+        '/admin/vectors/backfill',
+        queryParameters: {
+          'mode': mode.wire,
+          'limit': 200,
+          'cursor': ?cursor,
+        },
+      );
+      final page = BackfillResponse.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+      scanned += page.scanned;
+      embedded += page.embedded;
+      vectors += page.vectors;
+      skipped += page.skipped;
+      pages++;
+      cursor = (page.nextCursor?.isNotEmpty ?? false) ? page.nextCursor : null;
+    } while (cursor != null && pages < 1000);
+
+    return BackfillSummary(
+      mode: mode,
+      scanned: scanned,
+      embedded: embedded,
+      vectors: vectors,
+      skipped: skipped,
+      pages: pages,
+    );
+  }
 }
 
 final documentsListProvider =
@@ -562,3 +607,53 @@ final documentSearchProvider =
         rethrow;
       }
     });
+
+/// Mode for `POST /admin/vectors/backfill`. [missing] embeds only documents
+/// whose vectors are absent (cheap, incremental — the backend default);
+/// [rebuild] re-embeds every live document (expensive in compute and real cost
+/// — use after an embedding-model / chunk-size change, or to repair a
+/// suspected-stale index).
+enum VectorBackfillMode {
+  missing('missing'),
+  rebuild('rebuild');
+
+  const VectorBackfillMode(this.wire);
+
+  /// The on-the-wire `mode` value.
+  final String wire;
+}
+
+/// Aggregate of a (possibly multi-page) vector backfill run — the per-page
+/// `BackfillResponse` counts summed across the whole walk.
+class BackfillSummary {
+  const BackfillSummary({
+    required this.mode,
+    required this.scanned,
+    required this.embedded,
+    required this.vectors,
+    required this.skipped,
+    required this.pages,
+  });
+
+  final VectorBackfillMode mode;
+
+  /// Live documents scanned across all pages.
+  final int scanned;
+
+  /// Documents (re-)embedded.
+  final int embedded;
+
+  /// Chunk vectors upserted.
+  final int vectors;
+
+  /// Documents skipped (already had vectors, `missing` mode).
+  final int skipped;
+
+  /// Number of backfill pages walked.
+  final int pages;
+
+  /// Heuristic flag: fewer chunk vectors than documents embedded suggests some
+  /// embeds silently failed mid-run (the contract calls out `vectors ≪
+  /// embedded` as a transient Vectorize/Workers-AI failure worth re-running).
+  bool get suspectPartialFailure => embedded > 0 && vectors < embedded;
+}

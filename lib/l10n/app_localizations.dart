@@ -424,6 +424,114 @@ abstract class AppLocalizations {
   /// **'Semantic'**
   String get searchModeSemantic;
 
+  /// Title of the semantic-search vector-index management entry and sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Search index'**
+  String get searchIndex;
+
+  /// Subtitle on the Operate > Documents 'Search index' entry row.
+  ///
+  /// In en, this message translates to:
+  /// **'Semantic search vectors'**
+  String get searchIndexSubtitle;
+
+  /// Eyebrow above the search-index (vector backfill) sheet title.
+  ///
+  /// In en, this message translates to:
+  /// **'Semantic search'**
+  String get semanticSearch;
+
+  /// Intro paragraph in the search-index sheet explaining why vectors are backfilled.
+  ///
+  /// In en, this message translates to:
+  /// **'Semantic search matches documents by concept using vector embeddings. Documents added before search was enabled — or any that slipped through — need embedding before they appear in semantic and hybrid results.'**
+  String get backfillBody;
+
+  /// Title for the cheap, incremental backfill option (embeds only un-vectored docs).
+  ///
+  /// In en, this message translates to:
+  /// **'Index new documents'**
+  String get indexNewTitle;
+
+  /// Body for the 'Index new documents' backfill option card.
+  ///
+  /// In en, this message translates to:
+  /// **'Embed only documents that don\'t have vectors yet. Fast and inexpensive.'**
+  String get indexNewOptionBody;
+
+  /// Confirmation body for the index-new (missing) backfill mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Embed every document that\'s missing search vectors. This is incremental and cheap — only un-indexed documents are touched.'**
+  String get indexNewConfirmBody;
+
+  /// Confirm button for the index-new backfill mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Index new'**
+  String get indexNewCta;
+
+  /// Title for the expensive backfill option (re-embeds the whole corpus).
+  ///
+  /// In en, this message translates to:
+  /// **'Rebuild entire index'**
+  String get rebuildIndexTitle;
+
+  /// Body for the 'Rebuild entire index' backfill option card.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-embed every document from scratch. Slower and more costly — use after an embedding-model change or to repair the index.'**
+  String get rebuildIndexOptionBody;
+
+  /// Confirmation body for the rebuild backfill mode; stresses the cost.
+  ///
+  /// In en, this message translates to:
+  /// **'This re-embeds every live document from scratch — significantly more compute and real cost than indexing only new documents. Run it only after a model or chunk-size change, or to repair a stale index.'**
+  String get rebuildIndexConfirmBody;
+
+  /// Confirm button for the rebuild backfill mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Rebuild index'**
+  String get rebuildIndexCta;
+
+  /// Progress label shown while the index-new backfill runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Indexing new documents…'**
+  String get indexingNew;
+
+  /// Progress label shown while the rebuild backfill runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Rebuilding the entire index…'**
+  String get rebuildingIndex;
+
+  /// Success toast after a backfill run that embedded at least one document.
+  ///
+  /// In en, this message translates to:
+  /// **'Search index updated · {embedded} embedded, {vectors} vectors, {skipped} skipped'**
+  String backfillDone(int embedded, int vectors, int skipped);
+
+  /// Toast when a backfill run found no documents needing embedding.
+  ///
+  /// In en, this message translates to:
+  /// **'Search index already up to date — nothing to embed.'**
+  String get backfillUpToDate;
+
+  /// Warning toast when chunk vectors are far fewer than docs embedded (transient failure).
+  ///
+  /// In en, this message translates to:
+  /// **'Embedded {embedded} docs but only {vectors} vectors landed — some embeds failed. Try again.'**
+  String backfillPartial(int embedded, int vectors);
+
+  /// Error toast when a backfill run throws.
+  ///
+  /// In en, this message translates to:
+  /// **'Backfill failed: {error}'**
+  String backfillFailed(String error);
+
   /// Eyebrow above the Operate screen title (café metaphor).
   ///
   /// In en, this message translates to:

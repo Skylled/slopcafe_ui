@@ -205,6 +205,72 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchModeSemantic => 'Semantic';
 
   @override
+  String get searchIndex => 'Search index';
+
+  @override
+  String get searchIndexSubtitle => 'Semantic search vectors';
+
+  @override
+  String get semanticSearch => 'Semantic search';
+
+  @override
+  String get backfillBody =>
+      'Semantic search matches documents by concept using vector embeddings. Documents added before search was enabled — or any that slipped through — need embedding before they appear in semantic and hybrid results.';
+
+  @override
+  String get indexNewTitle => 'Index new documents';
+
+  @override
+  String get indexNewOptionBody =>
+      'Embed only documents that don\'t have vectors yet. Fast and inexpensive.';
+
+  @override
+  String get indexNewConfirmBody =>
+      'Embed every document that\'s missing search vectors. This is incremental and cheap — only un-indexed documents are touched.';
+
+  @override
+  String get indexNewCta => 'Index new';
+
+  @override
+  String get rebuildIndexTitle => 'Rebuild entire index';
+
+  @override
+  String get rebuildIndexOptionBody =>
+      'Re-embed every document from scratch. Slower and more costly — use after an embedding-model change or to repair the index.';
+
+  @override
+  String get rebuildIndexConfirmBody =>
+      'This re-embeds every live document from scratch — significantly more compute and real cost than indexing only new documents. Run it only after a model or chunk-size change, or to repair a stale index.';
+
+  @override
+  String get rebuildIndexCta => 'Rebuild index';
+
+  @override
+  String get indexingNew => 'Indexing new documents…';
+
+  @override
+  String get rebuildingIndex => 'Rebuilding the entire index…';
+
+  @override
+  String backfillDone(int embedded, int vectors, int skipped) {
+    return 'Search index updated · $embedded embedded, $vectors vectors, $skipped skipped';
+  }
+
+  @override
+  String get backfillUpToDate =>
+      'Search index already up to date — nothing to embed.';
+
+  @override
+  String backfillPartial(int embedded, int vectors) {
+    return 'Embedded $embedded docs but only $vectors vectors landed — some embeds failed. Try again.';
+  }
+
+  @override
+  String backfillFailed(String error) {
+    return 'Backfill failed: $error';
+  }
+
+  @override
   String get backOfHouse => 'Back of house';
 
   @override

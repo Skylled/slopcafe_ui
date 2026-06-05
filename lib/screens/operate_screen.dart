@@ -119,6 +119,18 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
   }
 
   // -------------------------------------------------------------------------
+  // Documents: manage the semantic-search vector index (POST /admin/vectors/
+  // backfill). Two modes — index-new (cheap) and rebuild (expensive) — each
+  // gated by its own confirmation step inside the sheet.
+  // -------------------------------------------------------------------------
+  Future<void> _openBackfill() async {
+    await showAppSheet<void>(
+      context,
+      builder: (_) => _BackfillSheet(ref: ref, host: context),
+    );
+  }
+
+  // -------------------------------------------------------------------------
   // Documents: author a new document (POST /admin/documents). The compose
   // screen reloads the list itself and pops the WriteResponse; we surface the
   // outcome (including any sanitizer adjustments) here.
@@ -458,6 +470,42 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
           icon: Icons.edit_note,
           expand: true,
           onPressed: _openCompose,
+        ),
+        const SizedBox(height: 10),
+        // Semantic-search index management (vector backfill).
+        PressCard(
+          onPress: _openBackfill,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: c.surface2,
+              border: Border.all(color: c.lineSoft),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.travel_explore, size: 18, color: c.textDim),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.searchIndex,
+                        style: AppText.titleSm.copyWith(color: c.text),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.searchIndexSubtitle,
+                        style: AppText.small.copyWith(color: c.textFaint),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, size: 20, color: c.textFaint),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 16),
         Padding(
@@ -1858,6 +1906,201 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
             onTap: _busy ? null : _revoke,
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ===========================================================================
+// Vector backfill sheet (semantic-search index): index-new vs rebuild.
+// ===========================================================================
+class _BackfillSheet extends StatefulWidget {
+  const _BackfillSheet({required this.ref, required this.host});
+  final WidgetRef ref;
+  final BuildContext host;
+
+  @override
+  State<_BackfillSheet> createState() => _BackfillSheetState();
+}
+
+class _BackfillSheetState extends State<_BackfillSheet> {
+  bool _busy = false;
+  VectorBackfillMode? _running;
+
+  Future<void> _run(VectorBackfillMode mode) async {
+    final l10n = context.l10n;
+    final rebuild = mode == VectorBackfillMode.rebuild;
+
+    // Confirmation step (required for both modes; rebuild gets the danger CTA).
+    final confirmed = await showConfirmSheet(
+      widget.host,
+      title: rebuild ? l10n.rebuildIndexTitle : l10n.indexNewTitle,
+      body: Text(
+        rebuild ? l10n.rebuildIndexConfirmBody : l10n.indexNewConfirmBody,
+      ),
+      cta: rebuild ? l10n.rebuildIndexCta : l10n.indexNewCta,
+      danger: rebuild,
+    );
+    if (!confirmed || !mounted) return;
+
+    setState(() {
+      _busy = true;
+      _running = mode;
+    });
+    try {
+      final summary = await widget.ref
+          .read(documentsListProvider.notifier)
+          .backfillVectors(mode);
+      if (widget.host.mounted) {
+        final String msg;
+        final bool danger;
+        if (summary.suspectPartialFailure) {
+          msg = l10n.backfillPartial(summary.embedded, summary.vectors);
+          danger = true;
+        } else if (summary.embedded == 0) {
+          msg = l10n.backfillUpToDate;
+          danger = false;
+        } else {
+          msg = l10n.backfillDone(
+            summary.embedded,
+            summary.vectors,
+            summary.skipped,
+          );
+          danger = false;
+        }
+        showToast(widget.host, msg, danger: danger);
+      }
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _running = null;
+        });
+        showToast(context, l10n.backfillFailed(ApiError.describe(e)), danger: true);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    return AppSheet(
+      title: l10n.searchIndex,
+      subtitle: l10n.semanticSearch,
+      icon: Icons.travel_explore,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.backfillBody, style: AppText.body.copyWith(color: c.textDim)),
+          const SizedBox(height: 18),
+          if (_busy)
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: c.surface2,
+                border: Border.all(color: c.lineSoft),
+                borderRadius: BorderRadius.circular(AppRadii.lg),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      color: c.clay,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      _running == VectorBackfillMode.rebuild
+                          ? l10n.rebuildingIndex
+                          : l10n.indexingNew,
+                      style: AppText.small.copyWith(color: c.textDim),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else ...[
+            _BackfillOption(
+              icon: Icons.auto_fix_high,
+              title: l10n.indexNewTitle,
+              body: l10n.indexNewOptionBody,
+              onTap: () => _run(VectorBackfillMode.missing),
+            ),
+            const SizedBox(height: 10),
+            _BackfillOption(
+              icon: Icons.refresh,
+              title: l10n.rebuildIndexTitle,
+              body: l10n.rebuildIndexOptionBody,
+              danger: true,
+              onTap: () => _run(VectorBackfillMode.rebuild),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _BackfillOption extends StatelessWidget {
+  const _BackfillOption({
+    required this.icon,
+    required this.title,
+    required this.body,
+    required this.onTap,
+    this.danger = false,
+  });
+  final IconData icon;
+  final String title;
+  final String body;
+  final VoidCallback onTap;
+  final bool danger;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final accent = danger ? c.red : c.clayD;
+    return PressCard(
+      onPress: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: c.surface2,
+          border: Border.all(
+            color: danger ? c.red.withValues(alpha: 0.30) : c.lineSoft,
+          ),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 19, color: accent),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: AppText.titleSm.copyWith(color: c.text)),
+                  const SizedBox(height: 3),
+                  Text(
+                    body,
+                    style: AppText.small.copyWith(
+                      color: c.textFaint,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right, size: 20, color: c.textFaint),
+          ],
+        ),
       ),
     );
   }
