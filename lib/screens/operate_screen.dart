@@ -19,6 +19,7 @@ import '../widgets/section_header.dart';
 import '../widgets/sheets.dart';
 import '../widgets/stat.dart';
 import '../widgets/toast.dart';
+import 'compose_screen.dart';
 import 'reader_screen.dart';
 
 /// Operate — "The Pass" (back of house). The single most feature-dense screen:
@@ -144,6 +145,26 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
     await showAppSheet<void>(
       context,
       builder: (_) => _DocActionsSheet(ref: ref, host: context, doc: doc),
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Documents: author a new document (POST /admin/documents). The compose
+  // screen reloads the list itself and pops the WriteResponse; we surface the
+  // outcome (including any sanitizer adjustments) here.
+  // -------------------------------------------------------------------------
+  Future<void> _openCompose() async {
+    final l10n = context.l10n;
+    final write = await Navigator.of(context).push<WriteResponse>(
+      MaterialPageRoute(builder: (_) => const ComposeScreen()),
+    );
+    if (write == null || !mounted) return;
+    final adjusted = write.stripped.length + write.willNotRender.length;
+    showToast(
+      context,
+      adjusted > 0
+          ? l10n.documentPublishedSanitized(write.version, adjusted)
+          : l10n.documentPublished(write.version),
     );
   }
 
@@ -452,6 +473,14 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        AppButton(
+          l10n.authorDocument,
+          variant: AppBtnVariant.primary,
+          icon: Icons.edit_note,
+          expand: true,
+          onPressed: _openCompose,
+        ),
+        const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.fromLTRB(2, 0, 2, 12),
           child: Row(

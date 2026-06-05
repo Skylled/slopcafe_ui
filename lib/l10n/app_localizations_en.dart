@@ -599,6 +599,96 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get authorDocument => 'Author a document';
+
+  @override
+  String get composeTitle => 'Compose';
+
+  @override
+  String get composeEyebrow => 'New document';
+
+  @override
+  String get composeModeWrite => 'Write';
+
+  @override
+  String get composeModePreview => 'Preview';
+
+  @override
+  String get composeFormatMarkdown => 'Markdown';
+
+  @override
+  String get composeFormatHtml => 'HTML';
+
+  @override
+  String get composeBodyHint => 'Write your document here…';
+
+  @override
+  String get composePreviewRaw => 'Preview · raw source';
+
+  @override
+  String get composePreviewEmpty => 'Nothing to preview yet.';
+
+  @override
+  String get composeDetails => 'Details';
+
+  @override
+  String get composeTitleLabel => 'TITLE';
+
+  @override
+  String get composeTitleHint =>
+      'Optional — derived from the first heading if left blank';
+
+  @override
+  String get composeDescriptionLabel => 'DESCRIPTION';
+
+  @override
+  String get composeDescriptionHint => 'Optional short summary';
+
+  @override
+  String get composeSlugNote =>
+      'Optional — a unique URL slug. Leave blank to auto-assign.';
+
+  @override
+  String get composeVisibilityLabel => 'VISIBILITY';
+
+  @override
+  String get composeVisibilityDefault => 'Default';
+
+  @override
+  String get composeVisibilityPublic => 'Public';
+
+  @override
+  String get composeVisibilityPrivate => 'Private';
+
+  @override
+  String get composeVisibilityNote =>
+      '“Default” births the document at the deployment\'s configured visibility.';
+
+  @override
+  String get composePublish => 'Publish';
+
+  @override
+  String get composePublishing => 'Publishing…';
+
+  @override
+  String get composeContentRequired => 'Write some content before publishing.';
+
+  @override
+  String documentPublished(int version) {
+    return 'Published as v$version.';
+  }
+
+  @override
+  String documentPublishedSanitized(int version, int count) {
+    return 'Published v$version — the sanitizer adjusted $count item(s).';
+  }
+
+  @override
+  String failedPublish(String error) {
+    return 'Failed to publish: $error';
+  }
+
+  @override
   String get revokeDocumentTitle => 'Revoke document';
 
   @override

@@ -64,6 +64,7 @@ _DocumentListing _$DocumentListingFromJson(Map<String, dynamic> json) =>
     _DocumentListing(
       publicId: json['public_id'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
+      createdByKind: json['created_by_kind'] as String,
       tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
       visibility: json['visibility'] as String,
       currentVer: (json['current_ver'] as num?)?.toInt(),
@@ -82,6 +83,7 @@ Map<String, dynamic> _$DocumentListingToJson(_DocumentListing instance) =>
     <String, dynamic>{
       'public_id': instance.publicId,
       'created_at': instance.createdAt.toIso8601String(),
+      'created_by_kind': instance.createdByKind,
       'tags': instance.tags,
       'visibility': instance.visibility,
       'current_ver': instance.currentVer,
@@ -363,6 +365,7 @@ Map<String, dynamic> _$SearchDocumentsResponseToJson(
 _SearchHit _$SearchHitFromJson(Map<String, dynamic> json) => _SearchHit(
   publicId: json['public_id'] as String,
   createdAt: DateTime.parse(json['created_at'] as String),
+  createdByKind: json['created_by_kind'] as String,
   tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
   visibility: json['visibility'] as String,
   score: (json['score'] as num).toDouble(),
@@ -384,6 +387,7 @@ Map<String, dynamic> _$SearchHitToJson(_SearchHit instance) =>
     <String, dynamic>{
       'public_id': instance.publicId,
       'created_at': instance.createdAt.toIso8601String(),
+      'created_by_kind': instance.createdByKind,
       'tags': instance.tags,
       'visibility': instance.visibility,
       'score': instance.score,

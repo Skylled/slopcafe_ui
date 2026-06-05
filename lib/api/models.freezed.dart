@@ -831,7 +831,7 @@ as String,
 /// @nodoc
 mixin _$DocumentListing {
 
-@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'visibility') String get visibility;@JsonKey(name: 'current_ver') int? get currentVer;@JsonKey(name: 'created_by_id') String? get createdById;@JsonKey(name: 'created_by_name') String? get createdByName;@JsonKey(name: 'current_size') int? get currentSize;@JsonKey(name: 'revoked_at') DateTime? get revokedAt;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;
+@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'created_by_kind') String get createdByKind;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'visibility') String get visibility;@JsonKey(name: 'current_ver') int? get currentVer;@JsonKey(name: 'created_by_id') String? get createdById;@JsonKey(name: 'created_by_name') String? get createdByName;@JsonKey(name: 'current_size') int? get currentSize;@JsonKey(name: 'revoked_at') DateTime? get revokedAt;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;
 /// Create a copy of DocumentListing
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -844,16 +844,16 @@ $DocumentListingCopyWith<DocumentListing> get copyWith => _$DocumentListingCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DocumentListing&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DocumentListing&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,publicId,createdAt,const DeepCollectionEquality().hash(tags),visibility,currentVer,createdById,createdByName,currentSize,revokedAt,title,description,slug);
+int get hashCode => Object.hash(runtimeType,publicId,createdAt,createdByKind,const DeepCollectionEquality().hash(tags),visibility,currentVer,createdById,createdByName,currentSize,revokedAt,title,description,slug);
 
 @override
 String toString() {
-  return 'DocumentListing(publicId: $publicId, createdAt: $createdAt, tags: $tags, visibility: $visibility, currentVer: $currentVer, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug)';
+  return 'DocumentListing(publicId: $publicId, createdAt: $createdAt, createdByKind: $createdByKind, tags: $tags, visibility: $visibility, currentVer: $currentVer, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug)';
 }
 
 
@@ -864,7 +864,7 @@ abstract mixin class $DocumentListingCopyWith<$Res>  {
   factory $DocumentListingCopyWith(DocumentListing value, $Res Function(DocumentListing) _then) = _$DocumentListingCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug
 });
 
 
@@ -881,11 +881,12 @@ class _$DocumentListingCopyWithImpl<$Res>
 
 /// Create a copy of DocumentListing
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? createdAt = null,Object? tags = null,Object? visibility = null,Object? currentVer = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? createdAt = null,Object? createdByKind = null,Object? tags = null,Object? visibility = null,Object? currentVer = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,}) {
   return _then(_self.copyWith(
 publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
+as DateTime,createdByKind: null == createdByKind ? _self.createdByKind : createdByKind // ignore: cast_nullable_to_non_nullable
+as String,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
 as List<String>,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
 as String,currentVer: freezed == currentVer ? _self.currentVer : currentVer // ignore: cast_nullable_to_non_nullable
 as int?,createdById: freezed == createdById ? _self.createdById : createdById // ignore: cast_nullable_to_non_nullable
@@ -980,10 +981,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DocumentListing() when $default != null:
-return $default(_that.publicId,_that.createdAt,_that.tags,_that.visibility,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug);case _:
+return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_that.visibility,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug);case _:
   return orElse();
 
 }
@@ -1001,10 +1002,10 @@ return $default(_that.publicId,_that.createdAt,_that.tags,_that.visibility,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)  $default,) {final _that = this;
 switch (_that) {
 case _DocumentListing():
-return $default(_that.publicId,_that.createdAt,_that.tags,_that.visibility,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug);case _:
+return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_that.visibility,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1021,10 +1022,10 @@ return $default(_that.publicId,_that.createdAt,_that.tags,_that.visibility,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)?  $default,) {final _that = this;
 switch (_that) {
 case _DocumentListing() when $default != null:
-return $default(_that.publicId,_that.createdAt,_that.tags,_that.visibility,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug);case _:
+return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_that.visibility,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug);case _:
   return null;
 
 }
@@ -1036,11 +1037,12 @@ return $default(_that.publicId,_that.createdAt,_that.tags,_that.visibility,_that
 @JsonSerializable()
 
 class _DocumentListing extends DocumentListing {
-  const _DocumentListing({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'visibility') required this.visibility, @JsonKey(name: 'current_ver') this.currentVer, @JsonKey(name: 'created_by_id') this.createdById, @JsonKey(name: 'created_by_name') this.createdByName, @JsonKey(name: 'current_size') this.currentSize, @JsonKey(name: 'revoked_at') this.revokedAt, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug}): _tags = tags,super._();
+  const _DocumentListing({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'created_by_kind') required this.createdByKind, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'visibility') required this.visibility, @JsonKey(name: 'current_ver') this.currentVer, @JsonKey(name: 'created_by_id') this.createdById, @JsonKey(name: 'created_by_name') this.createdByName, @JsonKey(name: 'current_size') this.currentSize, @JsonKey(name: 'revoked_at') this.revokedAt, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug}): _tags = tags,super._();
   factory _DocumentListing.fromJson(Map<String, dynamic> json) => _$DocumentListingFromJson(json);
 
 @override@JsonKey(name: 'public_id') final  String publicId;
 @override@JsonKey(name: 'created_at') final  DateTime createdAt;
+@override@JsonKey(name: 'created_by_kind') final  String createdByKind;
  final  List<String> _tags;
 @override@JsonKey(name: 'tags') List<String> get tags {
   if (_tags is EqualUnmodifiableListView) return _tags;
@@ -1071,16 +1073,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DocumentListing&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DocumentListing&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,publicId,createdAt,const DeepCollectionEquality().hash(_tags),visibility,currentVer,createdById,createdByName,currentSize,revokedAt,title,description,slug);
+int get hashCode => Object.hash(runtimeType,publicId,createdAt,createdByKind,const DeepCollectionEquality().hash(_tags),visibility,currentVer,createdById,createdByName,currentSize,revokedAt,title,description,slug);
 
 @override
 String toString() {
-  return 'DocumentListing(publicId: $publicId, createdAt: $createdAt, tags: $tags, visibility: $visibility, currentVer: $currentVer, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug)';
+  return 'DocumentListing(publicId: $publicId, createdAt: $createdAt, createdByKind: $createdByKind, tags: $tags, visibility: $visibility, currentVer: $currentVer, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug)';
 }
 
 
@@ -1091,7 +1093,7 @@ abstract mixin class _$DocumentListingCopyWith<$Res> implements $DocumentListing
   factory _$DocumentListingCopyWith(_DocumentListing value, $Res Function(_DocumentListing) _then) = __$DocumentListingCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug
 });
 
 
@@ -1108,11 +1110,12 @@ class __$DocumentListingCopyWithImpl<$Res>
 
 /// Create a copy of DocumentListing
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? createdAt = null,Object? tags = null,Object? visibility = null,Object? currentVer = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? createdAt = null,Object? createdByKind = null,Object? tags = null,Object? visibility = null,Object? currentVer = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,}) {
   return _then(_DocumentListing(
 publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
+as DateTime,createdByKind: null == createdByKind ? _self.createdByKind : createdByKind // ignore: cast_nullable_to_non_nullable
+as String,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
 as List<String>,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
 as String,currentVer: freezed == currentVer ? _self.currentVer : currentVer // ignore: cast_nullable_to_non_nullable
 as int?,createdById: freezed == createdById ? _self.createdById : createdById // ignore: cast_nullable_to_non_nullable
@@ -5551,7 +5554,7 @@ as List<SearchHit>,
 /// @nodoc
 mixin _$SearchHit {
 
-@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'visibility') String get visibility;@JsonKey(name: 'score') double get score;@JsonKey(name: 'matched_field') String get matchedField;@JsonKey(name: 'snippet') String get snippet;@JsonKey(name: 'current_ver') int? get currentVer;@JsonKey(name: 'created_by_id') String? get createdById;@JsonKey(name: 'created_by_name') String? get createdByName;@JsonKey(name: 'current_size') int? get currentSize;@JsonKey(name: 'revoked_at') DateTime? get revokedAt;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;
+@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'created_by_kind') String get createdByKind;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'visibility') String get visibility;@JsonKey(name: 'score') double get score;@JsonKey(name: 'matched_field') String get matchedField;@JsonKey(name: 'snippet') String get snippet;@JsonKey(name: 'current_ver') int? get currentVer;@JsonKey(name: 'created_by_id') String? get createdById;@JsonKey(name: 'created_by_name') String? get createdByName;@JsonKey(name: 'current_size') int? get currentSize;@JsonKey(name: 'revoked_at') DateTime? get revokedAt;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;
 /// Create a copy of SearchHit
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -5564,16 +5567,16 @@ $SearchHitCopyWith<SearchHit> get copyWith => _$SearchHitCopyWithImpl<SearchHit>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchHit&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.score, score) || other.score == score)&&(identical(other.matchedField, matchedField) || other.matchedField == matchedField)&&(identical(other.snippet, snippet) || other.snippet == snippet)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchHit&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.score, score) || other.score == score)&&(identical(other.matchedField, matchedField) || other.matchedField == matchedField)&&(identical(other.snippet, snippet) || other.snippet == snippet)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,publicId,createdAt,const DeepCollectionEquality().hash(tags),visibility,score,matchedField,snippet,currentVer,createdById,createdByName,currentSize,revokedAt,title,description,slug);
+int get hashCode => Object.hash(runtimeType,publicId,createdAt,createdByKind,const DeepCollectionEquality().hash(tags),visibility,score,matchedField,snippet,currentVer,createdById,createdByName,currentSize,revokedAt,title,description,slug);
 
 @override
 String toString() {
-  return 'SearchHit(publicId: $publicId, createdAt: $createdAt, tags: $tags, visibility: $visibility, score: $score, matchedField: $matchedField, snippet: $snippet, currentVer: $currentVer, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug)';
+  return 'SearchHit(publicId: $publicId, createdAt: $createdAt, createdByKind: $createdByKind, tags: $tags, visibility: $visibility, score: $score, matchedField: $matchedField, snippet: $snippet, currentVer: $currentVer, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug)';
 }
 
 
@@ -5584,7 +5587,7 @@ abstract mixin class $SearchHitCopyWith<$Res>  {
   factory $SearchHitCopyWith(SearchHit value, $Res Function(SearchHit) _then) = _$SearchHitCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'score') double score,@JsonKey(name: 'matched_field') String matchedField,@JsonKey(name: 'snippet') String snippet,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'score') double score,@JsonKey(name: 'matched_field') String matchedField,@JsonKey(name: 'snippet') String snippet,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug
 });
 
 
@@ -5601,11 +5604,12 @@ class _$SearchHitCopyWithImpl<$Res>
 
 /// Create a copy of SearchHit
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? createdAt = null,Object? tags = null,Object? visibility = null,Object? score = null,Object? matchedField = null,Object? snippet = null,Object? currentVer = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? createdAt = null,Object? createdByKind = null,Object? tags = null,Object? visibility = null,Object? score = null,Object? matchedField = null,Object? snippet = null,Object? currentVer = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,}) {
   return _then(_self.copyWith(
 publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
+as DateTime,createdByKind: null == createdByKind ? _self.createdByKind : createdByKind // ignore: cast_nullable_to_non_nullable
+as String,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
 as List<String>,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
 as String,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
 as double,matchedField: null == matchedField ? _self.matchedField : matchedField // ignore: cast_nullable_to_non_nullable
@@ -5703,10 +5707,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'score')  double score, @JsonKey(name: 'matched_field')  String matchedField, @JsonKey(name: 'snippet')  String snippet, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'score')  double score, @JsonKey(name: 'matched_field')  String matchedField, @JsonKey(name: 'snippet')  String snippet, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SearchHit() when $default != null:
-return $default(_that.publicId,_that.createdAt,_that.tags,_that.visibility,_that.score,_that.matchedField,_that.snippet,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug);case _:
+return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_that.visibility,_that.score,_that.matchedField,_that.snippet,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug);case _:
   return orElse();
 
 }
@@ -5724,10 +5728,10 @@ return $default(_that.publicId,_that.createdAt,_that.tags,_that.visibility,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'score')  double score, @JsonKey(name: 'matched_field')  String matchedField, @JsonKey(name: 'snippet')  String snippet, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'score')  double score, @JsonKey(name: 'matched_field')  String matchedField, @JsonKey(name: 'snippet')  String snippet, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)  $default,) {final _that = this;
 switch (_that) {
 case _SearchHit():
-return $default(_that.publicId,_that.createdAt,_that.tags,_that.visibility,_that.score,_that.matchedField,_that.snippet,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug);case _:
+return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_that.visibility,_that.score,_that.matchedField,_that.snippet,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -5744,10 +5748,10 @@ return $default(_that.publicId,_that.createdAt,_that.tags,_that.visibility,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'score')  double score, @JsonKey(name: 'matched_field')  String matchedField, @JsonKey(name: 'snippet')  String snippet, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'score')  double score, @JsonKey(name: 'matched_field')  String matchedField, @JsonKey(name: 'snippet')  String snippet, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)?  $default,) {final _that = this;
 switch (_that) {
 case _SearchHit() when $default != null:
-return $default(_that.publicId,_that.createdAt,_that.tags,_that.visibility,_that.score,_that.matchedField,_that.snippet,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug);case _:
+return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_that.visibility,_that.score,_that.matchedField,_that.snippet,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug);case _:
   return null;
 
 }
@@ -5759,11 +5763,12 @@ return $default(_that.publicId,_that.createdAt,_that.tags,_that.visibility,_that
 @JsonSerializable()
 
 class _SearchHit extends SearchHit {
-  const _SearchHit({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'visibility') required this.visibility, @JsonKey(name: 'score') required this.score, @JsonKey(name: 'matched_field') required this.matchedField, @JsonKey(name: 'snippet') required this.snippet, @JsonKey(name: 'current_ver') this.currentVer, @JsonKey(name: 'created_by_id') this.createdById, @JsonKey(name: 'created_by_name') this.createdByName, @JsonKey(name: 'current_size') this.currentSize, @JsonKey(name: 'revoked_at') this.revokedAt, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug}): _tags = tags,super._();
+  const _SearchHit({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'created_by_kind') required this.createdByKind, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'visibility') required this.visibility, @JsonKey(name: 'score') required this.score, @JsonKey(name: 'matched_field') required this.matchedField, @JsonKey(name: 'snippet') required this.snippet, @JsonKey(name: 'current_ver') this.currentVer, @JsonKey(name: 'created_by_id') this.createdById, @JsonKey(name: 'created_by_name') this.createdByName, @JsonKey(name: 'current_size') this.currentSize, @JsonKey(name: 'revoked_at') this.revokedAt, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug}): _tags = tags,super._();
   factory _SearchHit.fromJson(Map<String, dynamic> json) => _$SearchHitFromJson(json);
 
 @override@JsonKey(name: 'public_id') final  String publicId;
 @override@JsonKey(name: 'created_at') final  DateTime createdAt;
+@override@JsonKey(name: 'created_by_kind') final  String createdByKind;
  final  List<String> _tags;
 @override@JsonKey(name: 'tags') List<String> get tags {
   if (_tags is EqualUnmodifiableListView) return _tags;
@@ -5797,16 +5802,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchHit&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.score, score) || other.score == score)&&(identical(other.matchedField, matchedField) || other.matchedField == matchedField)&&(identical(other.snippet, snippet) || other.snippet == snippet)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchHit&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.score, score) || other.score == score)&&(identical(other.matchedField, matchedField) || other.matchedField == matchedField)&&(identical(other.snippet, snippet) || other.snippet == snippet)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,publicId,createdAt,const DeepCollectionEquality().hash(_tags),visibility,score,matchedField,snippet,currentVer,createdById,createdByName,currentSize,revokedAt,title,description,slug);
+int get hashCode => Object.hash(runtimeType,publicId,createdAt,createdByKind,const DeepCollectionEquality().hash(_tags),visibility,score,matchedField,snippet,currentVer,createdById,createdByName,currentSize,revokedAt,title,description,slug);
 
 @override
 String toString() {
-  return 'SearchHit(publicId: $publicId, createdAt: $createdAt, tags: $tags, visibility: $visibility, score: $score, matchedField: $matchedField, snippet: $snippet, currentVer: $currentVer, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug)';
+  return 'SearchHit(publicId: $publicId, createdAt: $createdAt, createdByKind: $createdByKind, tags: $tags, visibility: $visibility, score: $score, matchedField: $matchedField, snippet: $snippet, currentVer: $currentVer, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug)';
 }
 
 
@@ -5817,7 +5822,7 @@ abstract mixin class _$SearchHitCopyWith<$Res> implements $SearchHitCopyWith<$Re
   factory _$SearchHitCopyWith(_SearchHit value, $Res Function(_SearchHit) _then) = __$SearchHitCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'score') double score,@JsonKey(name: 'matched_field') String matchedField,@JsonKey(name: 'snippet') String snippet,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'score') double score,@JsonKey(name: 'matched_field') String matchedField,@JsonKey(name: 'snippet') String snippet,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug
 });
 
 
@@ -5834,11 +5839,12 @@ class __$SearchHitCopyWithImpl<$Res>
 
 /// Create a copy of SearchHit
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? createdAt = null,Object? tags = null,Object? visibility = null,Object? score = null,Object? matchedField = null,Object? snippet = null,Object? currentVer = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? createdAt = null,Object? createdByKind = null,Object? tags = null,Object? visibility = null,Object? score = null,Object? matchedField = null,Object? snippet = null,Object? currentVer = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,}) {
   return _then(_SearchHit(
 publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
+as DateTime,createdByKind: null == createdByKind ? _self.createdByKind : createdByKind // ignore: cast_nullable_to_non_nullable
+as String,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
 as List<String>,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
 as String,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
 as double,matchedField: null == matchedField ? _self.matchedField : matchedField // ignore: cast_nullable_to_non_nullable

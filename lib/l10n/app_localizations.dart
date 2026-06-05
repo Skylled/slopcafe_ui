@@ -1078,6 +1078,168 @@ abstract class AppLocalizations {
   /// **'Failed to update: {error}'**
   String failedUpdate(String error);
 
+  /// Operate › Documents CTA that opens the compose screen (POST /admin/documents).
+  ///
+  /// In en, this message translates to:
+  /// **'Author a document'**
+  String get authorDocument;
+
+  /// Title of the operator authoring / Markdown composition screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Compose'**
+  String get composeTitle;
+
+  /// No description provided for @composeEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'New document'**
+  String get composeEyebrow;
+
+  /// No description provided for @composeModeWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Write'**
+  String get composeModeWrite;
+
+  /// No description provided for @composeModePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get composeModePreview;
+
+  /// No description provided for @composeFormatMarkdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown'**
+  String get composeFormatMarkdown;
+
+  /// No description provided for @composeFormatHtml.
+  ///
+  /// In en, this message translates to:
+  /// **'HTML'**
+  String get composeFormatHtml;
+
+  /// No description provided for @composeBodyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your document here…'**
+  String get composeBodyHint;
+
+  /// Eyebrow over the placeholder compose preview pane (the swap-in seam for a Markdown renderer).
+  ///
+  /// In en, this message translates to:
+  /// **'Preview · raw source'**
+  String get composePreviewRaw;
+
+  /// No description provided for @composePreviewEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to preview yet.'**
+  String get composePreviewEmpty;
+
+  /// No description provided for @composeDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get composeDetails;
+
+  /// No description provided for @composeTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'TITLE'**
+  String get composeTitleLabel;
+
+  /// No description provided for @composeTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — derived from the first heading if left blank'**
+  String get composeTitleHint;
+
+  /// No description provided for @composeDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'DESCRIPTION'**
+  String get composeDescriptionLabel;
+
+  /// No description provided for @composeDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional short summary'**
+  String get composeDescriptionHint;
+
+  /// No description provided for @composeSlugNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — a unique URL slug. Leave blank to auto-assign.'**
+  String get composeSlugNote;
+
+  /// No description provided for @composeVisibilityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'VISIBILITY'**
+  String get composeVisibilityLabel;
+
+  /// No description provided for @composeVisibilityDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get composeVisibilityDefault;
+
+  /// No description provided for @composeVisibilityPublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get composeVisibilityPublic;
+
+  /// No description provided for @composeVisibilityPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get composeVisibilityPrivate;
+
+  /// No description provided for @composeVisibilityNote.
+  ///
+  /// In en, this message translates to:
+  /// **'“Default” births the document at the deployment\'s configured visibility.'**
+  String get composeVisibilityNote;
+
+  /// No description provided for @composePublish.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish'**
+  String get composePublish;
+
+  /// No description provided for @composePublishing.
+  ///
+  /// In en, this message translates to:
+  /// **'Publishing…'**
+  String get composePublishing;
+
+  /// No description provided for @composeContentRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Write some content before publishing.'**
+  String get composeContentRequired;
+
+  /// Toast after authoring a new document.
+  ///
+  /// In en, this message translates to:
+  /// **'Published as v{version}.'**
+  String documentPublished(int version);
+
+  /// Toast after authoring when the sanitizer stripped or flagged content.
+  ///
+  /// In en, this message translates to:
+  /// **'Published v{version} — the sanitizer adjusted {count} item(s).'**
+  String documentPublishedSanitized(int version, int count);
+
+  /// No description provided for @failedPublish.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to publish: {error}'**
+  String failedPublish(String error);
+
   /// No description provided for @revokeDocumentTitle.
   ///
   /// In en, this message translates to:

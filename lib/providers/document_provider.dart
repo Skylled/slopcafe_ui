@@ -282,6 +282,50 @@ class DocumentsListNotifier extends Notifier<DocumentsListState> {
     return state.documents.firstWhere((d) => d.publicId == publicId);
   }
 
+  /// Author a brand-new document as the operator principal via
+  /// `POST /admin/documents` (the new authoring surface).
+  ///
+  /// [content] + [format] (`'markdown'` | `'html'`) are the only contract-
+  /// required fields. The rest are optional — pass null/empty to let the backend
+  /// derive the title from the first `<h1>`, leave description/tags/slug unset,
+  /// and birth the document at the deployment's default visibility (so only send
+  /// [visibility] when the operator explicitly picks one).
+  ///
+  /// Returns the backend's [WriteResponse] (the new `publicId`/`url`/`version`
+  /// plus the sanitizer report — `stripped` / `willNotRender`) and reloads the
+  /// canonical first page so the new document shows up immediately (this also
+  /// refreshes the offline cache and flips the connection pill to "Live", just
+  /// like [loadNextPage]'s success path).
+  Future<WriteResponse> authorDocument({
+    required String content,
+    required String format,
+    String? title,
+    String? description,
+    List<String>? tags,
+    String? slug,
+    String? visibility,
+  }) async {
+    final dio = ref.read(dioProvider);
+    final body = <String, dynamic>{'content': content, 'format': format};
+    if (title != null && title.isNotEmpty) body['title'] = title;
+    if (description != null && description.isNotEmpty) {
+      body['description'] = description;
+    }
+    if (tags != null && tags.isNotEmpty) body['tags'] = tags;
+    if (slug != null && slug.isNotEmpty) body['slug'] = slug;
+    if (visibility != null && visibility.isNotEmpty) {
+      body['visibility'] = visibility;
+    }
+
+    final response = await dio.post('/admin/documents', data: body);
+    final write = WriteResponse.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+
+    await loadNextPage(clear: true);
+    return write;
+  }
+
   Future<int> restoreVersion(String publicId, int version) async {
     final dio = ref.read(dioProvider);
     final response = await dio.post(

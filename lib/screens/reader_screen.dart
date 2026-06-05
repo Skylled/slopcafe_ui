@@ -154,6 +154,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       return DocumentListing(
         publicId: publicId,
         createdAt: DateTime.now(),
+        createdByKind: 'agent',
         tags: [],
         title: publicId,
         visibility: 'private',

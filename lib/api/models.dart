@@ -57,6 +57,7 @@ abstract class DocumentListing with _$DocumentListing {
   const factory DocumentListing({
     @JsonKey(name: 'public_id') required String publicId,
     @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'created_by_kind') required String createdByKind,
     @JsonKey(name: 'tags') required List<String> tags,
     @JsonKey(name: 'visibility') required String visibility,
     @JsonKey(name: 'current_ver') int? currentVer,
@@ -289,6 +290,7 @@ abstract class SearchHit with _$SearchHit {
   const factory SearchHit({
     @JsonKey(name: 'public_id') required String publicId,
     @JsonKey(name: 'created_at') required DateTime createdAt,
+    @JsonKey(name: 'created_by_kind') required String createdByKind,
     @JsonKey(name: 'tags') required List<String> tags,
     @JsonKey(name: 'visibility') required String visibility,
     @JsonKey(name: 'score') required double score,
@@ -311,6 +313,7 @@ abstract class SearchHit with _$SearchHit {
     createdAt: createdAt,
     createdById: createdById,
     createdByName: createdByName,
+    createdByKind: createdByKind,
     currentSize: currentSize,
     revokedAt: revokedAt,
     title: title,
@@ -332,6 +335,7 @@ abstract class SearchHit with _$SearchHit {
     createdAt: doc.createdAt,
     createdById: doc.createdById,
     createdByName: doc.createdByName,
+    createdByKind: doc.createdByKind,
     currentSize: doc.currentSize,
     revokedAt: doc.revokedAt,
     title: doc.title,

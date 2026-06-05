@@ -120,7 +120,7 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
 The hand-written `lib/models/document.dart` / `lib/models/agent.dart` have been
 **replaced by code generated from the OpenAPI contract**. App code imports the
 barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dart)**.
-* **[lib/api/models.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/models.dart)** *(generated, do not edit)* — `freezed` + `json_serializable` data classes for every JSON request/response body in the spec: `DocumentListing`, `SearchHit`, `AgentListing`, `AgentKey`, `ListDocumentsResponse`, `SearchDocumentsResponse`, `ListAgentsResponse`, `ListAgentKeysResponse`, `MintAgentKeyResponse`, `CreateOAuthClientResponse`, `CreateUnboundOAuthClientResponse`, `Revoke{,Agent,Key}Response`, `SetDocument{Visibility,Slug,Tags}Response`, `HealthzResponse`, etc. Nullable (OpenAPI-3.1 `anyOf`-null) fields generate as nullable Dart; `created_at`/`revoked_at` (plain spec strings) are typed `DateTime`; `visibility`/`matched_field` stay `String` (not enums) to avoid call-site churn. `DocumentListing`/`AgentKey` expose an `isRevoked` getter; `SearchHit` is flat with a `.document` view + `SearchHit.fromDocument(...)` (used by the offline local-search fallback). `toJson` emits the same snake_case keys as before, so the offline document cache stays compatible.
+* **[lib/api/models.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/models.dart)** *(generated, do not edit)* — `freezed` + `json_serializable` data classes for every JSON request/response body in the spec: `DocumentListing`, `SearchHit`, `AgentListing`, `AgentKey`, `ListDocumentsResponse`, `SearchDocumentsResponse`, `ListAgentsResponse`, `ListAgentKeysResponse`, `MintAgentKeyResponse`, `CreateOAuthClientResponse`, `CreateUnboundOAuthClientResponse`, `Revoke{,Agent,Key}Response`, `SetDocument{Visibility,Slug,Tags}Response`, `HealthzResponse`, etc. Nullable (OpenAPI-3.1 `anyOf`-null) fields generate as nullable Dart; `created_at`/`revoked_at` (plain spec strings) are typed `DateTime`; `visibility`/`matched_field` stay `String` (not enums) to avoid call-site churn. `DocumentListing`/`AgentKey` expose an `isRevoked` getter; `SearchHit` is flat with a `.document` view + `SearchHit.fromDocument(...)` (used by the offline local-search fallback). `toJson` emits the same snake_case keys as before, so the offline document cache stays compatible (a stale cache missing a newly-required field just fails the parse and falls back to an online fetch — `getCachedDocumentList` swallows it). As of the authoring update both `DocumentListing` and `SearchHit` also carry a **required** `created_by_kind` (`agent`|`operator`, kept as `String`), distinguishing operator-authored documents.
 * **[lib/api/error_code.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/error_code.dart)** *(generated, do not edit)* — the `ErrorCode` enum: the 28 `error` discriminants of the `ErrorBody` oneOf union, plus `unknown` (forward-compat). `ErrorCode.fromWire(String?)` maps a wire value to a code.
 * **[lib/api/api_error.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api_error.dart)** *(hand-written glue)* — `ApiError`: a typed view over the `ErrorBody` envelope. `ApiError.fromException(e)` parses a `DioException`; `ApiError.describe(e)` returns the backend's `message` (falling back to the raw error) for toasts; discriminant extras are exposed as getters (`clientId`, `hint`, `slug`). The OAuth-exists path keys on `ErrorCode.clientExists`.
 
@@ -132,6 +132,7 @@ barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dar
   * Integrates search algorithms (such as full-text BM25 keyword matching) to calculate relevance score indicators.
   * Implements local client-side search fallback over cached listings with highlight formatting when offline.
   * Provides triggers for revoking specific documents and caching them locally.
+  * Exposes `authorDocument(...)` — the operator authoring write (`POST /admin/documents`). Builds the inline request body (`content`+`format` required; optional `title`/`description`/`tags`/`slug`/`visibility`), returns the backend's `WriteResponse`, and reloads the canonical first page on success.
 * **[lib/providers/agent_provider.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/providers/agent_provider.dart)**
   * Manages agent lists, agent creation, key minting/rotation, and key revocation actions.
 
@@ -141,7 +142,9 @@ barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dar
 * **[lib/screens/search_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/search_screen.dart)** — Search tab.
   * Autofocus query field, debounced live results via `documentSearchProvider` (with local cached fallback), relevance bars, matched-field pills, and highlighted snippets. Suggestion chips when idle.
 * **[lib/screens/operate_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/operate_screen.dart)** — Operate ("The Pass") tab.
-  * Fleet stat grid + R2 storage bar; a "Kitchen" segment (agent rows → an agent bottom-sheet with keys, mint key, OAuth client, kill; plus mint-agent and unbound-OAuth flows) and a "Documents" segment (admin doc list with include-revoked + a per-doc actions sheet: visibility/slug/tags/revoke).
+  * Fleet stat grid + R2 storage bar; a "Kitchen" segment (agent rows → an agent bottom-sheet with keys, mint key, OAuth client, kill; plus mint-agent and unbound-OAuth flows) and a "Documents" segment (an **"Author a document"** CTA that pushes the compose screen, the admin doc list with include-revoked + a per-doc actions sheet: visibility/slug/tags/revoke). After authoring it surfaces the outcome (incl. any sanitizer adjustments) via toast.
+* **[lib/screens/compose_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/compose_screen.dart)** — operator authoring / **Markdown composition** screen, pushed from Operate › Documents.
+  * A deliberately **forkable starting point**. The plumbing is wired end-to-end against the live contract: the metadata form (title/description/tags/slug/visibility), the `format` (Markdown/HTML) toggle, the write/preview switch, the `POST /admin/documents` call (via `documentsListProvider.authorDocument`), and sanitizer-aware result handling. The actual Markdown/HTML **rendering is intentionally left as an isolated swap seam** — `_PreviewPane`, currently a raw-source passthrough — so renderer packages (flutter_markdown, markdown_widget, gpt_markdown, …) can be A/B'd without touching the rest of the screen. **No rendering dependency was added** (deferred by design). Visibility is tri-state (Default = omit the field → deploy default · Public · Private). Pops the `WriteResponse` on success (the list is already reloaded by the provider). Render/behaviour covered by [test/compose_screen_test.dart](file:///Users/kyle/Repos/slopcafe_ui/test/compose_screen_test.dart).
 * **[lib/screens/reader_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/reader_screen.dart)** — full-screen document Reader ("the plate"), pushed as a route.
   * WebView-only reader with deliberately minimal chrome: a compact top bar (back · version chip · more), a single-line truncated serif title, a thin meta row (visibility · author · date), and tappable tag chips (→ `DocumentListScreen`). The WebView lives in an `Expanded` inside a `Column` (not a scroll view), so it scrolls internally and owns the screen edge-to-edge. Preserves the version-first offline cache strategy (conditional `If-None-Match`/`304`, instant cached render, reload only on version change). Operator actions are consolidated in the more-sheet (copy link, make public/private, edit slug & tags, copy slug URL, open in browser, revoke) plus version restore. Pops `true` after a revoke so list/search callers can refresh. Intercepts link clicks: matching configured Host URL links navigate the app internally to the document (resolving by public ID or slug), while other external links present an "Open in browser?" warning dialog before launching. (The cover, description, `OFFLINE READY` badge, bottom action bar, and the HTML/Markdown/Report view modes were removed.)
 * **[lib/screens/collections_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/collections_screen.dart)** — pushed **Collections** tag browser.
@@ -177,7 +180,11 @@ code-first API-contract effort).
 * **Pinned spec**: `tool/openapi.json` — an exact copy of what prod serves at
   `https://slopcafe.com/openapi.json`. Generating from the pin (not the live URL)
   keeps builds reproducible. `tool/CONTRACT_VERSION` records the `info.version`
-  generated against. **Re-pin + regenerate when `info.version` bumps:**
+  generated against. **Re-pin + regenerate whenever the backend surface
+  changes** — not only on an `info.version` bump. (The operator authoring
+  endpoints + `created_by_kind` landed under an unchanged `info.version` of
+  `1.0.0`, so `CONTRACT_VERSION` stayed `1.0.0`; only update it if `info.version`
+  actually changes.)
   ```sh
   curl -s https://slopcafe.com/openapi.json -o tool/openapi.json
   # update tool/CONTRACT_VERSION if info.version changed
@@ -201,6 +208,16 @@ code-first API-contract effort).
 * **Generated outputs** (committed, **do not hand-edit**): `lib/api/models.dart`,
   `lib/api/error_code.dart`, and the `build_runner` products `models.freezed.dart`
   / `models.g.dart`. Hand-written glue: `lib/api/api_error.dart`; barrel: `lib/api/api.dart`.
+* **Operator authoring (write) routes use hand-built request maps**:
+  `POST /admin/documents` (author a new doc as the operator principal) and
+  `PUT /admin/documents/{public_id}` (update → new version, optional `If-Match`)
+  take request bodies the spec models **inline** (not in `components.schemas`),
+  so the generator emits no request class — `DocumentsListNotifier.authorDocument`
+  builds the JSON map directly (mirroring the existing `set{Visibility,Slug,Tags}`
+  writes). Both return the generated `WriteResponse` (new `public_id`/`url`/
+  `version` + the sanitizer report `stripped`/`will_not_render`). The compose UI
+  lives in `lib/screens/compose_screen.dart`. (Only `POST` — author-new — is wired
+  in the UI so far; `PUT`/edit is a future extension over the same `WriteResponse`.)
 * **Non-JSON routes stay hand-rolled** (by spec design): content-negotiated /
   raw-bytes / HTML reads (`/d/{id}`, `/d/{id}/raw`, `/d/{id}/text`, `/s/{slug}`,
   the version `/raw` reads, restore) and `/mcp` are not JSON-modelled — the
