@@ -168,7 +168,7 @@ barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dar
 ## 🔗 External Integration Dependencies
 
 * **Canonical OpenAPI spec (machine source of truth)**:
-  * Served live at **[https://slopcafe.com/openapi.json](https://slopcafe.com/openapi.json)** — OpenAPI **3.1.0**, `info.version` tracked in `tool/CONTRACT_VERSION` (currently **1.0.0**). The app's models + `ErrorCode` are generated from a pinned copy at `tool/openapi.json`. See the **API layer** section below.
+  * Served live at **[https://slopcafe.com/openapi.json](https://slopcafe.com/openapi.json)** — OpenAPI **3.1.0**, `info.version` tracked in `tool/CONTRACT_VERSION` (currently **0.4.0**). The app's models + `ErrorCode` are generated from a pinned copy at `tool/openapi.json`. See the **API layer** section below.
 * **Canonical HTTP API Reference (human reference)**:
   * **Document Slug**: `slopcafe-http-api`
   * **URL**: [https://slopcafe.com/s/slopcafe-http-api](https://slopcafe.com/s/slopcafe-http-api)
@@ -193,7 +193,14 @@ code-first API-contract effort).
   actually changes. The semantic-search surface — the `/admin/documents/search`
   `mode` param, the new `POST /admin/vectors/backfill` path + `BackfillResponse`
   schema, and the `"semantic"` `matched_field` value — landed the same way: pin
-  re-pulled, `CONTRACT_VERSION` left at `1.0.0`.)
+  re-pulled, `CONTRACT_VERSION` left at `1.0.0`.) The inverse also happens: the
+  backend later **renumbered** `info.version` `1.0.0` → **`0.4.0`** with **no
+  surface change** — pre-launch they switched off the placeholder `1.0.0` to
+  `0.x.y` nomenclature, and going forward any change (breaking or not) bumps the
+  minor/tweak digits for consumer visibility; the `1.0.0` bump is reserved for
+  actual launch. That re-pin touched only the version numeral (the pinned spec is
+  otherwise byte-identical), so the only generated diff was the contract string in
+  the `models.dart` / `error_code.dart` headers.
   ```sh
   curl -s https://slopcafe.com/openapi.json -o tool/openapi.json
   # update tool/CONTRACT_VERSION if info.version changed
