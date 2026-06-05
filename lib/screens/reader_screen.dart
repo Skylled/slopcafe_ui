@@ -76,6 +76,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               if (reqUrl == 'about:blank' || reqUrl.startsWith('data:')) {
                 return NavigationDecision.navigate;
               }
+              // In-page anchor (#fragment) → let the WebView scroll natively.
+              if (_isSameDocumentFragment(reqUrl)) {
+                return NavigationDecision.navigate;
+              }
               _handleNavigation(reqUrl);
               return NavigationDecision.prevent;
             },
@@ -156,6 +160,22 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       );
     }
     return null;
+  }
+
+  /// Whether [url] is an in-page anchor jump within the loaded document, i.e.
+  /// it differs from the base URL only by a `#fragment`. Those should scroll
+  /// natively rather than route through external/document navigation.
+  bool _isSameDocumentFragment(String url) {
+    final reqUri = Uri.tryParse(url);
+    if (reqUri == null || !reqUri.hasFragment || reqUri.fragment.isEmpty) {
+      return false;
+    }
+    final baseUri = _baseUrl != null ? Uri.tryParse(_baseUrl!) : null;
+    if (baseUri == null) return false;
+    String norm(String p) => p.isEmpty ? '/' : p;
+    return reqUri.scheme == baseUri.scheme &&
+        reqUri.host == baseUri.host &&
+        norm(reqUri.path) == norm(baseUri.path);
   }
 
   Future<void> _handleNavigation(String url) async {
