@@ -9,6 +9,7 @@ import '../l10n/l10n.dart';
 import '../api/api.dart';
 import '../providers/agent_provider.dart';
 import '../providers/document_provider.dart';
+import '../providers/refresh.dart';
 import '../widgets/doc_feed_card.dart';
 import '../widgets/press_card.dart';
 import '../widgets/section_header.dart';
@@ -94,58 +95,66 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     return Scaffold(
       backgroundColor: c.bg,
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.screenH,
-          topInset,
-          AppSpacing.screenH,
-          AppSpacing.bottomInset,
-        ),
-        children: [
-          _header(c),
-          const SizedBox(height: 18),
-          if (docState.isOffline) ...[
-            _offlineBanner(c),
-            const SizedBox(height: 14),
-          ],
-          _tickers(c, live.length, agentState.agents.length, publicCount),
-          const SizedBox(height: 26),
-          if (featured != null) ...[
-            RiseIn(
-              child: DocFeedCard(
-                doc: featured,
-                featured: true,
-                onOpen: _openDoc,
-                onTagTap: (t) => DocumentListScreen.openForTag(context, t),
-              ),
-            ),
+      body: RefreshIndicator(
+        onRefresh: () => refreshFleetData(ref),
+        color: c.clay,
+        backgroundColor: c.surface,
+        child: ListView(
+          // AlwaysScrollable so the pull-to-refresh gesture works even when the
+          // content is short enough to fit without scrolling.
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.screenH,
+            topInset,
+            AppSpacing.screenH,
+            AppSpacing.bottomInset,
+          ),
+          children: [
+            _header(c),
+            const SizedBox(height: 18),
+            if (docState.isOffline) ...[
+              _offlineBanner(c),
+              const SizedBox(height: 14),
+            ],
+            _tickers(c, live.length, agentState.agents.length, publicCount),
             const SizedBox(height: 26),
-          ],
-          if (collections.isNotEmpty) ...[
+            if (featured != null) ...[
+              RiseIn(
+                child: DocFeedCard(
+                  doc: featured,
+                  featured: true,
+                  onOpen: _openDoc,
+                  onTagTap: (t) => DocumentListScreen.openForTag(context, t),
+                ),
+              ),
+              const SizedBox(height: 26),
+            ],
+            if (collections.isNotEmpty) ...[
+              SectionHeader(
+                context.l10n.collectionsTitle,
+                action: context.l10n.actionAll,
+                onAction: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const CollectionsScreen()),
+                ),
+              ),
+              _collections(c, collections, tagCounts),
+              const SizedBox(height: 26),
+            ],
             SectionHeader(
-              context.l10n.collectionsTitle,
-              action: context.l10n.actionAll,
+              context.l10n.recentlyPlatedTitle,
+              action: context.l10n.actionSeeAll,
               onAction: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const CollectionsScreen()),
-              ),
-            ),
-            _collections(c, collections, tagCounts),
-            const SizedBox(height: 26),
-          ],
-          SectionHeader(
-            context.l10n.recentlyPlatedTitle,
-            action: context.l10n.actionSeeAll,
-            onAction: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => DocumentListScreen(
-                  title: context.l10n.recentlyPlatedTitle,
-                  eyebrow: context.l10n.mostRecentFirst,
+                MaterialPageRoute(
+                  builder: (_) => DocumentListScreen(
+                    title: context.l10n.recentlyPlatedTitle,
+                    eyebrow: context.l10n.mostRecentFirst,
+                  ),
                 ),
               ),
             ),
-          ),
-          _recentlyPlated(c, recentTop, docState.isLoading),
-        ],
+            _recentlyPlated(c, recentTop, docState.isLoading),
+          ],
+        ),
       ),
     );
   }

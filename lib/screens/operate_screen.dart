@@ -12,6 +12,8 @@ import '../core/secure_storage.dart';
 import '../l10n/l10n.dart';
 import '../providers/agent_provider.dart';
 import '../providers/document_provider.dart';
+import '../providers/health_provider.dart';
+import '../providers/refresh.dart';
 import '../widgets/app_button.dart';
 import '../widgets/pill.dart';
 import '../widgets/press_card.dart';
@@ -42,11 +44,6 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
   _OpSeg _seg = _OpSeg.kitchen;
   bool _includeRevoked = false;
 
-  // Best-effort /healthz metrics (sanitizer version + R2 storage cap/used).
-  String? _sanitizerVersion;
-  int? _storageCapBytes;
-  int? _storageUsedBytes;
-
   @override
   void initState() {
     super.initState();
@@ -57,37 +54,10 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
       if (ref.read(documentsListProvider).documents.isEmpty) {
         ref.read(documentsListProvider.notifier).loadNextPage(clear: true);
       }
-      _loadHealth();
+      // Best-effort /healthz metrics (sanitizer version + R2 storage). Held in a
+      // provider so a pull-to-refresh from either home tab reloads it too.
+      ref.read(healthProvider.notifier).load();
     });
-  }
-
-  // -------------------------------------------------------------------------
-  // Best-effort backend health (sanitizer version, R2 storage).
-  // -------------------------------------------------------------------------
-  Future<void> _loadHealth() async {
-    try {
-      final dio = ref.read(dioProvider);
-      final res = await dio.get('/healthz');
-      final data = res.data;
-      if (data is Map) {
-        final map = Map<String, dynamic>.from(data);
-        final health = HealthzResponse.fromJson(map);
-        // No canonical "used" field is in the contract; read it opportunistically
-        // so the bar fills in if the backend ever exposes one, but never invent it.
-        final used = map['storage_used_bytes'] ?? map['storage_bytes_used'];
-        if (mounted) {
-          setState(() {
-            _sanitizerVersion = health.sanitizerVersion;
-            _storageCapBytes = health.storageCapBytes;
-            _storageUsedBytes = used is int
-                ? used
-                : int.tryParse('${used ?? ''}');
-          });
-        }
-      }
-    } catch (_) {
-      // Health is non-essential; leave metrics as "—" / hide the bar.
-    }
   }
 
   // -------------------------------------------------------------------------
@@ -180,6 +150,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
     final l10n = context.l10n;
     final agentsState = ref.watch(agentsListProvider);
     final docsState = ref.watch(documentsListProvider);
+    final health = ref.watch(healthProvider);
 
     final agents = agentsState.agents;
     final docs = docsState.documents;
@@ -194,84 +165,92 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
 
     return Scaffold(
       backgroundColor: c.bg,
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.screenH,
-          MediaQuery.paddingOf(context).top + 12,
-          AppSpacing.screenH,
-          AppSpacing.bottomInset,
+      body: RefreshIndicator(
+        onRefresh: () => refreshFleetData(ref),
+        color: c.clay,
+        backgroundColor: c.surface,
+        child: ListView(
+          // AlwaysScrollable so the pull-to-refresh gesture works even when the
+          // content is short enough to fit without scrolling.
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.screenH,
+            MediaQuery.paddingOf(context).top + 12,
+            AppSpacing.screenH,
+            AppSpacing.bottomInset,
+          ),
+          children: [
+            // ---- Header ----
+            Eyebrow(l10n.backOfHouse),
+            const SizedBox(height: 3),
+            Text(l10n.thePass, style: AppText.display.copyWith(color: c.text)),
+            const SizedBox(height: 18),
+
+            // ---- Stat grid (2x2) ----
+            Row(
+              children: [
+                Expanded(
+                  child: OpStat(
+                    icon: Icons.description_outlined,
+                    label: l10n.liveDocuments,
+                    value: '$liveDocs',
+                    sub: l10n.publicCountSub(publicDocs),
+                  ),
+                ),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: OpStat(
+                    icon: Icons.person_outline,
+                    label: l10n.activeAgents,
+                    value: '$activeAgents',
+                    sub: l10n.ofCountSub(agents.length),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 11),
+            Row(
+              children: [
+                Expanded(
+                  child: OpStat(
+                    icon: Icons.key_outlined,
+                    label: l10n.activeKeys,
+                    value: '$activeKeys',
+                    sub: l10n.mintedSub(mintedKeys),
+                  ),
+                ),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: OpStat(
+                    icon: Icons.shield_outlined,
+                    label: l10n.sanitizer,
+                    value: health.sanitizerVersion ?? '—',
+                    sub: health.sanitizerVersion != null
+                        ? l10n.allGreen
+                        : l10n.unavailable,
+                    mono: true,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // ---- R2 storage bar (hidden gracefully if cap unknown) ----
+            if (health.storageCapBytes != null) _buildStorageBar(c, health),
+            if (health.storageCapBytes != null) const SizedBox(height: 22),
+            if (health.storageCapBytes == null) const SizedBox(height: 10),
+
+            // ---- Segmented control ----
+            _Segmented(value: _seg, onChanged: (v) => setState(() => _seg = v)),
+            const SizedBox(height: 16),
+
+            // ---- Content ----
+            if (_seg == _OpSeg.kitchen)
+              _buildKitchen(c, agentsState)
+            else
+              _buildDocuments(c, docsState),
+          ],
         ),
-        children: [
-          // ---- Header ----
-          Eyebrow(l10n.backOfHouse),
-          const SizedBox(height: 3),
-          Text(l10n.thePass, style: AppText.display.copyWith(color: c.text)),
-          const SizedBox(height: 18),
-
-          // ---- Stat grid (2x2) ----
-          Row(
-            children: [
-              Expanded(
-                child: OpStat(
-                  icon: Icons.description_outlined,
-                  label: l10n.liveDocuments,
-                  value: '$liveDocs',
-                  sub: l10n.publicCountSub(publicDocs),
-                ),
-              ),
-              const SizedBox(width: 11),
-              Expanded(
-                child: OpStat(
-                  icon: Icons.person_outline,
-                  label: l10n.activeAgents,
-                  value: '$activeAgents',
-                  sub: l10n.ofCountSub(agents.length),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 11),
-          Row(
-            children: [
-              Expanded(
-                child: OpStat(
-                  icon: Icons.key_outlined,
-                  label: l10n.activeKeys,
-                  value: '$activeKeys',
-                  sub: l10n.mintedSub(mintedKeys),
-                ),
-              ),
-              const SizedBox(width: 11),
-              Expanded(
-                child: OpStat(
-                  icon: Icons.shield_outlined,
-                  label: l10n.sanitizer,
-                  value: _sanitizerVersion ?? '—',
-                  sub: _sanitizerVersion != null
-                      ? l10n.allGreen
-                      : l10n.unavailable,
-                  mono: true,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // ---- R2 storage bar (hidden gracefully if cap unknown) ----
-          if (_storageCapBytes != null) _buildStorageBar(c),
-          if (_storageCapBytes != null) const SizedBox(height: 22),
-          if (_storageCapBytes == null) const SizedBox(height: 10),
-
-          // ---- Segmented control ----
-          _Segmented(value: _seg, onChanged: (v) => setState(() => _seg = v)),
-          const SizedBox(height: 16),
-
-          // ---- Content ----
-          if (_seg == _OpSeg.kitchen)
-            _buildKitchen(c, agentsState)
-          else
-            _buildDocuments(c, docsState),
-        ],
       ),
     );
   }
@@ -279,9 +258,9 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
   // -------------------------------------------------------------------------
   // Storage bar
   // -------------------------------------------------------------------------
-  Widget _buildStorageBar(AppColors c) {
-    final cap = _storageCapBytes!;
-    final used = _storageUsedBytes;
+  Widget _buildStorageBar(AppColors c, HealthState health) {
+    final cap = health.storageCapBytes!;
+    final used = health.storageUsedBytes;
     final pct = (used != null && cap > 0) ? (used / cap).clamp(0.0, 1.0) : null;
 
     return Container(
