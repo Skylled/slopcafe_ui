@@ -1300,6 +1300,12 @@ abstract class AppLocalizations {
   /// **'Operator actions'**
   String get operatorActions;
 
+  /// More-sheet action that re-fetches the document from the server (complements pull-to-refresh on the reader).
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
   /// No description provided for @copyLink.
   ///
   /// In en, this message translates to:

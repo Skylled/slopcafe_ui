@@ -367,6 +367,10 @@
   "@revocationFailed": { "placeholders": { "error": { "type": "String" } } },
 
   "operatorActions": "Operator actions",
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "More-sheet action that re-fetches the document from the server (complements pull-to-refresh on the reader)."
+  },
   "copyLink": "Copy link",
   "linkCopied": "Link copied",
   "openInBrowser": "Open in browser",

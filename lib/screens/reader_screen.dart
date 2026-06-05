@@ -21,6 +21,7 @@ import '../widgets/press_card.dart';
 import '../widgets/section_header.dart';
 import '../widgets/sheets.dart';
 import '../widgets/toast.dart';
+import '../widgets/webview_pull_to_refresh.dart';
 import 'document_list_screen.dart';
 
 /// ReaderScreen — the Craft "plate". A full-bleed pushed route built around a
@@ -50,11 +51,23 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   late DocumentListing _currentDoc;
 
+  /// Translates drags on the (natively-scrolling) WebView into the scroll
+  /// notifications a [RefreshIndicator] needs — only when the document is at
+  /// its top. See [WebViewPullToRefresh].
+  late final WebViewPullToRefresh _pullToRefresh;
+
   @override
   void initState() {
     super.initState();
     _currentDoc = widget.doc;
+    _pullToRefresh = WebViewPullToRefresh(onRefresh: _reloadWebview);
     _initBaseUrlAndWebview();
+  }
+
+  @override
+  void dispose() {
+    _pullToRefresh.dispose();
+    super.dispose();
   }
 
   // ----------------------------------------------------------------
@@ -909,6 +922,16 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           child: Column(
             children: [
               SheetActionRow(
+                icon: Icons.refresh,
+                label: l10n.refresh,
+                onTap: (!_currentDoc.isRevoked && _baseUrl != null)
+                    ? () {
+                        Navigator.of(sheetContext).pop();
+                        _reloadWebview();
+                      }
+                    : null,
+              ),
+              SheetActionRow(
                 icon: Icons.link,
                 label: l10n.copyLink,
                 onTap: (_baseUrl != null && !_currentDoc.isRevoked)
@@ -1164,7 +1187,23 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         borderRadius: BorderRadius.circular(AppRadii.xl),
         boxShadow: c.shadow,
       ),
-      child: WebViewWidget(controller: _webViewController),
+      // Pull-to-refresh: the WebView scrolls natively, so a custom gesture
+      // recognizer feeds the RefreshIndicator synthetic scroll notifications
+      // and only engages at the top of the document. See WebViewPullToRefresh.
+      child: RefreshIndicator(
+        onRefresh: _pullToRefresh.refresh,
+        color: c.clay,
+        backgroundColor: c.surface,
+        child: Builder(
+          builder: (refreshContext) {
+            _pullToRefresh.attach(refreshContext, _webViewController);
+            return WebViewWidget(
+              controller: _webViewController,
+              gestureRecognizers: _pullToRefresh.asGestureRecognizers,
+            );
+          },
+        ),
+      ),
     );
   }
 

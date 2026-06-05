@@ -728,6 +728,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get operatorActions => 'Operator actions';
 
   @override
+  String get refresh => 'Refresh';
+
+  @override
   String get copyLink => 'Copy link';
 
   @override
