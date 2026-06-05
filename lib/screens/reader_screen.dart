@@ -1075,39 +1075,51 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final ver = _currentDoc.currentVer;
     final topPad = MediaQuery.paddingOf(context).top;
 
+    final Widget body = Column(
+      children: [
+        // ---- Compact top bar: back · version · more ----
+        Padding(
+          padding: EdgeInsets.fromLTRB(14, topPad + 10, 14, 0),
+          child: Row(
+            children: [
+              _BackPill(onTap: () => Navigator.of(context).pop()),
+              const Spacer(),
+              if (ver != null && !isRevoked) ...[
+                _VersionChip(version: ver, onTap: _openVersionSheet),
+                const SizedBox(width: 8),
+              ],
+              _CircleIconButton(icon: Icons.more_horiz, onTap: _openMoreSheet),
+            ],
+          ),
+        ),
+
+        // ---- Minimal document header: title · meta · tags ----
+        Padding(
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
+          child: _buildHeader(c, isRevoked),
+        ),
+
+        // ---- WebView (or revoked state) owns the rest of the screen ----
+        Expanded(child: _buildReaderBody()),
+      ],
+    );
+
     return Scaffold(
       backgroundColor: c.bg,
-      body: Column(
-        children: [
-          // ---- Compact top bar: back · version · more ----
-          Padding(
-            padding: EdgeInsets.fromLTRB(14, topPad + 10, 14, 0),
-            child: Row(
-              children: [
-                _BackPill(onTap: () => Navigator.of(context).pop()),
-                const Spacer(),
-                if (ver != null && !isRevoked) ...[
-                  _VersionChip(version: ver, onTap: _openVersionSheet),
-                  const SizedBox(width: 8),
-                ],
-                _CircleIconButton(
-                  icon: Icons.more_horiz,
-                  onTap: _openMoreSheet,
-                ),
-              ],
+      // Pull-to-refresh sits at the Scaffold level so the spinner drops from the
+      // top of the screen (just clear of the status bar) instead of from the top
+      // edge of the embedded WebView card. The recognizer attached to the
+      // WebView dispatches the scroll notifications this indicator consumes.
+      // Revoked docs render a static card with no WebView, so they opt out.
+      body: isRevoked
+          ? body
+          : RefreshIndicator(
+              onRefresh: _pullToRefresh.refresh,
+              color: c.clay,
+              backgroundColor: c.surface,
+              edgeOffset: topPad,
+              child: body,
             ),
-          ),
-
-          // ---- Minimal document header: title · meta · tags ----
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
-            child: _buildHeader(c, isRevoked),
-          ),
-
-          // ---- WebView (or revoked state) owns the rest of the screen ----
-          Expanded(child: _buildReaderBody()),
-        ],
-      ),
     );
   }
 
@@ -1205,21 +1217,18 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         boxShadow: c.shadow,
       ),
       // Pull-to-refresh: the WebView scrolls natively, so a custom gesture
-      // recognizer feeds the RefreshIndicator synthetic scroll notifications
-      // and only engages at the top of the document. See WebViewPullToRefresh.
-      child: RefreshIndicator(
-        onRefresh: _pullToRefresh.refresh,
-        color: c.clay,
-        backgroundColor: c.surface,
-        child: Builder(
-          builder: (refreshContext) {
-            _pullToRefresh.attach(refreshContext, _webViewController);
-            return WebViewWidget(
-              controller: _webViewController,
-              gestureRecognizers: _pullToRefresh.asGestureRecognizers,
-            );
-          },
-        ),
+      // recognizer feeds synthetic scroll notifications to the RefreshIndicator
+      // wrapping the whole screen (see build), engaging only when the document
+      // is at its top. The Builder context is the dispatch origin, so it must
+      // sit under that indicator. See WebViewPullToRefresh.
+      child: Builder(
+        builder: (refreshContext) {
+          _pullToRefresh.attach(refreshContext, _webViewController);
+          return WebViewWidget(
+            controller: _webViewController,
+            gestureRecognizers: _pullToRefresh.asGestureRecognizers,
+          );
+        },
       ),
     );
   }
