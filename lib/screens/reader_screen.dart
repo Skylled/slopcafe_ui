@@ -109,6 +109,15 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         _isLoadingBaseUrl = false;
       });
     }
+
+    // Silently reconcile metadata with the server after the first paint, so the
+    // chrome (version, tags, title, …) isn't stale until the operator manually
+    // refreshes. Deliberately runs *after* the reveal above so it never delays
+    // the instant cached render; it touches only the chrome (never reloads the
+    // body) and no-ops when nothing changed.
+    if (url != null && mounted) {
+      await _refreshMetadata();
+    }
   }
 
   /// Re-render the document. [force] performs a *hard* refresh for explicit
@@ -259,30 +268,65 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
   }
 
+  /// Silently reconcile this document's metadata (version, title, tags, size,
+  /// visibility) with the server via the documents provider. No spinner and no
+  /// WebView reload — only the chrome updates, and only when something actually
+  /// changed: [DocumentsListNotifier.refreshDocument] no-ops on an unchanged
+  /// record, and the [setState] here is skipped when the listing is value-equal
+  /// to what's already on screen, so a refresh with no new version is a true
+  /// no-op. Best-effort: offline/transient failures are swallowed so the reader
+  /// keeps showing the listing it already has.
+  ///
+  /// Runs on open (so the chrome isn't stale until a manual refresh) and ahead
+  /// of the body fetch on a forced refresh. (Previously the version was reverse-
+  /// engineered from the /raw ETag — which carries the representation format,
+  /// not the document version — and written only to local widget state, so
+  /// every refresh mislabeled the document "v1" and the change was lost on
+  /// reopen.)
+  Future<void> _refreshMetadata() async {
+    try {
+      final fresh = await ref
+          .read(documentsListProvider.notifier)
+          .refreshDocument(_currentDoc.publicId);
+      if (!mounted || fresh == _currentDoc) return;
+      setState(() => _currentDoc = fresh);
+    } catch (_) {
+      // Best-effort: keep the current listing on offline/transient errors.
+    }
+  }
+
   Future<void> _loadHtmlIntoWebview({bool force = false}) async {
     if (_baseUrl == null) return;
     final l10n = context.l10n;
 
     final String publicId = _currentDoc.publicId;
-    int versionToLoad = _selectedVersion == 0
+
+    // A forced refresh (pull-to-refresh / the more-sheet Refresh) reconciles the
+    // canonical metadata record *first*, so the version, title, tags, size and
+    // visibility shown in the chrome update too — not just the HTML body — and
+    // the body below loads against the freshly resolved version.
+    if (force) {
+      await _refreshMetadata();
+      if (!mounted) return;
+    }
+
+    // Which version's body to render and cache under. 0 == latest, which is
+    // always the server's current version (`/d/:id/raw`); any other value is a
+    // pinned historical version. For the latest view this is the authoritative
+    // `currentVer` from the metadata record (just refreshed above on a forced
+    // load) — never a value scraped from the ETag.
+    final int versionToLoad = _selectedVersion == 0
         ? (_currentDoc.currentVer ?? 1)
         : _selectedVersion;
 
-    // Check if we have a cached version for this document
+    // Locate a cached body to paint instantly (offline resilience). For the
+    // latest view we accept any cached version of the document; for a pinned
+    // historical view only the exact version qualifies.
     int? cachedVersion;
     if (_selectedVersion == 0) {
       cachedVersion = await DocumentCacheManager.getCachedVersion(publicId);
-      if (cachedVersion != null) {
-        versionToLoad = cachedVersion;
-      }
-    } else {
-      final exists = await DocumentCacheManager.isCached(
-        publicId,
-        _selectedVersion,
-      );
-      if (exists) {
-        cachedVersion = _selectedVersion;
-      }
+    } else if (await DocumentCacheManager.isCached(publicId, _selectedVersion)) {
+      cachedVersion = _selectedVersion;
     }
 
     final cachedHtml = cachedVersion != null
@@ -326,44 +370,26 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         return;
       }
 
-      // If response is 200 OK, update the cache and render fresh HTML
+      // 200 OK: render fresh HTML and update the body cache.
       final freshHtml = response.data as String;
 
-      // Extract new version from etag header if present
-      final etagHeader =
-          response.headers.value('etag') ?? response.headers.value('ETag');
-      int newVersion = versionToLoad;
-      if (etagHeader != null) {
-        final cleanEtag = etagHeader.replaceAll('"', '').trim();
-        if (cleanEtag.startsWith('v')) {
-          final ver = int.tryParse(cleanEtag.substring(1));
-          if (ver != null) {
-            newVersion = ver;
-          }
-        }
-      }
-
-      // Client-side guard: if the version matches the cached version, we don't
-      // need to reload or save. A forced refresh always re-renders.
-      if (!force && newVersion == cachedVersion && cachedHtml != null) {
+      // Idempotent body update: when the freshly fetched bytes are identical to
+      // what's already cached (and on screen), don't rewrite the cache or reload
+      // the WebView — even on a forced refresh. The chrome was already
+      // reconciled via _refreshMetadata, so a document with no new version is a
+      // true no-op: no disk churn, no flicker, no scroll reset.
+      if (cachedHtml != null && freshHtml == cachedHtml) {
         return;
       }
 
-      // Update cache
+      // Cache the body under the authoritative version. saveCachedHtml evicts
+      // any other cached version of this document first, so a stale label
+      // self-heals here.
       await DocumentCacheManager.saveCachedHtml(
         publicId,
-        newVersion,
+        versionToLoad,
         freshHtml,
       );
-
-      // If version has changed, update _currentDoc so UI shows correct version
-      if (_selectedVersion == 0 && _currentDoc.currentVer != newVersion) {
-        if (mounted) {
-          setState(() {
-            _currentDoc = _currentDoc.copyWith(currentVer: newVersion);
-          });
-        }
-      }
 
       // Render fresh HTML (now from the network, not the cache)
       final securedHtml = _injectCspMeta(freshHtml);

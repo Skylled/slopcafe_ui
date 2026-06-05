@@ -282,6 +282,57 @@ class DocumentsListNotifier extends Notifier<DocumentsListState> {
     return state.documents.firstWhere((d) => d.publicId == publicId);
   }
 
+  /// Re-fetch the canonical metadata record for a single document from
+  /// `GET /admin/documents/:id` and replace it in the in-memory list and the
+  /// offline cache, so every surface that reads the documents provider (the
+  /// Library, Search, and especially the Reader's chrome) sees the fresh
+  /// version, title, tags, size and visibility. Returns the refreshed listing.
+  ///
+  /// This is the metadata counterpart to the Reader re-fetching the rendered
+  /// HTML body on refresh: without it the body updated but the version, tags,
+  /// title, etc. stayed pinned to whatever was loaded when the list was first
+  /// fetched — stale on screen and stale again after leaving and reopening.
+  Future<DocumentListing> refreshDocument(String publicId) async {
+    final dio = ref.read(dioProvider);
+    final response = await dio.get('/admin/documents/$publicId');
+    final fresh = DocumentListing.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+
+    final existingIndex = state.documents.indexWhere(
+      (d) => d.publicId == publicId,
+    );
+
+    // Idempotent: when the freshly fetched record is value-equal to the one we
+    // already hold — or the document isn't in the loaded list at all — leave
+    // provider state and the offline cache untouched. Rebuilding every listener
+    // and rewriting disk for an unchanged record would defeat the "no new
+    // version → no-op" contract. Callers still receive the canonical listing.
+    // (DocumentListing is a freezed value type, so `==` compares every field.)
+    if (existingIndex == -1 || state.documents[existingIndex] == fresh) {
+      return fresh;
+    }
+
+    final updatedDocs = List<DocumentListing>.from(state.documents)
+      ..[existingIndex] = fresh;
+
+    final Set<String> allTags = Set<String>.from(state.aggregatedTags)
+      ..addAll(fresh.tags);
+
+    state = DocumentsListState(
+      documents: updatedDocs,
+      nextCursor: state.nextCursor,
+      isLoading: state.isLoading,
+      hasError: state.hasError,
+      errorMessage: state.errorMessage,
+      aggregatedTags: allTags,
+      isOffline: state.isOffline,
+    );
+    await DocumentCacheManager.saveCachedDocumentList(updatedDocs);
+
+    return fresh;
+  }
+
   /// Author a brand-new document as the operator principal via
   /// `POST /admin/documents` (the new authoring surface).
   ///
