@@ -80,14 +80,28 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
 
+  # Pure-Dart image manipulation, used only by tool/gen_adaptive_foreground.dart
+  # to derive the Android adaptive-icon foreground from the source art.
+  image: ^4.3.0
+
 # App launcher icons. Source art lives in assets/icon/app_icon.png; regenerate
 # the platform icons after changing it with: dart run flutter_launcher_icons
-# The design is full-bleed (cup on a brown field), so we emit standard
-# edge-to-edge icons rather than masked Android adaptive icons that would crop
-# the saucer.
+#
+# Android uses an adaptive icon so the brown field bleeds edge-to-edge under any
+# launcher mask. The background layer is the flat field colour; the foreground
+# (assets/icon/app_icon_foreground.png) is the cup pre-scaled into the adaptive
+# safe zone (~61% of the canvas) so the saucer is never cropped. Regenerate the
+# foreground with: dart run tool/gen_adaptive_foreground.dart (after editing the
+# source art). image_path stays as the legacy fallback for Android < 8.
 flutter_launcher_icons:
   image_path: "assets/icon/app_icon.png"
   android: true
+  adaptive_icon_background: "#65381D"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+  # The foreground is already pre-scaled into the safe zone by
+  # tool/gen_adaptive_foreground.dart, so suppress the tool's default 16% inset
+  # (which would double-shrink the cup) and use the art as-authored.
+  adaptive_icon_foreground_inset: 0
   ios: false
   remove_alpha_ios: false
   macos:
