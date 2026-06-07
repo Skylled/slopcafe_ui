@@ -1569,9 +1569,14 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
 
           keysAsync.when(
             data: (result) {
-              final active = result.keys.where((k) => !k.isRevoked).toList();
-              final revoked = result.keys.where((k) => k.isRevoked).toList();
-              if (active.isEmpty && revoked.isEmpty) {
+              // A key is surfaced as live only while it still authenticates
+              // (neither revoked nor expired — `isActive`). Lapsed-but-un-revoked
+              // short-lived publish credentials fall into the inert audit below
+              // alongside revoked keys, so the operator never sees a dead key as
+              // a live, revocable one.
+              final active = result.keys.where((k) => k.isActive).toList();
+              final inert = result.keys.where((k) => !k.isActive).toList();
+              if (active.isEmpty && inert.isEmpty) {
                 return Text(
                   l10n.noKeys,
                   style: AppText.small.copyWith(
@@ -1584,12 +1589,12 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
                 children: [
                   for (final k in active)
                     _KeyRow(keyItem: k, onRevoke: () => _revokeKey(k)),
-                  if (revoked.isNotEmpty) ...[
+                  if (inert.isNotEmpty) ...[
                     const SizedBox(height: 10),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        l10n.revokedAudit(revoked.length),
+                        l10n.inactiveAudit(inert.length),
                         style: AppText.label.copyWith(
                           fontSize: 10.5,
                           color: c.textFaint,
@@ -1597,7 +1602,7 @@ class _AgentSheetState extends ConsumerState<_AgentSheet> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    for (final k in revoked) _KeyRow(keyItem: k),
+                    for (final k in inert) _KeyRow(keyItem: k),
                   ],
                 ],
               );
@@ -1645,8 +1650,23 @@ class _KeyRow extends StatelessWidget {
     final c = context.colors;
     final l10n = context.l10n;
     final revoked = keyItem.isRevoked;
+    // Expired-but-not-revoked: lapsed past its TTL, no longer authenticates.
+    final expired = !revoked && keyItem.expired;
+    final inactive = !keyItem.isActive; // revoked OR expired — an inert key.
+    // Active short-lived credential with a future expiry worth flagging.
+    final expiresSoon = !inactive && keyItem.expiresAt != null;
+    final String subLabel;
+    if (revoked) {
+      subLabel = l10n.keyRevokedOn(fmtDate(keyItem.revokedAt));
+    } else if (expired) {
+      subLabel = l10n.keyExpiredOn(fmtDate(keyItem.expiresAt));
+    } else if (expiresSoon) {
+      subLabel = l10n.keyExpiresOn(fmtDate(keyItem.expiresAt));
+    } else {
+      subLabel = l10n.keyMintedOn(fmtDate(keyItem.createdAt));
+    }
     return Opacity(
-      opacity: revoked ? 0.55 : 1,
+      opacity: inactive ? 0.55 : 1,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -1659,7 +1679,7 @@ class _KeyRow extends StatelessWidget {
             Icon(
               Icons.key_outlined,
               size: 16,
-              color: revoked ? c.textFaint : c.clayD,
+              color: inactive ? c.textFaint : c.clayD,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1671,14 +1691,12 @@ class _KeyRow extends StatelessWidget {
                     style: AppText.mono.copyWith(
                       fontWeight: FontWeight.w700,
                       color: c.text,
-                      decoration: revoked ? TextDecoration.lineThrough : null,
+                      decoration: inactive ? TextDecoration.lineThrough : null,
                     ),
                   ),
                   const SizedBox(height: 1),
                   Text(
-                    revoked
-                        ? l10n.keyRevokedOn(fmtDate(keyItem.revokedAt))
-                        : l10n.keyMintedOn(fmtDate(keyItem.createdAt)),
+                    subLabel,
                     style: AppText.small.copyWith(
                       fontSize: 11,
                       color: c.textFaint,
@@ -1689,6 +1707,8 @@ class _KeyRow extends StatelessWidget {
             ),
             if (revoked)
               Pill(l10n.revokedUpper, tone: PillTone.red, small: true)
+            else if (expired)
+              Pill(l10n.expiredUpper, tone: PillTone.neutral, small: true)
             else
               GestureDetector(
                 onTap: onRevoke,

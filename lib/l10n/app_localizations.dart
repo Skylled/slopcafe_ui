@@ -922,11 +922,17 @@ abstract class AppLocalizations {
   /// **'No keys registered. Mint one to authorize clients.'**
   String get noKeys;
 
-  /// Header above the revoked-keys audit list.
+  /// Header above the inert-keys audit list (keys that no longer authenticate — revoked or expired).
   ///
   /// In en, this message translates to:
-  /// **'REVOKED AUDIT ({count})'**
-  String revokedAudit(int count);
+  /// **'INACTIVE ({count})'**
+  String inactiveAudit(int count);
+
+  /// Uppercase EXPIRED pill on a lapsed (but un-revoked) agent key row.
+  ///
+  /// In en, this message translates to:
+  /// **'EXPIRED'**
+  String get expiredUpper;
 
   /// No description provided for @errorFetchingKeys.
   ///
@@ -1059,6 +1065,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Minted {date}'**
   String keyMintedOn(String date);
+
+  /// Sub-label on a lapsed (un-revoked) key row, e.g. "Expired Jan 4, 2026".
+  ///
+  /// In en, this message translates to:
+  /// **'Expired {date}'**
+  String keyExpiredOn(String date);
+
+  /// Sub-label on an active short-lived key that has a future expiry, e.g. "Expires Jan 4, 2026".
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {date}'**
+  String keyExpiresOn(String date);
 
   /// No description provided for @makePublic.
   ///

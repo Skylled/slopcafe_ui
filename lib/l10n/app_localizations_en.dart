@@ -495,9 +495,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noKeys => 'No keys registered. Mint one to authorize clients.';
 
   @override
-  String revokedAudit(int count) {
-    return 'REVOKED AUDIT ($count)';
+  String inactiveAudit(int count) {
+    return 'INACTIVE ($count)';
   }
+
+  @override
+  String get expiredUpper => 'EXPIRED';
 
   @override
   String errorFetchingKeys(String error) {
@@ -589,6 +592,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String keyMintedOn(String date) {
     return 'Minted $date';
+  }
+
+  @override
+  String keyExpiredOn(String date) {
+    return 'Expired $date';
+  }
+
+  @override
+  String keyExpiresOn(String date) {
+    return 'Expires $date';
   }
 
   @override

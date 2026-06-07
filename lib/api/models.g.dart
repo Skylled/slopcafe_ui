@@ -184,16 +184,22 @@ _AgentKey _$AgentKeyFromJson(Map<String, dynamic> json) => _AgentKey(
   id: json['id'] as String,
   keyPrefix: json['key_prefix'] as String,
   createdAt: DateTime.parse(json['created_at'] as String),
+  expired: json['expired'] as bool,
   revokedAt: json['revoked_at'] == null
       ? null
       : DateTime.parse(json['revoked_at'] as String),
+  expiresAt: json['expires_at'] == null
+      ? null
+      : DateTime.parse(json['expires_at'] as String),
 );
 
 Map<String, dynamic> _$AgentKeyToJson(_AgentKey instance) => <String, dynamic>{
   'id': instance.id,
   'key_prefix': instance.keyPrefix,
   'created_at': instance.createdAt.toIso8601String(),
+  'expired': instance.expired,
   'revoked_at': instance.revokedAt?.toIso8601String(),
+  'expires_at': instance.expiresAt?.toIso8601String(),
 };
 
 _ListAgentsResponse _$ListAgentsResponseFromJson(Map<String, dynamic> json) =>

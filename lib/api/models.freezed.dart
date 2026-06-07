@@ -2538,7 +2538,7 @@ as String?,
 /// @nodoc
 mixin _$AgentKey {
 
-@JsonKey(name: 'id') String get id;@JsonKey(name: 'key_prefix') String get keyPrefix;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'revoked_at') DateTime? get revokedAt;
+@JsonKey(name: 'id') String get id;@JsonKey(name: 'key_prefix') String get keyPrefix;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'expired') bool get expired;@JsonKey(name: 'revoked_at') DateTime? get revokedAt;@JsonKey(name: 'expires_at') DateTime? get expiresAt;
 /// Create a copy of AgentKey
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2551,16 +2551,16 @@ $AgentKeyCopyWith<AgentKey> get copyWith => _$AgentKeyCopyWithImpl<AgentKey>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AgentKey&&(identical(other.id, id) || other.id == id)&&(identical(other.keyPrefix, keyPrefix) || other.keyPrefix == keyPrefix)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AgentKey&&(identical(other.id, id) || other.id == id)&&(identical(other.keyPrefix, keyPrefix) || other.keyPrefix == keyPrefix)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.expired, expired) || other.expired == expired)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,keyPrefix,createdAt,revokedAt);
+int get hashCode => Object.hash(runtimeType,id,keyPrefix,createdAt,expired,revokedAt,expiresAt);
 
 @override
 String toString() {
-  return 'AgentKey(id: $id, keyPrefix: $keyPrefix, createdAt: $createdAt, revokedAt: $revokedAt)';
+  return 'AgentKey(id: $id, keyPrefix: $keyPrefix, createdAt: $createdAt, expired: $expired, revokedAt: $revokedAt, expiresAt: $expiresAt)';
 }
 
 
@@ -2571,7 +2571,7 @@ abstract mixin class $AgentKeyCopyWith<$Res>  {
   factory $AgentKeyCopyWith(AgentKey value, $Res Function(AgentKey) _then) = _$AgentKeyCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'id') String id,@JsonKey(name: 'key_prefix') String keyPrefix,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'revoked_at') DateTime? revokedAt
+@JsonKey(name: 'id') String id,@JsonKey(name: 'key_prefix') String keyPrefix,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'expired') bool expired,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'expires_at') DateTime? expiresAt
 });
 
 
@@ -2588,12 +2588,14 @@ class _$AgentKeyCopyWithImpl<$Res>
 
 /// Create a copy of AgentKey
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? keyPrefix = null,Object? createdAt = null,Object? revokedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? keyPrefix = null,Object? createdAt = null,Object? expired = null,Object? revokedAt = freezed,Object? expiresAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,keyPrefix: null == keyPrefix ? _self.keyPrefix : keyPrefix // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,expired: null == expired ? _self.expired : expired // ignore: cast_nullable_to_non_nullable
+as bool,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,expiresAt: freezed == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));
 }
@@ -2679,10 +2681,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'key_prefix')  String keyPrefix, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'revoked_at')  DateTime? revokedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'key_prefix')  String keyPrefix, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'expired')  bool expired, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'expires_at')  DateTime? expiresAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AgentKey() when $default != null:
-return $default(_that.id,_that.keyPrefix,_that.createdAt,_that.revokedAt);case _:
+return $default(_that.id,_that.keyPrefix,_that.createdAt,_that.expired,_that.revokedAt,_that.expiresAt);case _:
   return orElse();
 
 }
@@ -2700,10 +2702,10 @@ return $default(_that.id,_that.keyPrefix,_that.createdAt,_that.revokedAt);case _
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'key_prefix')  String keyPrefix, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'revoked_at')  DateTime? revokedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'key_prefix')  String keyPrefix, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'expired')  bool expired, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'expires_at')  DateTime? expiresAt)  $default,) {final _that = this;
 switch (_that) {
 case _AgentKey():
-return $default(_that.id,_that.keyPrefix,_that.createdAt,_that.revokedAt);case _:
+return $default(_that.id,_that.keyPrefix,_that.createdAt,_that.expired,_that.revokedAt,_that.expiresAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2720,10 +2722,10 @@ return $default(_that.id,_that.keyPrefix,_that.createdAt,_that.revokedAt);case _
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'key_prefix')  String keyPrefix, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'revoked_at')  DateTime? revokedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'key_prefix')  String keyPrefix, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'expired')  bool expired, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'expires_at')  DateTime? expiresAt)?  $default,) {final _that = this;
 switch (_that) {
 case _AgentKey() when $default != null:
-return $default(_that.id,_that.keyPrefix,_that.createdAt,_that.revokedAt);case _:
+return $default(_that.id,_that.keyPrefix,_that.createdAt,_that.expired,_that.revokedAt,_that.expiresAt);case _:
   return null;
 
 }
@@ -2735,13 +2737,15 @@ return $default(_that.id,_that.keyPrefix,_that.createdAt,_that.revokedAt);case _
 @JsonSerializable()
 
 class _AgentKey extends AgentKey {
-  const _AgentKey({@JsonKey(name: 'id') required this.id, @JsonKey(name: 'key_prefix') required this.keyPrefix, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'revoked_at') this.revokedAt}): super._();
+  const _AgentKey({@JsonKey(name: 'id') required this.id, @JsonKey(name: 'key_prefix') required this.keyPrefix, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'expired') required this.expired, @JsonKey(name: 'revoked_at') this.revokedAt, @JsonKey(name: 'expires_at') this.expiresAt}): super._();
   factory _AgentKey.fromJson(Map<String, dynamic> json) => _$AgentKeyFromJson(json);
 
 @override@JsonKey(name: 'id') final  String id;
 @override@JsonKey(name: 'key_prefix') final  String keyPrefix;
 @override@JsonKey(name: 'created_at') final  DateTime createdAt;
+@override@JsonKey(name: 'expired') final  bool expired;
 @override@JsonKey(name: 'revoked_at') final  DateTime? revokedAt;
+@override@JsonKey(name: 'expires_at') final  DateTime? expiresAt;
 
 /// Create a copy of AgentKey
 /// with the given fields replaced by the non-null parameter values.
@@ -2756,16 +2760,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AgentKey&&(identical(other.id, id) || other.id == id)&&(identical(other.keyPrefix, keyPrefix) || other.keyPrefix == keyPrefix)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AgentKey&&(identical(other.id, id) || other.id == id)&&(identical(other.keyPrefix, keyPrefix) || other.keyPrefix == keyPrefix)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.expired, expired) || other.expired == expired)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,keyPrefix,createdAt,revokedAt);
+int get hashCode => Object.hash(runtimeType,id,keyPrefix,createdAt,expired,revokedAt,expiresAt);
 
 @override
 String toString() {
-  return 'AgentKey(id: $id, keyPrefix: $keyPrefix, createdAt: $createdAt, revokedAt: $revokedAt)';
+  return 'AgentKey(id: $id, keyPrefix: $keyPrefix, createdAt: $createdAt, expired: $expired, revokedAt: $revokedAt, expiresAt: $expiresAt)';
 }
 
 
@@ -2776,7 +2780,7 @@ abstract mixin class _$AgentKeyCopyWith<$Res> implements $AgentKeyCopyWith<$Res>
   factory _$AgentKeyCopyWith(_AgentKey value, $Res Function(_AgentKey) _then) = __$AgentKeyCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'id') String id,@JsonKey(name: 'key_prefix') String keyPrefix,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'revoked_at') DateTime? revokedAt
+@JsonKey(name: 'id') String id,@JsonKey(name: 'key_prefix') String keyPrefix,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'expired') bool expired,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'expires_at') DateTime? expiresAt
 });
 
 
@@ -2793,12 +2797,14 @@ class __$AgentKeyCopyWithImpl<$Res>
 
 /// Create a copy of AgentKey
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? keyPrefix = null,Object? createdAt = null,Object? revokedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? keyPrefix = null,Object? createdAt = null,Object? expired = null,Object? revokedAt = freezed,Object? expiresAt = freezed,}) {
   return _then(_AgentKey(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,keyPrefix: null == keyPrefix ? _self.keyPrefix : keyPrefix // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,expired: null == expired ? _self.expired : expired // ignore: cast_nullable_to_non_nullable
+as bool,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,expiresAt: freezed == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));
 }

@@ -305,8 +305,17 @@ class _Generator {
   List<String> _extraMembers(String name, List<_Field> fields) {
     switch (name) {
       case 'DocumentListing':
-      case 'AgentKey':
         return ['bool get isRevoked => revokedAt != null;'];
+      case 'AgentKey':
+        // A key authenticates only while not revoked AND not expired (the
+        // server-computed `expired` flag, per the HTTP API contract); this
+        // mirrors the backend's `active_keys` accounting. `isActive` is the
+        // surface the UI buckets on so a lapsed (but un-revoked) short-lived
+        // publish credential is no longer shown as a live, revocable key.
+        return [
+          'bool get isRevoked => revokedAt != null;',
+          'bool get isActive => !isRevoked && !expired;',
+        ];
       case 'SearchHit':
         return _searchHitExtras(fields);
       default:
