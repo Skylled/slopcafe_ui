@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <application
-        android:label="slopcafe_ui"
+        android:label="Slopcafe"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
