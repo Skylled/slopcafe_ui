@@ -1047,7 +1047,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get baseUrlLabel => 'Base URL';
 
   @override
-  String get baseUrlHint => 'https://agent-web-host.skylled.workers.dev';
+  String get baseUrlHint => 'https://slopcafe.com';
 
   @override
   String get baseUrlRequired => 'Please enter a Base URL';

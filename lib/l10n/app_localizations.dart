@@ -1837,7 +1837,7 @@ abstract class AppLocalizations {
   /// Example placeholder shown in the Base URL field.
   ///
   /// In en, this message translates to:
-  /// **'https://agent-web-host.skylled.workers.dev'**
+  /// **'https://slopcafe.com'**
   String get baseUrlHint;
 
   /// No description provided for @baseUrlRequired.

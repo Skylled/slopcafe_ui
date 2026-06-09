@@ -569,7 +569,7 @@
   "@openTheLine": { "description": "Settings intro card heading (café metaphor for connecting)." },
   "connectionIntroBody": "Point the operator app at your Slopcafe deployment and provide an admin token. Credentials are stored only on this device in secure storage.",
   "baseUrlLabel": "Base URL",
-  "baseUrlHint": "https://agent-web-host.skylled.workers.dev",
+  "baseUrlHint": "https://slopcafe.com",
   "@baseUrlHint": { "description": "Example placeholder shown in the Base URL field." },
   "baseUrlRequired": "Please enter a Base URL",
   "baseUrlInvalidScheme": "Must start with http:// or https://",
