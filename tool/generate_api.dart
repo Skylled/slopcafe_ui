@@ -39,7 +39,12 @@ import 'dart:io';
 /// plain `String`s (the values are preserved) to avoid churning the ~15
 /// `visibility == 'public'` / `matchedField.toUpperCase()` call sites; the task
 /// mandates only the `ErrorCode` enum. Referenced via `$ref` -> `String`.
-const _stringEnumSchemas = {'Visibility', 'SourceFormat', 'SlugReject'};
+const _stringEnumSchemas = {
+  'Visibility',
+  'SourceFormat',
+  'SlugReject',
+  'DocumentStatus',
+};
 
 /// oneOf unions we do not emit as plain data classes. `ErrorBody` becomes the
 /// `ErrorCode` enum (handled separately); `DeleteOAuthClientResponse` is an

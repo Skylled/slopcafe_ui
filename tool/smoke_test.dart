@@ -51,12 +51,15 @@ Future<void> main() async {
     'created_at': '2026-01-02T03:04:05.000Z',
     'created_by_id': null,
     'created_by_name': null,
+    'created_by_kind': 'agent',
     'current_size': null,
     'revoked_at': '2026-02-03T04:05:06.000Z',
     'title': null,
     'description': null,
     'tags': <String>[],
     'slug': null,
+    'status': 'active',
+    'superseded_by': null,
     'visibility': 'private',
   };
   try {

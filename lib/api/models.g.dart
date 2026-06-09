@@ -86,6 +86,7 @@ _DocumentListing _$DocumentListingFromJson(Map<String, dynamic> json) =>
       createdAt: DateTime.parse(json['created_at'] as String),
       createdByKind: json['created_by_kind'] as String,
       tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
+      status: json['status'] as String,
       visibility: json['visibility'] as String,
       currentVer: (json['current_ver'] as num?)?.toInt(),
       createdById: json['created_by_id'] as String?,
@@ -97,6 +98,7 @@ _DocumentListing _$DocumentListingFromJson(Map<String, dynamic> json) =>
       title: json['title'] as String?,
       description: json['description'] as String?,
       slug: json['slug'] as String?,
+      supersededBy: json['superseded_by'] as String?,
     );
 
 Map<String, dynamic> _$DocumentListingToJson(_DocumentListing instance) =>
@@ -105,6 +107,7 @@ Map<String, dynamic> _$DocumentListingToJson(_DocumentListing instance) =>
       'created_at': instance.createdAt.toIso8601String(),
       'created_by_kind': instance.createdByKind,
       'tags': instance.tags,
+      'status': instance.status,
       'visibility': instance.visibility,
       'current_ver': instance.currentVer,
       'created_by_id': instance.createdById,
@@ -114,6 +117,7 @@ Map<String, dynamic> _$DocumentListingToJson(_DocumentListing instance) =>
       'title': instance.title,
       'description': instance.description,
       'slug': instance.slug,
+      'superseded_by': instance.supersededBy,
     };
 
 _HealthzResponse _$HealthzResponseFromJson(Map<String, dynamic> json) =>
@@ -270,6 +274,139 @@ Map<String, dynamic> _$MintAgentKeyResponseToJson(
   'note': instance.note,
 };
 
+_PackDocument _$PackDocumentFromJson(Map<String, dynamic> json) =>
+    _PackDocument(
+      publicId: json['public_id'] as String,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      createdByKind: json['created_by_kind'] as String,
+      tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
+      status: json['status'] as String,
+      visibility: json['visibility'] as String,
+      content: json['content'] as String,
+      format: json['format'] as String,
+      converterV: json['converter_v'] as String,
+      version: (json['version'] as num).toInt(),
+      currentVer: (json['current_ver'] as num?)?.toInt(),
+      createdById: json['created_by_id'] as String?,
+      createdByName: json['created_by_name'] as String?,
+      currentSize: (json['current_size'] as num?)?.toInt(),
+      revokedAt: json['revoked_at'] == null
+          ? null
+          : DateTime.parse(json['revoked_at'] as String),
+      title: json['title'] as String?,
+      description: json['description'] as String?,
+      slug: json['slug'] as String?,
+      supersededBy: json['superseded_by'] as String?,
+      score: (json['score'] as num?)?.toDouble(),
+      matchedField: json['matched_field'] as String?,
+      snippet: json['snippet'] as String?,
+      tier: json['tier'] as String?,
+      hint: json['hint'] as String?,
+    );
+
+Map<String, dynamic> _$PackDocumentToJson(_PackDocument instance) =>
+    <String, dynamic>{
+      'public_id': instance.publicId,
+      'created_at': instance.createdAt.toIso8601String(),
+      'created_by_kind': instance.createdByKind,
+      'tags': instance.tags,
+      'status': instance.status,
+      'visibility': instance.visibility,
+      'content': instance.content,
+      'format': instance.format,
+      'converter_v': instance.converterV,
+      'version': instance.version,
+      'current_ver': instance.currentVer,
+      'created_by_id': instance.createdById,
+      'created_by_name': instance.createdByName,
+      'current_size': instance.currentSize,
+      'revoked_at': instance.revokedAt?.toIso8601String(),
+      'title': instance.title,
+      'description': instance.description,
+      'slug': instance.slug,
+      'superseded_by': instance.supersededBy,
+      'score': instance.score,
+      'matched_field': instance.matchedField,
+      'snippet': instance.snippet,
+      'tier': instance.tier,
+      'hint': instance.hint,
+    };
+
+_PackInfo _$PackInfoFromJson(Map<String, dynamic> json) => _PackInfo(
+  source: json['source'] as String,
+  budgetBytes: (json['budget_bytes'] as num).toInt(),
+  maxDocuments: (json['max_documents'] as num).toInt(),
+  usedBytes: (json['used_bytes'] as num).toInt(),
+  query: json['query'] as String?,
+  root: json['root'] == null
+      ? null
+      : PackRoot.fromJson(json['root'] as Map<String, dynamic>),
+);
+
+Map<String, dynamic> _$PackInfoToJson(_PackInfo instance) => <String, dynamic>{
+  'source': instance.source,
+  'budget_bytes': instance.budgetBytes,
+  'max_documents': instance.maxDocuments,
+  'used_bytes': instance.usedBytes,
+  'query': instance.query,
+  'root': instance.root,
+};
+
+_PackRoot _$PackRootFromJson(Map<String, dynamic> json) => _PackRoot(
+  publicId: json['public_id'] as String,
+  content: json['content'] as String,
+  format: json['format'] as String,
+  slug: json['slug'] as String?,
+  title: json['title'] as String?,
+);
+
+Map<String, dynamic> _$PackRootToJson(_PackRoot instance) => <String, dynamic>{
+  'public_id': instance.publicId,
+  'content': instance.content,
+  'format': instance.format,
+  'slug': instance.slug,
+  'title': instance.title,
+};
+
+_PackOmitted _$PackOmittedFromJson(Map<String, dynamic> json) => _PackOmitted(
+  ref: json['ref'] as String,
+  reason: json['reason'] as String,
+  publicId: json['public_id'] as String?,
+  title: json['title'] as String?,
+  sizeBytes: (json['size_bytes'] as num?)?.toInt(),
+  supersededBy: json['superseded_by'] as String?,
+  hint: json['hint'] as String?,
+);
+
+Map<String, dynamic> _$PackOmittedToJson(_PackOmitted instance) =>
+    <String, dynamic>{
+      'ref': instance.ref,
+      'reason': instance.reason,
+      'public_id': instance.publicId,
+      'title': instance.title,
+      'size_bytes': instance.sizeBytes,
+      'superseded_by': instance.supersededBy,
+      'hint': instance.hint,
+    };
+
+_PackResponse _$PackResponseFromJson(Map<String, dynamic> json) =>
+    _PackResponse(
+      pack: PackInfo.fromJson(json['pack'] as Map<String, dynamic>),
+      documents: (json['documents'] as List<dynamic>)
+          .map((e) => PackDocument.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      omitted: (json['omitted'] as List<dynamic>)
+          .map((e) => PackOmitted.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$PackResponseToJson(_PackResponse instance) =>
+    <String, dynamic>{
+      'pack': instance.pack,
+      'documents': instance.documents,
+      'omitted': instance.omitted,
+    };
+
 _ReadSourceResponse _$ReadSourceResponseFromJson(Map<String, dynamic> json) =>
     _ReadSourceResponse(
       source: json['source'] as String,
@@ -283,10 +420,12 @@ _ReadSourceResponse _$ReadSourceResponseFromJson(Map<String, dynamic> json) =>
           .map((e) => e as String)
           .toList(),
       tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
+      status: json['status'] as String,
       unsanitized: json['unsanitized'] as bool,
       title: json['title'] as String?,
       description: json['description'] as String?,
       slug: json['slug'] as String?,
+      supersededBy: json['superseded_by'] as String?,
     );
 
 Map<String, dynamic> _$ReadSourceResponseToJson(_ReadSourceResponse instance) =>
@@ -298,10 +437,12 @@ Map<String, dynamic> _$ReadSourceResponseToJson(_ReadSourceResponse instance) =>
       'stripped': instance.stripped,
       'will_not_render': instance.willNotRender,
       'tags': instance.tags,
+      'status': instance.status,
       'unsanitized': instance.unsanitized,
       'title': instance.title,
       'description': instance.description,
       'slug': instance.slug,
+      'superseded_by': instance.supersededBy,
     };
 
 _RedirectTarget _$RedirectTargetFromJson(Map<String, dynamic> json) =>
@@ -393,6 +534,7 @@ _SearchHit _$SearchHitFromJson(Map<String, dynamic> json) => _SearchHit(
   createdAt: DateTime.parse(json['created_at'] as String),
   createdByKind: json['created_by_kind'] as String,
   tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
+  status: json['status'] as String,
   visibility: json['visibility'] as String,
   score: (json['score'] as num).toDouble(),
   matchedField: json['matched_field'] as String,
@@ -407,6 +549,7 @@ _SearchHit _$SearchHitFromJson(Map<String, dynamic> json) => _SearchHit(
   title: json['title'] as String?,
   description: json['description'] as String?,
   slug: json['slug'] as String?,
+  supersededBy: json['superseded_by'] as String?,
 );
 
 Map<String, dynamic> _$SearchHitToJson(_SearchHit instance) =>
@@ -415,6 +558,7 @@ Map<String, dynamic> _$SearchHitToJson(_SearchHit instance) =>
       'created_at': instance.createdAt.toIso8601String(),
       'created_by_kind': instance.createdByKind,
       'tags': instance.tags,
+      'status': instance.status,
       'visibility': instance.visibility,
       'score': instance.score,
       'matched_field': instance.matchedField,
@@ -427,6 +571,7 @@ Map<String, dynamic> _$SearchHitToJson(_SearchHit instance) =>
       'title': instance.title,
       'description': instance.description,
       'slug': instance.slug,
+      'superseded_by': instance.supersededBy,
     };
 
 _SetDocumentSlugResponse _$SetDocumentSlugResponseFromJson(
@@ -445,6 +590,22 @@ Map<String, dynamic> _$SetDocumentSlugResponseToJson(
   'redirected': instance.redirected,
   'slug': instance.slug,
   'retired': instance.retired,
+};
+
+_SetDocumentStatusResponse _$SetDocumentStatusResponseFromJson(
+  Map<String, dynamic> json,
+) => _SetDocumentStatusResponse(
+  publicId: json['public_id'] as String,
+  status: json['status'] as String,
+  supersededBy: json['superseded_by'] as String?,
+);
+
+Map<String, dynamic> _$SetDocumentStatusResponseToJson(
+  _SetDocumentStatusResponse instance,
+) => <String, dynamic>{
+  'public_id': instance.publicId,
+  'status': instance.status,
+  'superseded_by': instance.supersededBy,
 };
 
 _SetDocumentTagsResponse _$SetDocumentTagsResponseFromJson(

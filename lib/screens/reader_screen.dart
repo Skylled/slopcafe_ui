@@ -172,6 +172,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         createdAt: DateTime.now(),
         createdByKind: 'agent',
         tags: [],
+        status: 'active',
         title: publicId,
         visibility: 'private',
       );
