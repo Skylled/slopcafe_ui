@@ -99,6 +99,24 @@ class VisBadge extends StatelessWidget {
   }
 }
 
+/// DEPRECATED lifecycle badge. Render only when `status == 'deprecated'` —
+/// `active` is the unmarked normal, and `archived` is reserved (nothing sets
+/// it in v1). Honey-toned: a caution, not the red of a revoked kill.
+class DeprecatedBadge extends StatelessWidget {
+  const DeprecatedBadge({super.key, this.small = true});
+  final bool small;
+
+  @override
+  Widget build(BuildContext context) {
+    return Pill(
+      context.l10n.deprecatedUpper,
+      tone: PillTone.honey,
+      icon: Icons.history_toggle_off,
+      small: small,
+    );
+  }
+}
+
 /// A tag chip tinted by [AppColors.tagTint]. When [onTap] is provided it gains
 /// press feedback and is meant to navigate into that tag's collection — the
 /// shared affordance used on cards, the Collections list, and the Reader.

@@ -40,9 +40,15 @@ class OperateScreen extends ConsumerStatefulWidget {
 
 enum _OpSeg { kitchen, docs }
 
+/// Lifecycle filter for the admin document list. Client-side, like the
+/// include-revoked toggle: it filters the loaded pages of the shared documents
+/// provider rather than re-querying with the server's `status` param.
+enum _DocStatusFilter { all, active, deprecated }
+
 class _OperateScreenState extends ConsumerState<OperateScreen> {
   _OpSeg _seg = _OpSeg.kitchen;
   bool _includeRevoked = false;
+  _DocStatusFilter _statusFilter = _DocStatusFilter.all;
 
   @override
   void initState() {
@@ -457,9 +463,14 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
   Widget _buildDocuments(AppColors c, DocumentsListState state) {
     final l10n = context.l10n;
     final all = state.documents;
-    final docs = _includeRevoked
-        ? all
-        : all.where((d) => !d.isRevoked).toList();
+    final docs = all.where((d) {
+      if (!_includeRevoked && d.isRevoked) return false;
+      return switch (_statusFilter) {
+        _DocStatusFilter.all => true,
+        _DocStatusFilter.active => d.status == 'active',
+        _DocStatusFilter.deprecated => d.status == 'deprecated',
+      };
+    }).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -546,6 +557,13 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
                 ),
               ),
             ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _StatusFilterSegmented(
+            value: _statusFilter,
+            onChanged: (v) => setState(() => _statusFilter = v),
           ),
         ),
 
@@ -724,6 +742,66 @@ class _Segmented extends StatelessWidget {
           seg(_OpSeg.kitchen, context.l10n.segKitchen),
           const SizedBox(width: 3),
           seg(_OpSeg.docs, context.l10n.segDocuments),
+        ],
+      ),
+    );
+  }
+}
+
+/// Three-way lifecycle filter (All / Active / Deprecated) for the admin
+/// document list — same segmented styling as [_Segmented], typed to
+/// [_DocStatusFilter].
+class _StatusFilterSegmented extends StatelessWidget {
+  const _StatusFilterSegmented({required this.value, required this.onChanged});
+  final _DocStatusFilter value;
+  final ValueChanged<_DocStatusFilter> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    Widget seg(_DocStatusFilter v, String label) {
+      final active = v == value;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => onChanged(v),
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 140),
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+            decoration: BoxDecoration(
+              color: active ? c.surface : Colors.transparent,
+              borderRadius: BorderRadius.circular(9),
+              boxShadow: active ? c.shadow : null,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: AppText.body.copyWith(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: active ? c.text : c.textFaint,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: c.surface2,
+        border: Border.all(color: c.lineSoft),
+        borderRadius: BorderRadius.circular(AppRadii.md + 1),
+      ),
+      child: Row(
+        children: [
+          seg(_DocStatusFilter.all, l10n.statusFilterAll),
+          const SizedBox(width: 3),
+          seg(_DocStatusFilter.active, l10n.statusFilterActive),
+          const SizedBox(width: 3),
+          seg(_DocStatusFilter.deprecated, l10n.statusFilterDeprecated),
         ],
       ),
     );
@@ -914,6 +992,10 @@ class _AdminDocRow extends StatelessWidget {
             if (revoked)
               Pill(l10n.revokedBadge, tone: PillTone.red, small: true)
             else ...[
+              if (doc.status == 'deprecated') ...[
+                const DeprecatedBadge(),
+                const SizedBox(width: 6),
+              ],
               Icon(
                 doc.visibility == 'public' ? Icons.public : Icons.lock_outline,
                 size: 14,
@@ -1787,6 +1869,53 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
     }
   }
 
+  /// Toggle lifecycle status. Deprecating routes through the deprecate sheet
+  /// (optional superseded_by target); re-activating is a plain confirm — the
+  /// backend force-clears the pointer on 'active'.
+  Future<void> _toggleStatus() async {
+    final l10n = context.l10n;
+    final deprecating = _doc.status != 'deprecated';
+    String? supersededBy;
+    if (deprecating) {
+      final target = await showDeprecateSheet(
+        widget.host,
+        initialTarget: _doc.supersededBy,
+      );
+      if (target == null) return;
+      supersededBy = target.isEmpty ? null : target;
+    } else {
+      final confirmed = await showConfirmSheet(
+        widget.host,
+        title: l10n.markActive,
+        body: Text(l10n.markActiveBody),
+        cta: l10n.markActive,
+        danger: false,
+      );
+      if (!confirmed) return;
+    }
+    setState(() => _busy = true);
+    try {
+      final next = deprecating ? 'deprecated' : 'active';
+      final updated = await widget.ref
+          .read(documentsListProvider.notifier)
+          .updateStatus(_doc.publicId, next, supersededBy: supersededBy);
+      if (mounted) setState(() => _doc = updated);
+      if (widget.host.mounted) {
+        showToast(widget.host, l10n.statusSet(next.toUpperCase()));
+      }
+    } catch (e) {
+      if (mounted) {
+        showToast(
+          context,
+          l10n.failedUpdateStatus(ApiError.describe(e)),
+          danger: true,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _editSlugAndTags() async {
     await showAppSheet<void>(
       widget.host,
@@ -1869,6 +1998,7 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
     final c = context.colors;
     final l10n = context.l10n;
     final isPublic = _doc.visibility == 'public';
+    final isDeprecated = _doc.status == 'deprecated';
     return AppSheet(
       title: _doc.title ?? l10n.untitled,
       subtitle: l10n.documentActions,
@@ -1880,6 +2010,10 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
             children: [
               VisBadge(_doc.visibility),
               const SizedBox(width: 8),
+              if (isDeprecated) ...[
+                const DeprecatedBadge(),
+                const SizedBox(width: 8),
+              ],
               if (_doc.currentVer != null)
                 Pill(
                   'v${_doc.currentVer}',
@@ -1907,6 +2041,11 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
             icon: isPublic ? Icons.lock_outline : Icons.public,
             label: isPublic ? l10n.makePrivate : l10n.makePublic,
             onTap: _busy ? null : _toggleVisibility,
+          ),
+          SheetActionRow(
+            icon: isDeprecated ? Icons.task_alt : Icons.history_toggle_off,
+            label: isDeprecated ? l10n.markActive : l10n.markDeprecated,
+            onTap: _busy ? null : _toggleStatus,
           ),
           SheetActionRow(
             icon: Icons.sell_outlined,

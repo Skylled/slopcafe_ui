@@ -648,6 +648,57 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
   }
 
+  /// Toggle lifecycle status — the Reader twin of the Operate sheet's flow.
+  /// Deprecating routes through the deprecate sheet (optional superseded_by
+  /// target); re-activating is a plain confirm (the backend clears the
+  /// pointer on 'active').
+  Future<void> _toggleStatus() async {
+    final l10n = context.l10n;
+    final deprecating = _currentDoc.status != 'deprecated';
+    String? supersededBy;
+    if (deprecating) {
+      final target = await showDeprecateSheet(
+        context,
+        initialTarget: _currentDoc.supersededBy,
+      );
+      if (target == null) return;
+      supersededBy = target.isEmpty ? null : target;
+    } else {
+      final confirmed = await showConfirmSheet(
+        context,
+        title: l10n.markActive,
+        body: Text(l10n.markActiveBody),
+        cta: l10n.markActive,
+        danger: false,
+      );
+      if (!confirmed) return;
+    }
+
+    setState(() => _updatingProperties = true);
+    try {
+      final next = deprecating ? 'deprecated' : 'active';
+      final updated = await ref
+          .read(documentsListProvider.notifier)
+          .updateStatus(_currentDoc.publicId, next, supersededBy: supersededBy);
+
+      setState(() {
+        _currentDoc = updated;
+        _updatingProperties = false;
+      });
+
+      if (!mounted) return;
+      showToast(context, l10n.statusSet(next.toUpperCase()));
+    } catch (e) {
+      setState(() => _updatingProperties = false);
+      if (!mounted) return;
+      showToast(
+        context,
+        l10n.failedUpdateStatus(ApiError.describe(e)),
+        danger: true,
+      );
+    }
+  }
+
   Future<void> _editSlugAndTags() async {
     final l10n = context.l10n;
     final slugController = TextEditingController(text: _currentDoc.slug ?? '');
@@ -984,6 +1035,20 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                     : null,
               ),
               SheetActionRow(
+                icon: _currentDoc.status == 'deprecated'
+                    ? Icons.task_alt
+                    : Icons.history_toggle_off,
+                label: _currentDoc.status == 'deprecated'
+                    ? l10n.markActive
+                    : l10n.markDeprecated,
+                onTap: canEdit
+                    ? () {
+                        Navigator.of(sheetContext).pop();
+                        _toggleStatus();
+                      }
+                    : null,
+              ),
+              SheetActionRow(
                 icon: Icons.sell_outlined,
                 label: l10n.editSlugTags,
                 onTap: canEdit
@@ -1145,8 +1210,13 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                 icon: Icons.block,
                 small: true,
               )
-            else
+            else ...[
               VisBadge(_currentDoc.visibility),
+              if (_currentDoc.status == 'deprecated') ...[
+                const SizedBox(width: 6),
+                const DeprecatedBadge(),
+              ],
+            ],
             const MetaDot(),
             Flexible(
               child: Text(
@@ -1196,6 +1266,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
     return Column(
       children: [
+        if (_currentDoc.status == 'deprecated') _buildDeprecatedBanner(),
         if (_selectedVersion != 0) _buildHistoricalBanner(),
         Expanded(child: _buildReadView()),
       ],
@@ -1214,6 +1285,61 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       ),
       child: WebViewWidget(controller: _webViewController),
     );
+  }
+
+  /// Honey caution banner on a deprecated document (the lifecycle `status`
+  /// axis). When a `superseded_by` replacement is named, an Open CTA navigates
+  /// to it — the contract never auto-follows the pointer, so the tap is the
+  /// reader's explicit decision.
+  Widget _buildDeprecatedBanner() {
+    final c = context.colors;
+    final l10n = context.l10n;
+    final hasTarget = _currentDoc.supersededBy != null;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: c.honey.withValues(alpha: 0.12),
+        border: Border.all(color: c.honey.withValues(alpha: 0.30)),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.history_toggle_off, size: 18, color: c.honeyD),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              hasTarget ? l10n.deprecatedBannerSuperseded : l10n.deprecatedBanner,
+              style: AppText.small.copyWith(
+                fontWeight: FontWeight.w600,
+                color: c.honeyD,
+              ),
+            ),
+          ),
+          if (hasTarget) ...[
+            const SizedBox(width: 8),
+            AppButton(
+              l10n.openReplacement,
+              variant: AppBtnVariant.warm,
+              icon: Icons.arrow_forward,
+              small: true,
+              onPressed: _openSupersededBy,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openSupersededBy() async {
+    final target = _currentDoc.supersededBy;
+    if (target == null) return;
+    final doc = await _resolveDocumentListing(target, null);
+    if (doc == null || !mounted) return;
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => ReaderScreen(doc: doc)));
   }
 
   Widget _buildHistoricalBanner() {

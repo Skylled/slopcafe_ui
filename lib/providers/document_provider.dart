@@ -282,6 +282,54 @@ class DocumentsListNotifier extends Notifier<DocumentsListState> {
     return state.documents.firstWhere((d) => d.publicId == publicId);
   }
 
+  /// Set a live document's lifecycle status via
+  /// `POST /admin/documents/:id/status` — no version bump, like the
+  /// visibility/slug/tags mutators above. `'deprecated'` may carry a
+  /// [supersededBy] replacement public_id (full-replace per call: omitting it
+  /// clears any stored pointer); the backend force-clears the pointer on
+  /// `'active'`. The response is canonical for both fields.
+  Future<DocumentListing> updateStatus(
+    String publicId,
+    String status, {
+    String? supersededBy,
+  }) async {
+    final dio = ref.read(dioProvider);
+    final response = await dio.post(
+      '/admin/documents/$publicId/status',
+      data: {
+        'status': status,
+        if (supersededBy != null && supersededBy.isNotEmpty)
+          'superseded_by': supersededBy,
+      },
+    );
+    final returned = SetDocumentStatusResponse.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+
+    final updatedDocs = state.documents.map((doc) {
+      if (doc.publicId == publicId) {
+        return doc.copyWith(
+          status: returned.status,
+          supersededBy: returned.supersededBy,
+        );
+      }
+      return doc;
+    }).toList();
+
+    state = DocumentsListState(
+      documents: updatedDocs,
+      nextCursor: state.nextCursor,
+      isLoading: state.isLoading,
+      hasError: state.hasError,
+      errorMessage: state.errorMessage,
+      aggregatedTags: state.aggregatedTags,
+      isOffline: state.isOffline,
+    );
+    await DocumentCacheManager.saveCachedDocumentList(updatedDocs);
+
+    return state.documents.firstWhere((d) => d.publicId == publicId);
+  }
+
   /// Re-fetch the canonical metadata record for a single document from
   /// `GET /admin/documents/:id` and replace it in the in-memory list and the
   /// offline cache, so every surface that reads the documents provider (the

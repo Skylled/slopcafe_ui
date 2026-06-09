@@ -440,6 +440,101 @@ class _Check extends StatelessWidget {
   }
 }
 
+/// Deprecate-document sheet: explains the lifecycle state and takes an
+/// optional `superseded_by` replacement public_id. Returns the trimmed target
+/// (`''` = deprecate with no successor) when confirmed, or null on cancel.
+/// The caller owns the actual `POST …/status` call, like [showConfirmSheet].
+Future<String?> showDeprecateSheet(
+  BuildContext context, {
+  String? initialTarget,
+}) {
+  return showAppSheet<String?>(
+    context,
+    builder: (_) => _DeprecateSheet(initialTarget: initialTarget),
+  );
+}
+
+class _DeprecateSheet extends StatefulWidget {
+  const _DeprecateSheet({this.initialTarget});
+  final String? initialTarget;
+
+  @override
+  State<_DeprecateSheet> createState() => _DeprecateSheetState();
+}
+
+class _DeprecateSheetState extends State<_DeprecateSheet> {
+  late final _controller = TextEditingController(
+    text: widget.initialTarget ?? '',
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    return AppSheet(
+      title: l10n.markDeprecated,
+      subtitle: l10n.documentProperties,
+      icon: Icons.history_toggle_off,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.markDeprecatedBody,
+            style: AppText.body.copyWith(fontSize: 14.5, color: c.textDim),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.supersededByLabel,
+            style: AppText.label.copyWith(fontSize: 11, color: c.textFaint),
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _controller,
+            style: AppText.mono.copyWith(fontSize: 14, color: c.text),
+            decoration: InputDecoration(hintText: l10n.supersededByHint),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.supersededByNote,
+            style: AppText.small.copyWith(color: c.textFaint),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  l10n.cancel,
+                  variant: AppBtnVariant.outline,
+                  expand: true,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 2,
+                child: AppButton(
+                  l10n.markDeprecated,
+                  variant: AppBtnVariant.warm,
+                  icon: Icons.history_toggle_off,
+                  expand: true,
+                  onPressed: () =>
+                      Navigator.of(context).pop(_controller.text.trim()),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Shows a destructive-confirmation sheet. Returns `true` when confirmed. When
 /// [confirmWord] is set, the CTA stays disabled until it is typed exactly.
 Future<bool> showConfirmSheet(

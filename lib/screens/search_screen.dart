@@ -535,6 +535,10 @@ class _SearchHitCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
+                if (doc.status == 'deprecated') ...[
+                  const DeprecatedBadge(),
+                  const SizedBox(width: 6),
+                ],
                 Pill(
                   hit.matchedField.toUpperCase(),
                   tone: PillTone.clay,

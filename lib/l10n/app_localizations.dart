@@ -1222,6 +1222,102 @@ abstract class AppLocalizations {
   /// **'Failed to update: {error}'**
   String failedUpdate(String error);
 
+  /// Uppercase DEPRECATED lifecycle pill on cards, hits, rows, and the reader.
+  ///
+  /// In en, this message translates to:
+  /// **'DEPRECATED'**
+  String get deprecatedUpper;
+
+  /// No description provided for @markDeprecated.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark deprecated'**
+  String get markDeprecated;
+
+  /// No description provided for @markActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark active'**
+  String get markActive;
+
+  /// Explainer at the top of the deprecate sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'The document stays served and searchable, but is marked as no longer current and left out of context packs by default.'**
+  String get markDeprecatedBody;
+
+  /// Mark-active confirmation body.
+  ///
+  /// In en, this message translates to:
+  /// **'The document will count as current again. Any superseded-by pointer is cleared.'**
+  String get markActiveBody;
+
+  /// No description provided for @supersededByLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'SUPERSEDED BY (OPTIONAL)'**
+  String get supersededByLabel;
+
+  /// No description provided for @supersededByHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Replacement document\'s public ID'**
+  String get supersededByHint;
+
+  /// No description provided for @supersededByNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Readers are pointed at the replacement but never auto-redirected. Leave empty if there is no successor.'**
+  String get supersededByNote;
+
+  /// Toast after changing lifecycle status, e.g. "Status set to DEPRECATED."
+  ///
+  /// In en, this message translates to:
+  /// **'Status set to {status}.'**
+  String statusSet(String status);
+
+  /// No description provided for @failedUpdateStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update status: {error}'**
+  String failedUpdateStatus(String error);
+
+  /// Reader banner on a deprecated document with no superseded_by pointer.
+  ///
+  /// In en, this message translates to:
+  /// **'This document is deprecated — treat it as no longer current.'**
+  String get deprecatedBanner;
+
+  /// Reader banner on a deprecated document that names a replacement.
+  ///
+  /// In en, this message translates to:
+  /// **'Deprecated — a newer document supersedes this one.'**
+  String get deprecatedBannerSuperseded;
+
+  /// CTA on the reader deprecation banner that opens the superseded_by replacement.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get openReplacement;
+
+  /// Operate › Documents lifecycle filter segments (All / Active / Deprecated).
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get statusFilterAll;
+
+  /// No description provided for @statusFilterActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get statusFilterActive;
+
+  /// No description provided for @statusFilterDeprecated.
+  ///
+  /// In en, this message translates to:
+  /// **'Deprecated'**
+  String get statusFilterDeprecated;
+
   /// Operate › Documents CTA that opens the compose screen (POST /admin/documents).
   ///
   /// In en, this message translates to:

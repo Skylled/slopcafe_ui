@@ -80,7 +80,12 @@ class DocFeedCard extends StatelessWidget {
                       small: true,
                     ),
                   )
-                else
+                else ...[
+                  if (doc.status == 'deprecated')
+                    const Padding(
+                      padding: EdgeInsets.only(top: 2, right: 6),
+                      child: DeprecatedBadge(),
+                    ),
                   Padding(
                     padding: EdgeInsets.only(top: featured ? 6 : 4),
                     child: Icon(
@@ -89,6 +94,7 @@ class DocFeedCard extends StatelessWidget {
                       color: c.textFaint,
                     ),
                   ),
+                ],
               ],
             ),
             if (!isRevoked &&

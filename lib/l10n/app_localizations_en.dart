@@ -687,6 +687,63 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get deprecatedUpper => 'DEPRECATED';
+
+  @override
+  String get markDeprecated => 'Mark deprecated';
+
+  @override
+  String get markActive => 'Mark active';
+
+  @override
+  String get markDeprecatedBody =>
+      'The document stays served and searchable, but is marked as no longer current and left out of context packs by default.';
+
+  @override
+  String get markActiveBody =>
+      'The document will count as current again. Any superseded-by pointer is cleared.';
+
+  @override
+  String get supersededByLabel => 'SUPERSEDED BY (OPTIONAL)';
+
+  @override
+  String get supersededByHint => 'Replacement document\'s public ID';
+
+  @override
+  String get supersededByNote =>
+      'Readers are pointed at the replacement but never auto-redirected. Leave empty if there is no successor.';
+
+  @override
+  String statusSet(String status) {
+    return 'Status set to $status.';
+  }
+
+  @override
+  String failedUpdateStatus(String error) {
+    return 'Failed to update status: $error';
+  }
+
+  @override
+  String get deprecatedBanner =>
+      'This document is deprecated — treat it as no longer current.';
+
+  @override
+  String get deprecatedBannerSuperseded =>
+      'Deprecated — a newer document supersedes this one.';
+
+  @override
+  String get openReplacement => 'Open';
+
+  @override
+  String get statusFilterAll => 'All';
+
+  @override
+  String get statusFilterActive => 'Active';
+
+  @override
+  String get statusFilterDeprecated => 'Deprecated';
+
+  @override
   String get authorDocument => 'Author a document';
 
   @override
