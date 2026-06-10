@@ -7,9 +7,19 @@ class SecureStorageService {
   // flutter_secure_storage 10 dropped the EncryptedSharedPreferences-backed
   // Android implementation (Jetpack Security was deprecated by Google). The
   // plugin now uses custom ciphers by default and transparently migrates any
-  // values written by earlier versions on first access, so no options are
-  // required here.
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  // values written by earlier versions on first access, so Android needs no
+  // options here.
+  //
+  // macOS: force the legacy file-based keychain instead of the default data
+  // protection keychain (usesDataProtectionKeychain defaults to true). The data
+  // protection keychain requires the keychain-access-groups / application-
+  // identifier entitlement even when the app is unsandboxed, which an ad-hoc
+  // signed build (no Apple Developer team) cannot satisfy — every write fails
+  // with errSecMissingEntitlement (-34018). mOptions is macOS-only, so iOS and
+  // Android behaviour is unchanged.
+  final FlutterSecureStorage _storage = const FlutterSecureStorage(
+    mOptions: MacOsOptions(usesDataProtectionKeychain: false),
+  );
 
   static const String _keyBaseUrl = 'slopcafe_base_url';
   static const String _keyOperatorToken = 'slopcafe_operator_token';
