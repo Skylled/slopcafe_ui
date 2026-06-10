@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/format.dart';
@@ -36,43 +37,45 @@ class CollectionsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: c.bg,
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.screenH,
-          topInset,
-          AppSpacing.screenH,
-          AppSpacing.bottomInset,
-        ),
-        children: [
-          BackHeader(
-            context.l10n.collectionsTitle,
-            eyebrow: context.l10n.browseByTag,
+      body: AdaptiveGutter(
+        builder: (context, gutter) => ListView(
+          padding: EdgeInsets.fromLTRB(
+            gutter,
+            topInset,
+            gutter,
+            AppSpacing.bottomInset,
           ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(left: 2, bottom: 14),
-            child: Text(
-              context.l10n.collectionCount(tags.length),
-              style: AppText.small.copyWith(color: c.textFaint),
+          children: [
+            BackHeader(
+              context.l10n.collectionsTitle,
+              eyebrow: context.l10n.browseByTag,
             ),
-          ),
-          if (tags.isEmpty)
-            _empty(context, c)
-          else
-            for (var i = 0; i < tags.length; i++)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 11),
-                child: RiseIn(
-                  delay: Duration(milliseconds: (i * 30).clamp(0, 300)),
-                  child: _CollectionRow(
-                    tag: tags[i],
-                    count: tagCounts[tags[i]] ?? 0,
-                    onTap: () =>
-                        DocumentListScreen.openForTag(context, tags[i]),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(left: 2, bottom: 14),
+              child: Text(
+                context.l10n.collectionCount(tags.length),
+                style: AppText.small.copyWith(color: c.textFaint),
+              ),
+            ),
+            if (tags.isEmpty)
+              _empty(context, c)
+            else
+              for (var i = 0; i < tags.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 11),
+                  child: RiseIn(
+                    delay: Duration(milliseconds: (i * 30).clamp(0, 300)),
+                    child: _CollectionRow(
+                      tag: tags[i],
+                      count: tagCounts[tags[i]] ?? 0,
+                      onTap: () =>
+                          DocumentListScreen.openForTag(context, tags[i]),
+                    ),
                   ),
                 ),
-              ),
-        ],
+          ],
+        ),
       ),
     );
   }

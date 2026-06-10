@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/api.dart';
+import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../l10n/l10n.dart';
@@ -9,6 +10,7 @@ import '../providers/document_provider.dart';
 import '../widgets/app_button.dart';
 import '../widgets/section_header.dart';
 import '../widgets/toast.dart';
+import '../widgets/press_card.dart';
 
 /// Markdown composition / authoring screen — the operator-facing front end for
 /// `POST /admin/documents` (the backend's new authoring surface).
@@ -113,7 +115,11 @@ class _ComposeScreenState extends ConsumerState<ComposeScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);
-      showToast(context, l10n.failedPublish(ApiError.describe(e)), danger: true);
+      showToast(
+        context,
+        l10n.failedPublish(ApiError.describe(e)),
+        danger: true,
+      );
     }
   }
 
@@ -126,116 +132,118 @@ class _ComposeScreenState extends ConsumerState<ComposeScreen> {
       backgroundColor: c.bg,
       body: SafeArea(
         bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.screenH,
-            12,
-            AppSpacing.screenH,
-            AppSpacing.bottomInset,
-          ),
-          children: [
-            BackHeader(l10n.composeTitle, eyebrow: l10n.composeEyebrow),
-            const SizedBox(height: 18),
-
-            // Toolbar — write/preview mode + content format.
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _SegToggle<_Mode>(
-                  value: _mode,
-                  onChanged: (m) => setState(() => _mode = m),
-                  options: [
-                    (_Mode.write, l10n.composeModeWrite),
-                    (_Mode.preview, l10n.composeModePreview),
-                  ],
-                ),
-                _SegToggle<_Format>(
-                  value: _format,
-                  onChanged: _submitting
-                      ? null
-                      : (f) => setState(() => _format = f),
-                  options: [
-                    (_Format.markdown, l10n.composeFormatMarkdown),
-                    (_Format.html, l10n.composeFormatHtml),
-                  ],
-                ),
-              ],
+        child: AdaptiveGutter(
+          builder: (context, gutter) => ListView(
+            padding: EdgeInsets.fromLTRB(
+              gutter,
+              12,
+              gutter,
+              AppSpacing.bottomInset,
             ),
-            const SizedBox(height: 14),
+            children: [
+              BackHeader(l10n.composeTitle, eyebrow: l10n.composeEyebrow),
+              const SizedBox(height: 18),
 
-            // Source editor / rendered preview.
-            if (_mode == _Mode.write)
-              _Editor(
-                controller: _content,
+              // Toolbar — write/preview mode + content format.
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _SegToggle<_Mode>(
+                    value: _mode,
+                    onChanged: (m) => setState(() => _mode = m),
+                    options: [
+                      (_Mode.write, l10n.composeModeWrite),
+                      (_Mode.preview, l10n.composeModePreview),
+                    ],
+                  ),
+                  _SegToggle<_Format>(
+                    value: _format,
+                    onChanged: _submitting
+                        ? null
+                        : (f) => setState(() => _format = f),
+                    options: [
+                      (_Format.markdown, l10n.composeFormatMarkdown),
+                      (_Format.html, l10n.composeFormatHtml),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Source editor / rendered preview.
+              if (_mode == _Mode.write)
+                _Editor(
+                  controller: _content,
+                  enabled: !_submitting,
+                  hint: l10n.composeBodyHint,
+                )
+              else
+                _PreviewPane(source: _content.text, format: _format),
+              const SizedBox(height: 24),
+
+              // ---- Metadata ----
+              SectionHeader(l10n.composeDetails),
+              _Field(
+                label: l10n.composeTitleLabel,
+                controller: _title,
                 enabled: !_submitting,
-                hint: l10n.composeBodyHint,
-              )
-            else
-              _PreviewPane(source: _content.text, format: _format),
-            const SizedBox(height: 24),
+                hint: l10n.composeTitleHint,
+              ),
+              _Field(
+                label: l10n.composeDescriptionLabel,
+                controller: _description,
+                enabled: !_submitting,
+                hint: l10n.composeDescriptionHint,
+                minLines: 2,
+                maxLines: 4,
+              ),
+              _Field(
+                label: l10n.tagsLabel,
+                controller: _tags,
+                enabled: !_submitting,
+                hint: l10n.tagsHint,
+              ),
+              _Field(
+                label: l10n.slugLabel,
+                controller: _slug,
+                enabled: !_submitting,
+                hint: l10n.slugHint,
+                note: l10n.composeSlugNote,
+              ),
 
-            // ---- Metadata ----
-            SectionHeader(l10n.composeDetails),
-            _Field(
-              label: l10n.composeTitleLabel,
-              controller: _title,
-              enabled: !_submitting,
-              hint: l10n.composeTitleHint,
-            ),
-            _Field(
-              label: l10n.composeDescriptionLabel,
-              controller: _description,
-              enabled: !_submitting,
-              hint: l10n.composeDescriptionHint,
-              minLines: 2,
-              maxLines: 4,
-            ),
-            _Field(
-              label: l10n.tagsLabel,
-              controller: _tags,
-              enabled: !_submitting,
-              hint: l10n.tagsHint,
-            ),
-            _Field(
-              label: l10n.slugLabel,
-              controller: _slug,
-              enabled: !_submitting,
-              hint: l10n.slugHint,
-              note: l10n.composeSlugNote,
-            ),
+              Text(
+                l10n.composeVisibilityLabel,
+                style: AppText.label.copyWith(fontSize: 11, color: c.textFaint),
+              ),
+              const SizedBox(height: 8),
+              _SegToggle<String?>(
+                value: _visibility,
+                expand: true,
+                onChanged: _submitting
+                    ? null
+                    : (v) => setState(() => _visibility = v),
+                options: <(String?, String)>[
+                  (null, l10n.composeVisibilityDefault),
+                  ('public', l10n.composeVisibilityPublic),
+                  ('private', l10n.composeVisibilityPrivate),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n.composeVisibilityNote,
+                style: AppText.small.copyWith(color: c.textFaint),
+              ),
+              const SizedBox(height: 24),
 
-            Text(
-              l10n.composeVisibilityLabel,
-              style: AppText.label.copyWith(fontSize: 11, color: c.textFaint),
-            ),
-            const SizedBox(height: 8),
-            _SegToggle<String?>(
-              value: _visibility,
-              expand: true,
-              onChanged: _submitting
-                  ? null
-                  : (v) => setState(() => _visibility = v),
-              options: <(String?, String)>[
-                (null, l10n.composeVisibilityDefault),
-                ('public', l10n.composeVisibilityPublic),
-                ('private', l10n.composeVisibilityPrivate),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              l10n.composeVisibilityNote,
-              style: AppText.small.copyWith(color: c.textFaint),
-            ),
-            const SizedBox(height: 24),
-
-            AppButton(
-              _submitting ? l10n.composePublishing : l10n.composePublish,
-              variant: AppBtnVariant.primary,
-              icon: Icons.send_rounded,
-              expand: true,
-              onPressed: _submitting ? null : _publish,
-            ),
-          ],
+              AppButton(
+                _submitting ? l10n.composePublishing : l10n.composePublish,
+                variant: AppBtnVariant.primary,
+                icon: Icons.send_rounded,
+                expand: true,
+                onPressed: _submitting ? null : _publish,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -339,7 +347,11 @@ class _Editor extends StatelessWidget {
         keyboardType: TextInputType.multiline,
         textCapitalization: TextCapitalization.sentences,
         cursorColor: c.clay,
-        style: AppText.mono.copyWith(fontSize: 13.5, color: c.text, height: 1.55),
+        style: AppText.mono.copyWith(
+          fontSize: 13.5,
+          color: c.text,
+          height: 1.55,
+        ),
         decoration: InputDecoration.collapsed(
           hintText: hint,
           hintStyle: AppText.mono.copyWith(fontSize: 13.5, color: c.textFaint),
@@ -448,7 +460,7 @@ class _SegToggle<T> extends StatelessWidget {
   Widget _seg(BuildContext context, T opt, String label) {
     final c = context.colors;
     final active = opt == value;
-    return GestureDetector(
+    return Tappable(
       onTap: onChanged == null ? null : () => onChanged!(opt),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(

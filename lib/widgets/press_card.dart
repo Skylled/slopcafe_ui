@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 /// Tactile press feedback: scales the child down slightly while held, like the
-/// mockup's `PressCard`. Wrap any tappable card/row.
+/// mockup's `PressCard`. Wrap any tappable card/row. On pointer devices it
+/// also shows a click cursor and a whisper of hover lift, so cards read as
+/// interactive on desktop.
 class PressCard extends StatefulWidget {
   const PressCard({
     super.key,
@@ -20,25 +22,52 @@ class PressCard extends StatefulWidget {
 
 class _PressCardState extends State<PressCard> {
   bool _down = false;
+  bool _hover = false;
 
-  void _set(bool v) {
+  void _setDown(bool v) {
     if (_down != v) setState(() => _down = v);
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onPress,
-      onTapDown: (_) => _set(true),
-      onTapUp: (_) => _set(false),
-      onTapCancel: () => _set(false),
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedScale(
-        scale: _down ? 0.975 : 1.0,
-        duration: const Duration(milliseconds: 120),
-        curve: Curves.easeOut,
-        child: widget.child,
+    final tappable = widget.onPress != null;
+    final scale = _down ? 0.975 : (_hover && tappable ? 1.01 : 1.0);
+    return MouseRegion(
+      cursor: tappable ? SystemMouseCursors.click : MouseCursor.defer,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        onTap: widget.onPress,
+        onTapDown: (_) => _setDown(true),
+        onTapUp: (_) => _setDown(false),
+        onTapCancel: () => _setDown(false),
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedScale(
+          scale: scale,
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          child: widget.child,
+        ),
       ),
+    );
+  }
+}
+
+/// Drop-in [GestureDetector] for plain tap targets that also shows a click
+/// cursor on pointer devices (desktop/web), where a bare GestureDetector gives
+/// no affordance at all.
+class Tappable extends StatelessWidget {
+  const Tappable({super.key, this.onTap, this.behavior, required this.child});
+
+  final VoidCallback? onTap;
+  final HitTestBehavior? behavior;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: onTap == null ? MouseCursor.defer : SystemMouseCursors.click,
+      child: GestureDetector(onTap: onTap, behavior: behavior, child: child),
     );
   }
 }

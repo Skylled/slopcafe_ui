@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../l10n/l10n.dart';
 import 'app_button.dart';
 import 'toast.dart';
+import 'press_card.dart';
 
 /// Presents [builder] as a rounded-top modal bottom sheet. The builder should
 /// return an [AppSheet] (or any widget) — the sheet handles scrolling and the
-/// keyboard inset itself.
+/// keyboard inset itself. On wide layouts the sheet is capped at
+/// [AppLayout.sheetMax] and centered rather than stretching across the window.
 Future<T?> showAppSheet<T>(
   BuildContext context, {
   required WidgetBuilder builder,
@@ -18,6 +21,7 @@ Future<T?> showAppSheet<T>(
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: const Color(0x66241E18),
+    constraints: const BoxConstraints(maxWidth: AppLayout.sheetMax),
     builder: builder,
   );
 }
@@ -405,7 +409,7 @@ class _Check extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return GestureDetector(
+    return Tappable(
       onTap: () => onChanged(!value),
       behavior: HitTestBehavior.opaque,
       child: Row(

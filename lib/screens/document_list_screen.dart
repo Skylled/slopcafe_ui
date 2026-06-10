@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/format.dart';
@@ -70,39 +71,42 @@ class DocumentListScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: c.bg,
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.screenH,
-          topInset,
-          AppSpacing.screenH,
-          AppSpacing.bottomInset,
-        ),
-        children: [
-          BackHeader(title, eyebrow: eyebrow),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(left: 2, bottom: 14),
-            child: Text(
-              context.l10n.documentCount(docs.length),
-              style: AppText.small.copyWith(color: c.textFaint),
-            ),
+      body: AdaptiveGutter(
+        builder: (context, gutter) => ListView(
+          padding: EdgeInsets.fromLTRB(
+            gutter,
+            topInset,
+            gutter,
+            AppSpacing.bottomInset,
           ),
-          if (docs.isEmpty)
-            _empty(context, c)
-          else
-            for (var i = 0; i < docs.length; i++)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: RiseIn(
-                  delay: Duration(milliseconds: (i * 40).clamp(0, 300)),
-                  child: DocFeedCard(
-                    doc: docs[i],
-                    onOpen: openDoc,
-                    onTagTap: (t) => DocumentListScreen.openForTag(context, t),
+          children: [
+            BackHeader(title, eyebrow: eyebrow),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(left: 2, bottom: 14),
+              child: Text(
+                context.l10n.documentCount(docs.length),
+                style: AppText.small.copyWith(color: c.textFaint),
+              ),
+            ),
+            if (docs.isEmpty)
+              _empty(context, c)
+            else
+              for (var i = 0; i < docs.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: RiseIn(
+                    delay: Duration(milliseconds: (i * 40).clamp(0, 300)),
+                    child: DocFeedCard(
+                      doc: docs[i],
+                      onOpen: openDoc,
+                      onTagTap: (t) =>
+                          DocumentListScreen.openForTag(context, t),
+                    ),
                   ),
                 ),
-              ),
-        ],
+          ],
+        ),
       ),
     );
   }

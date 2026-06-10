@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
 
 import '../core/api_client.dart';
+import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/document_cache.dart';
@@ -48,6 +49,15 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   /// 0 == latest; any other value is a pinned historical version.
   int _selectedVersion = 0;
 
+  /// Armed around each programmatic `loadHtmlString(..., baseUrl: _baseUrl)`.
+  /// On macOS, WKWebView reports that synthetic load to the navigation
+  /// delegate as a request for the bare base URL — it must be allowed
+  /// through, or the reader intercepts its *own* content load (the WebView
+  /// stays blank and an "open in browser?" prompt appears). Real link taps
+  /// never run with this flag set. iOS/Android never fire the delegate for
+  /// loadHtmlString, so the flag simply stays armed until the next load there.
+  bool _expectSyntheticBaseLoad = false;
+
   late DocumentListing _currentDoc;
 
   @override
@@ -74,6 +84,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             onNavigationRequest: (NavigationRequest request) {
               final reqUrl = request.url;
               if (reqUrl == 'about:blank' || reqUrl.startsWith('data:')) {
+                return NavigationDecision.navigate;
+              }
+              // The synthetic base-URL navigation of our own loadHtmlString
+              // (macOS WKWebView) — see [_expectSyntheticBaseLoad].
+              if (_expectSyntheticBaseLoad && _isBareBaseUrl(reqUrl)) {
+                _expectSyntheticBaseLoad = false;
                 return NavigationDecision.navigate;
               }
               // In-page anchor (#fragment) → let the WebView scroll natively.
@@ -178,6 +194,16 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       );
     }
     return null;
+  }
+
+  /// Whether [url] is exactly the configured base URL (modulo a trailing
+  /// slash) — the URL WKWebView reports for our own
+  /// `loadHtmlString(..., baseUrl:)` navigations on macOS.
+  bool _isBareBaseUrl(String url) {
+    final base = _baseUrl;
+    if (base == null) return false;
+    String norm(String u) => u.endsWith('/') ? u.substring(0, u.length - 1) : u;
+    return norm(url) == norm(base);
   }
 
   /// Whether [url] is an in-page anchor jump within the loaded document, i.e.
@@ -311,7 +337,10 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     int? cachedVersion;
     if (_selectedVersion == 0) {
       cachedVersion = await DocumentCacheManager.getCachedVersion(publicId);
-    } else if (await DocumentCacheManager.isCached(publicId, _selectedVersion)) {
+    } else if (await DocumentCacheManager.isCached(
+      publicId,
+      _selectedVersion,
+    )) {
       cachedVersion = _selectedVersion;
     }
 
@@ -324,6 +353,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     // position before the fresh bytes arrive.
     if (!force && cachedHtml != null) {
       final securedHtml = _injectCspMeta(cachedHtml);
+      _expectSyntheticBaseLoad = true;
       await _webViewController.loadHtmlString(securedHtml, baseUrl: _baseUrl);
     }
 
@@ -379,6 +409,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
       // Render fresh HTML (now from the network, not the cache)
       final securedHtml = _injectCspMeta(freshHtml);
+      _expectSyntheticBaseLoad = true;
       await _webViewController.loadHtmlString(securedHtml, baseUrl: _baseUrl);
     } on DioException catch (dioErr) {
       final statusCode = dioErr.response?.statusCode;
@@ -1152,33 +1183,69 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final ver = _currentDoc.currentVer;
     final topPad = MediaQuery.paddingOf(context).top;
 
-    final Widget body = Column(
-      children: [
-        // ---- Compact top bar: back · version · more ----
-        Padding(
-          padding: EdgeInsets.fromLTRB(14, topPad + 10, 14, 0),
-          child: Row(
-            children: [
-              _BackPill(onTap: () => Navigator.of(context).pop()),
-              const Spacer(),
-              if (ver != null && !isRevoked) ...[
-                _VersionChip(version: ver, onTap: _openVersionSheet),
-                const SizedBox(width: 8),
-              ],
-              _CircleIconButton(icon: Icons.more_horiz, onTap: _openMoreSheet),
-            ],
-          ),
-        ),
+    // On wide layouts the document surface centers into a readable column
+    // ([AppLayout.readerMax]); on phones the gutters collapse to the original
+    // insets (0 for the WebView card, which owns the screen edge-to-edge).
+    final Widget body = LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final barGutter = AppLayout.gutterFor(
+          w,
+          max: AppLayout.readerMax,
+          min: 14,
+        );
+        final headerGutter = AppLayout.gutterFor(
+          w,
+          max: AppLayout.readerMax,
+          min: 18,
+        );
+        final bodyGutter = AppLayout.gutterFor(
+          w,
+          max: AppLayout.readerMax,
+          min: 0,
+        );
+        return Column(
+          children: [
+            // ---- Compact top bar: back · version · more ----
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                barGutter,
+                topPad + 10,
+                barGutter,
+                0,
+              ),
+              child: Row(
+                children: [
+                  _BackPill(onTap: () => Navigator.of(context).pop()),
+                  const Spacer(),
+                  if (ver != null && !isRevoked) ...[
+                    _VersionChip(version: ver, onTap: _openVersionSheet),
+                    const SizedBox(width: 8),
+                  ],
+                  _CircleIconButton(
+                    icon: Icons.more_horiz,
+                    onTap: _openMoreSheet,
+                  ),
+                ],
+              ),
+            ),
 
-        // ---- Minimal document header: title · meta · tags ----
-        Padding(
-          padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
-          child: _buildHeader(c, isRevoked),
-        ),
+            // ---- Minimal document header: title · meta · tags ----
+            Padding(
+              padding: EdgeInsets.fromLTRB(headerGutter, 14, headerGutter, 12),
+              child: _buildHeader(c, isRevoked),
+            ),
 
-        // ---- WebView (or revoked state) owns the rest of the screen ----
-        Expanded(child: _buildReaderBody()),
-      ],
+            // ---- WebView (or revoked state) owns the rest of the screen ----
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: bodyGutter),
+                child: _buildReaderBody(),
+              ),
+            ),
+          ],
+        );
+      },
     );
 
     return Scaffold(backgroundColor: c.bg, body: body);
@@ -1310,7 +1377,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              hasTarget ? l10n.deprecatedBannerSuperseded : l10n.deprecatedBanner,
+              hasTarget
+                  ? l10n.deprecatedBannerSuperseded
+                  : l10n.deprecatedBanner,
               style: AppText.small.copyWith(
                 fontWeight: FontWeight.w600,
                 color: c.honeyD,

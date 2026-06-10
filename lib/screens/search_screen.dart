@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../api/api.dart';
 import '../core/design/typography.dart';
@@ -111,53 +112,53 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     return Scaffold(
       backgroundColor: c.bg,
-      body: Column(
-        children: [
-          // ---- Title + search field (fixed header) ----
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              AppSpacing.screenH,
-              topInset,
-              AppSpacing.screenH,
-              12,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.searchTitle,
-                  style: AppText.display.copyWith(fontSize: 32, color: c.text),
-                ),
-                const SizedBox(height: 14),
-                _SearchField(
-                  controller: _searchController,
-                  focusNode: _focusNode,
-                  active: searching,
-                  onChanged: _onSearchChanged,
-                  onClear: _clear,
-                ),
-                if (searching) ...[
-                  const SizedBox(height: 11),
-                  _SearchModeSelector(mode: _mode, onChanged: _setMode),
+      body: AdaptiveGutter(
+        builder: (context, gutter) => Column(
+          children: [
+            // ---- Title + search field (fixed header) ----
+            Padding(
+              padding: EdgeInsets.fromLTRB(gutter, topInset, gutter, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.searchTitle,
+                    style: AppText.display.copyWith(
+                      fontSize: 32,
+                      color: c.text,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _SearchField(
+                    controller: _searchController,
+                    focusNode: _focusNode,
+                    active: searching,
+                    onChanged: _onSearchChanged,
+                    onClear: _clear,
+                  ),
+                  if (searching) ...[
+                    const SizedBox(height: 11),
+                    _SearchModeSelector(mode: _mode, onChanged: _setMode),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
 
-          // ---- Body (scrolling results / suggestions) ----
-          Expanded(
-            child: searching
-                ? _buildResults(_searchQuery)
-                : _buildSuggestions(),
-          ),
-        ],
+            // ---- Body (scrolling results / suggestions) ----
+            Expanded(
+              child: searching
+                  ? _buildResults(_searchQuery, gutter)
+                  : _buildSuggestions(gutter),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   // ----------------------------------------------------------------- body
 
-  Widget _buildSuggestions() {
+  Widget _buildSuggestions(double gutter) {
     final c = context.colors;
     // A few static seeds (editable via the `searchSuggestionSeeds` ARB string)
     // plus a couple of real tags from what we've loaded.
@@ -176,12 +177,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final suggestions = [...staticSuggestions, ...tagSuggestions];
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.screenH,
-        6,
-        AppSpacing.screenH,
-        AppSpacing.bottomInset,
-      ),
+      padding: EdgeInsets.fromLTRB(gutter, 6, gutter, context.shellBottomInset),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -209,7 +205,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  Widget _buildResults(String query) {
+  Widget _buildResults(String query, double gutter) {
     final c = context.colors;
     final resultsAsync = ref.watch(
       documentSearchProvider(SearchQueryParams(query: query, mode: _mode)),
@@ -231,11 +227,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         final showCeilingHint = hits.length >= 50;
 
         return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.screenH,
+          padding: EdgeInsets.fromLTRB(
+            gutter,
             6,
-            AppSpacing.screenH,
-            AppSpacing.bottomInset,
+            gutter,
+            context.shellBottomInset,
           ),
           itemCount: hits.length + (showCeilingHint ? 2 : 1),
           itemBuilder: (context, index) {
@@ -339,7 +335,7 @@ class _SearchField extends StatelessWidget {
             valueListenable: controller,
             builder: (context, value, _) {
               if (value.text.isEmpty) return const SizedBox.shrink();
-              return GestureDetector(
+              return Tappable(
                 behavior: HitTestBehavior.opaque,
                 onTap: onClear,
                 child: Padding(
@@ -413,7 +409,7 @@ class _ModeSegment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return GestureDetector(
+    return Tappable(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: AnimatedContainer(
@@ -682,11 +678,11 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         AppSpacing.screenH,
         60,
         AppSpacing.screenH,
-        AppSpacing.bottomInset,
+        context.shellBottomInset,
       ),
       child: Column(
         children: [
@@ -717,7 +713,7 @@ class _LoadingState extends StatelessWidget {
     final c = context.colors;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.only(bottom: AppSpacing.bottomInset),
+        padding: EdgeInsets.only(bottom: context.shellBottomInset),
         child: SizedBox(
           width: 26,
           height: 26,
@@ -736,11 +732,11 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
+      padding: EdgeInsets.fromLTRB(
         AppSpacing.screenH,
         60,
         AppSpacing.screenH,
-        AppSpacing.bottomInset,
+        context.shellBottomInset,
       ),
       child: Column(
         children: [

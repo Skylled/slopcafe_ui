@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
+import 'press_card.dart';
 
 /// Serif section title with an optional trailing action (e.g. "See all").
 class SectionHeader extends StatelessWidget {
@@ -22,7 +23,7 @@ class SectionHeader extends StatelessWidget {
             child: Text(title, style: AppText.headline.copyWith(color: c.text)),
           ),
           if (action != null)
-            GestureDetector(
+            Tappable(
               onTap: onAction,
               child: Text(
                 action!,

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/api.dart';
 import '../core/api_client.dart';
+import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/secure_storage.dart';
@@ -168,112 +169,115 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
       body: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.xl,
-            AppSpacing.lg,
-            AppSpacing.xl,
-            AppSpacing.bottomInset,
-          ),
-          children: [
-            if (isUnauthorized) ...[
-              _UnauthorizedBanner(
-                message:
-                    connectionState.errorMessage ?? l10n.tokenRejectedDetail,
+        child: AdaptiveGutter(
+          maxContent: AppLayout.formMax,
+          builder: (context, gutter) => ListView(
+            padding: EdgeInsets.fromLTRB(
+              gutter,
+              AppSpacing.lg,
+              gutter,
+              AppSpacing.bottomInset,
+            ),
+            children: [
+              if (isUnauthorized) ...[
+                _UnauthorizedBanner(
+                  message:
+                      connectionState.errorMessage ?? l10n.tokenRejectedDetail,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
+              _IntroCard(),
+              const SizedBox(height: AppSpacing.xxl),
+              SectionHeader(l10n.credentialsSection),
+              _FieldLabel(l10n.baseUrlLabel),
+              const SizedBox(height: AppSpacing.sm),
+              TextFormField(
+                controller: _urlController,
+                keyboardType: TextInputType.url,
+                autocorrect: false,
+                style: AppText.body.copyWith(color: c.text),
+                decoration: InputDecoration(
+                  hintText: l10n.baseUrlHint,
+                  prefixIcon: const Icon(Icons.link),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return l10n.baseUrlRequired;
+                  }
+                  if (!value.startsWith('http://') &&
+                      !value.startsWith('https://')) {
+                    return l10n.baseUrlInvalidScheme;
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: AppSpacing.lg),
-            ],
-            _IntroCard(),
-            const SizedBox(height: AppSpacing.xxl),
-            SectionHeader(l10n.credentialsSection),
-            _FieldLabel(l10n.baseUrlLabel),
-            const SizedBox(height: AppSpacing.sm),
-            TextFormField(
-              controller: _urlController,
-              keyboardType: TextInputType.url,
-              autocorrect: false,
-              style: AppText.body.copyWith(color: c.text),
-              decoration: InputDecoration(
-                hintText: l10n.baseUrlHint,
-                prefixIcon: const Icon(Icons.link),
+              _FieldLabel(l10n.operatorTokenLabel),
+              const SizedBox(height: AppSpacing.sm),
+              TextFormField(
+                controller: _tokenController,
+                obscureText: _obscureToken,
+                autocorrect: false,
+                enableSuggestions: false,
+                style: AppText.mono.copyWith(color: c.text),
+                decoration: InputDecoration(
+                  hintText: l10n.operatorTokenHint,
+                  prefixIcon: const Icon(Icons.key_outlined),
+                  suffixIcon: IconButton(
+                    tooltip: _obscureToken ? l10n.showToken : l10n.hideToken,
+                    icon: Icon(
+                      _obscureToken
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: c.textDim,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscureToken = !_obscureToken),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return l10n.operatorTokenRequired;
+                  }
+                  return null;
+                },
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.baseUrlRequired;
-                }
-                if (!value.startsWith('http://') &&
-                    !value.startsWith('https://')) {
-                  return l10n.baseUrlInvalidScheme;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            _FieldLabel(l10n.operatorTokenLabel),
-            const SizedBox(height: AppSpacing.sm),
-            TextFormField(
-              controller: _tokenController,
-              obscureText: _obscureToken,
-              autocorrect: false,
-              enableSuggestions: false,
-              style: AppText.mono.copyWith(color: c.text),
-              decoration: InputDecoration(
-                hintText: l10n.operatorTokenHint,
-                prefixIcon: const Icon(Icons.key_outlined),
-                suffixIcon: IconButton(
-                  tooltip: _obscureToken ? l10n.showToken : l10n.hideToken,
-                  icon: Icon(
-                    _obscureToken
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    color: c.textDim,
-                  ),
-                  onPressed: () =>
-                      setState(() => _obscureToken = !_obscureToken),
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.operatorTokenRequired;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            Row(
-              children: [
-                Expanded(
-                  child: AppButton(
-                    _testingConnection
-                        ? l10n.testingConnection
-                        : l10n.testConnection,
-                    variant: AppBtnVariant.outline,
-                    icon: Icons.bolt,
-                    expand: true,
-                    onPressed: _testingConnection ? null : _testConnection,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: AppButton(
-                    l10n.saveAndContinue,
-                    variant: AppBtnVariant.primary,
-                    icon: Icons.check,
-                    expand: true,
-                    onPressed: _testingConnection ? null : _saveSettings,
-                  ),
-                ),
-              ],
-            ),
-            if (_testResult != null) ...[
               const SizedBox(height: AppSpacing.xl),
-              _ResultPanel(text: _testResult!, isError: _resultIsError),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      _testingConnection
+                          ? l10n.testingConnection
+                          : l10n.testConnection,
+                      variant: AppBtnVariant.outline,
+                      icon: Icons.bolt,
+                      expand: true,
+                      onPressed: _testingConnection ? null : _testConnection,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: AppButton(
+                      l10n.saveAndContinue,
+                      variant: AppBtnVariant.primary,
+                      icon: Icons.check,
+                      expand: true,
+                      onPressed: _testingConnection ? null : _saveSettings,
+                    ),
+                  ),
+                ],
+              ),
+              if (_testResult != null) ...[
+                const SizedBox(height: AppSpacing.xl),
+                _ResultPanel(text: _testResult!, isError: _resultIsError),
+              ],
+              const SizedBox(height: AppSpacing.xxl),
+              Divider(color: c.lineSoft, height: 1),
+              const SizedBox(height: AppSpacing.xl),
+              _DangerCard(onClear: _clearAll),
             ],
-            const SizedBox(height: AppSpacing.xxl),
-            Divider(color: c.lineSoft, height: 1),
-            const SizedBox(height: AppSpacing.xl),
-            _DangerCard(onClear: _clearAll),
-          ],
+          ),
         ),
       ),
     );

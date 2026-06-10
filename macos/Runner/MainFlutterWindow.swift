@@ -8,6 +8,10 @@ class MainFlutterWindow: NSWindow {
     self.contentViewController = flutterViewController
     self.setFrame(windowFrame, display: true)
 
+    // Keep the window above the layout's compact floor: below ~400pt wide the
+    // phone-first Craft layout has no room to breathe.
+    self.minSize = NSSize(width: 400, height: 600)
+
     RegisterGeneratedPlugins(registry: flutterViewController)
 
     super.awakeFromNib()

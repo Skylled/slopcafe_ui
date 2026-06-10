@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 
 import '../core/api_client.dart';
+import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/format.dart';
@@ -187,88 +188,108 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
         onRefresh: () => refreshFleetData(ref),
         color: c.clay,
         backgroundColor: c.surface,
-        child: ListView(
-          // AlwaysScrollable so the pull-to-refresh gesture works even when the
-          // content is short enough to fit without scrolling.
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(
-            AppSpacing.screenH,
-            MediaQuery.paddingOf(context).top + 12,
-            AppSpacing.screenH,
-            AppSpacing.bottomInset,
-          ),
-          children: [
-            // ---- Header ----
-            Eyebrow(l10n.backOfHouse),
-            const SizedBox(height: 3),
-            Text(l10n.thePass, style: AppText.display.copyWith(color: c.text)),
-            const SizedBox(height: 18),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final gutter = AppLayout.gutterFor(constraints.maxWidth);
+            // Lay the four stat tiles in one row when the content column can
+            // give each a comfortable cell; otherwise keep the phone 2x2 grid.
+            final statsAcross = constraints.maxWidth - 2 * gutter >= 640;
+            final stats = [
+              OpStat(
+                icon: Icons.description_outlined,
+                label: l10n.liveDocuments,
+                value: '$liveDocs',
+                sub: l10n.publicCountSub(publicDocs),
+              ),
+              OpStat(
+                icon: Icons.person_outline,
+                label: l10n.activeAgents,
+                value: '$activeAgents',
+                sub: l10n.ofCountSub(agents.length),
+              ),
+              OpStat(
+                icon: Icons.key_outlined,
+                label: l10n.activeKeys,
+                value: '$activeKeys',
+                sub: l10n.mintedSub(mintedKeys),
+              ),
+              OpStat(
+                icon: Icons.shield_outlined,
+                label: l10n.sanitizer,
+                value: health.sanitizerVersion ?? '—',
+                sub: health.sanitizerVersion != null
+                    ? l10n.allGreen
+                    : l10n.unavailable,
+                mono: true,
+              ),
+            ];
 
-            // ---- Stat grid (2x2) ----
-            Row(
+            return ListView(
+              // AlwaysScrollable so the pull-to-refresh gesture works even
+              // when the content is short enough to fit without scrolling.
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(
+                gutter,
+                MediaQuery.paddingOf(context).top + 12,
+                gutter,
+                context.shellBottomInset,
+              ),
               children: [
-                Expanded(
-                  child: OpStat(
-                    icon: Icons.description_outlined,
-                    label: l10n.liveDocuments,
-                    value: '$liveDocs',
-                    sub: l10n.publicCountSub(publicDocs),
-                  ),
+                // ---- Header ----
+                Eyebrow(l10n.backOfHouse),
+                const SizedBox(height: 3),
+                Text(
+                  l10n.thePass,
+                  style: AppText.display.copyWith(color: c.text),
                 ),
-                const SizedBox(width: 11),
-                Expanded(
-                  child: OpStat(
-                    icon: Icons.person_outline,
-                    label: l10n.activeAgents,
-                    value: '$activeAgents',
-                    sub: l10n.ofCountSub(agents.length),
-                  ),
+                const SizedBox(height: 18),
+
+                // ---- Stat grid (2x2, or 4-across on wide columns) ----
+                if (statsAcross)
+                  _statRow(stats)
+                else ...[
+                  _statRow(stats.sublist(0, 2)),
+                  const SizedBox(height: 11),
+                  _statRow(stats.sublist(2)),
+                ],
+                const SizedBox(height: 12),
+
+                // ---- R2 storage bar (hidden gracefully if cap unknown) ----
+                if (health.storageCapBytes != null) _buildStorageBar(c, health),
+                if (health.storageCapBytes != null) const SizedBox(height: 22),
+                if (health.storageCapBytes == null) const SizedBox(height: 10),
+
+                // ---- Segmented control ----
+                _Segmented(
+                  value: _seg,
+                  onChanged: (v) => setState(() => _seg = v),
                 ),
+                const SizedBox(height: 16),
+
+                // ---- Content ----
+                if (_seg == _OpSeg.kitchen)
+                  _buildKitchen(c, agentsState)
+                else
+                  _buildDocuments(c, docsState),
               ],
-            ),
-            const SizedBox(height: 11),
-            Row(
-              children: [
-                Expanded(
-                  child: OpStat(
-                    icon: Icons.key_outlined,
-                    label: l10n.activeKeys,
-                    value: '$activeKeys',
-                    sub: l10n.mintedSub(mintedKeys),
-                  ),
-                ),
-                const SizedBox(width: 11),
-                Expanded(
-                  child: OpStat(
-                    icon: Icons.shield_outlined,
-                    label: l10n.sanitizer,
-                    value: health.sanitizerVersion ?? '—',
-                    sub: health.sanitizerVersion != null
-                        ? l10n.allGreen
-                        : l10n.unavailable,
-                    mono: true,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // ---- R2 storage bar (hidden gracefully if cap unknown) ----
-            if (health.storageCapBytes != null) _buildStorageBar(c, health),
-            if (health.storageCapBytes != null) const SizedBox(height: 22),
-            if (health.storageCapBytes == null) const SizedBox(height: 10),
-
-            // ---- Segmented control ----
-            _Segmented(value: _seg, onChanged: (v) => setState(() => _seg = v)),
-            const SizedBox(height: 16),
-
-            // ---- Content ----
-            if (_seg == _OpSeg.kitchen)
-              _buildKitchen(c, agentsState)
-            else
-              _buildDocuments(c, docsState),
-          ],
+            );
+          },
         ),
+      ),
+    );
+  }
+
+  /// One stat row: equal-width cells, stretched to the tallest tile.
+  Widget _statRow(List<Widget> cells) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < cells.length; i++) ...[
+            if (i > 0) const SizedBox(width: 11),
+            Expanded(child: cells[i]),
+          ],
+        ],
       ),
     );
   }
@@ -368,7 +389,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
                   letterSpacing: 0.6,
                 ),
               ),
-              GestureDetector(
+              Tappable(
                 onTap: _showNewAgentSheet,
                 behavior: HitTestBehavior.opaque,
                 child: Row(
@@ -532,7 +553,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
                   letterSpacing: 0.6,
                 ),
               ),
-              GestureDetector(
+              Tappable(
                 onTap: () => setState(() => _includeRevoked = !_includeRevoked),
                 behavior: HitTestBehavior.opaque,
                 child: Row(
@@ -705,7 +726,7 @@ class _Segmented extends StatelessWidget {
     Widget seg(_OpSeg v, String label) {
       final active = v == value;
       return Expanded(
-        child: GestureDetector(
+        child: Tappable(
           onTap: () => onChanged(v),
           behavior: HitTestBehavior.opaque,
           child: AnimatedContainer(
@@ -763,7 +784,7 @@ class _StatusFilterSegmented extends StatelessWidget {
     Widget seg(_DocStatusFilter v, String label) {
       final active = v == value;
       return Expanded(
-        child: GestureDetector(
+        child: Tappable(
           onTap: () => onChanged(v),
           behavior: HitTestBehavior.opaque,
           child: AnimatedContainer(
@@ -934,7 +955,7 @@ class _AdminDocRow extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: GestureDetector(
+              child: Tappable(
                 onTap: revoked ? null : onOpen,
                 behavior: HitTestBehavior.opaque,
                 child: Row(
@@ -1792,7 +1813,7 @@ class _KeyRow extends StatelessWidget {
             else if (expired)
               Pill(l10n.expiredUpper, tone: PillTone.neutral, small: true)
             else
-              GestureDetector(
+              Tappable(
                 onTap: onRevoke,
                 behavior: HitTestBehavior.opaque,
                 child: Padding(
@@ -2136,7 +2157,11 @@ class _BackfillSheetState extends State<_BackfillSheet> {
           _busy = false;
           _running = null;
         });
-        showToast(context, l10n.backfillFailed(ApiError.describe(e)), danger: true);
+        showToast(
+          context,
+          l10n.backfillFailed(ApiError.describe(e)),
+          danger: true,
+        );
       }
     }
   }
@@ -2152,7 +2177,10 @@ class _BackfillSheetState extends State<_BackfillSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.backfillBody, style: AppText.body.copyWith(color: c.textDim)),
+          Text(
+            l10n.backfillBody,
+            style: AppText.body.copyWith(color: c.textDim),
+          ),
           const SizedBox(height: 18),
           if (_busy)
             Container(

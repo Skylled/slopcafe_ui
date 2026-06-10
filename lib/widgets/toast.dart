@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 
 /// Lightweight floating toast, styled to match the Craft `useToast` node.
+/// On wide layouts it keeps a compact centered width instead of stretching
+/// across the whole window.
 void showToast(BuildContext context, String message, {bool danger = false}) {
   final c = context.colors;
   final messenger = ScaffoldMessenger.of(context);
@@ -10,7 +13,7 @@ void showToast(BuildContext context, String message, {bool danger = false}) {
   messenger.showSnackBar(
     SnackBar(
       duration: const Duration(milliseconds: 2400),
-      width: null,
+      width: context.isExpandedLayout ? 440 : null,
       behavior: SnackBarBehavior.floating,
       backgroundColor: c.surface3,
       content: Row(
