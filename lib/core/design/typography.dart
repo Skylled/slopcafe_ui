@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Craft typography.
+/// Cortado typography.
 ///
 /// The mockup uses Instrument Serif (display), Hanken Grotesk (sans) and Space
 /// Mono (mono). Per the chosen "system fallback" approach we don't bundle font
@@ -98,7 +98,7 @@ class AppText {
   );
 
   /// Builds a Material [TextTheme] so plain [Text] widgets inherit sensible
-  /// Craft defaults (sans body, serif display) coloured for [onSurface].
+  /// Cortado defaults (sans body, serif display) coloured for [onSurface].
   static TextTheme textTheme(Color onSurface) {
     final base = ThemeData(brightness: Brightness.light).textTheme;
     return base

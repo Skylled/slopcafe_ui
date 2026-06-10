@@ -22,7 +22,7 @@ import '../widgets/toast.dart';
 /// (`GET /healthz` then `GET /admin/agents?limit=1` with a Bearer token),
 /// persists credentials via [SecureStorageService], and can clear secure
 /// storage. The wiring is preserved exactly; only the presentation is restyled
-/// into the Craft language.
+/// into the Cortado language.
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key, this.onSaved});
 

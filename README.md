@@ -2,13 +2,16 @@
 
 A professional, feature-rich Flutter administrative application designed for operators to manage, search, and monitor their Slopcafe fleet deployment.
 
-## 🎨 Mobile experience — "Craft"
+## 🎨 Mobile experience — "Cortado"
 
-The app uses the **Craft** design language: a warm café-themed visual system (terracotta **clay** +
+The app uses the **Cortado** design language: a warm café-themed visual system (terracotta **clay** +
 **honey** palette, serif display type, press-cards, a floating pill tab bar) with light + dark support.
 The mobile information architecture is three tabs — **Library** ("The Café"), **Search**, and
 **Operate** ("The Pass") — plus a full-screen document **Reader** and a **Connection** (Settings)
 screen. See [GEMINI.md](GEMINI.md) for the full codebase map.
+
+> Cortado's visual language is inspired by the [Craft](https://www.craft.do/) app, whose
+> warm, document-forward aesthetic guided the original Claude Design overhaul.
 
 ## 📖 Canonical HTTP API Surface Reference
 

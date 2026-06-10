@@ -356,7 +356,7 @@ class _SearchField extends StatelessWidget {
 /// Segmented Hybrid / Keyword / Semantic ranking selector shown beneath the
 /// search field while a query is active. Hybrid (the backend default) fuses the
 /// keyword + semantic legs; the operator can force a single leg. The selected
-/// segment uses the Craft `PillTone.solid` fill (clay + onAccent).
+/// segment uses the Cortado `PillTone.solid` fill (clay + onAccent).
 class _SearchModeSelector extends StatelessWidget {
   const _SearchModeSelector({required this.mode, required this.onChanged});
 

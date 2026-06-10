@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// Craft design-system tokens.
+/// Cortado design-system tokens.
 ///
-/// The palette originates from the Claude Design "Craft-light" mockup, authored
+/// The palette originates from the Claude Design "Cortado-light" mockup, authored
 /// in OKLCH. Those OKLCH values were converted to sRGB (see plan) and frozen as
-/// the constants below. A matching espresso-based "Craft-dark" set keeps system
+/// the constants below. A matching espresso-based "Cortado-dark" set keeps system
 /// dark mode working.
 ///
 /// Tokens are exposed as a [ThemeExtension] so they switch automatically with
@@ -57,7 +57,7 @@ class AppColors extends ThemeExtension<AppColors> {
   final List<BoxShadow> shadowLg;
   final List<BoxShadow> glow;
 
-  // ---- Craft-light (OKLCH -> sRGB, verified) ----
+  // ---- Cortado-light (OKLCH -> sRGB, verified) ----
   static final AppColors light = AppColors(
     bg: const Color(0xFFF9F5F0),
     bgDeep: const Color(0xFFF2EEE8),
@@ -105,7 +105,7 @@ class AppColors extends ThemeExtension<AppColors> {
     ],
   );
 
-  // ---- Craft-dark (espresso base, brightened accents) ----
+  // ---- Cortado-dark (espresso base, brightened accents) ----
   static final AppColors dark = AppColors(
     bg: const Color(0xFF16100C),
     bgDeep: const Color(0xFF0F0A06),
@@ -269,7 +269,7 @@ class AppColors extends ThemeExtension<AppColors> {
   }
 }
 
-/// Corner radii used across the Craft system.
+/// Corner radii used across the Cortado system.
 class AppRadii {
   AppRadii._();
   static const double pill = 99;

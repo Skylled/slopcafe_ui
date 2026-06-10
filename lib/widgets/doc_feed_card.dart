@@ -9,7 +9,7 @@ import 'pill.dart';
 import 'press_card.dart';
 import 'section_header.dart';
 
-/// A text-forward document card — the Craft "plate". No cover art: the title is
+/// A text-forward document card — the Cortado "plate". No cover art: the title is
 /// the star, with a visibility marker pinned top-right. [featured] only gives a
 /// larger, hero-weight treatment (used by the Library's "Today's Special" slot);
 /// the "special" labeling itself is owned by the homepage, not this widget. Used

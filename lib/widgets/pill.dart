@@ -6,7 +6,7 @@ import 'press_card.dart';
 
 enum PillTone { neutral, clay, honey, red, green, solid }
 
-/// Small rounded status/label chip — the Craft `Pill` primitive.
+/// Small rounded status/label chip — the Cortado `Pill` primitive.
 class Pill extends StatelessWidget {
   const Pill(
     this.label, {

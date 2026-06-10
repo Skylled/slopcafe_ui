@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'design/tokens.dart';
 import 'design/typography.dart';
 
-/// Assembles the Craft [ThemeData] (light + dark) from the design tokens.
+/// Assembles the Cortado [ThemeData] (light + dark) from the design tokens.
 ///
 /// The [AppColors] token set is registered as a [ThemeExtension] so bespoke
 /// widgets can read raw tokens via `context.colors`, while the standard Material
 /// [ColorScheme] is mapped onto the same palette so existing `Theme.of(context)`
-/// references keep resolving to sensible Craft colours.
+/// references keep resolving to sensible Cortado colours.
 class AppTheme {
   AppTheme._();
 

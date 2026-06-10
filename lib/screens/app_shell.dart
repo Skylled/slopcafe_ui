@@ -14,7 +14,7 @@ import 'search_screen.dart';
 import 'operate_screen.dart';
 import 'settings_screen.dart';
 
-/// The three-tab Craft app shell, adaptive to the window width:
+/// The three-tab Cortado app shell, adaptive to the window width:
 ///
 /// * **Compact** (phones): an [IndexedStack] of Library / Search / Operate
 ///   under a floating pill tab bar (mirrors the old `MainNavigationShell`).

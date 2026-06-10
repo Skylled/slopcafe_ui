@@ -38,18 +38,18 @@ It communicates with the Slopcafe Backend API to perform fleet management tasks,
 
 ---
 
-## 🎨 Design Language — "Craft"
-The mobile UI follows the **Craft** design language (a warm café metaphor): a terracotta **clay** +
+## 🎨 Design Language — "Cortado"
+The mobile UI follows the **Cortado** design language (a warm café metaphor): a terracotta **clay** +
 **honey** OKLCH-derived palette, serif display type, text-forward "plate" cards (no cover art), tinted
 tag chips, press-cards, and a floating pill tab bar. The information architecture is three tabs —
 **Library** ("The Café"), **Search**, and **Operate** ("The Pass") — plus pushed routes: a full-screen
 document **Reader**, a **Collections** tag browser, a generic **document list** (a tag's collection /
 "see all"), and **Settings**. Copy uses "light café flavor": café-flavored section/screen titles,
-professional functional copy. Both **Craft-light** and a derived **Craft-dark** are supported via
+professional functional copy. Both **Cortado-light** and a derived **Cortado-dark** are supported via
 `ThemeMode.system`.
 
 ### Large-screen adaptation (tablet / desktop)
-Craft is phone-first but **adaptive**, via one small system in
+Cortado is phone-first but **adaptive**, via one small system in
 [lib/core/design/layout.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/design/layout.dart):
 * **One breakpoint** — at window width ≥ `AppLayout.railBreakpoint` (600, M3's compact/medium
   boundary) the shell swaps the floating pill tab bar for a left **side rail** (same three tabs +
@@ -110,7 +110,7 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
 
 ### 1. Entry & Bootstrapping
 * **[lib/main.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/main.dart)**
-  * Initializes the `ProviderScope`, builds the `MaterialApp` (Craft light/dark themes, `ThemeMode.system`), and runs the application.
+  * Initializes the `ProviderScope`, builds the `MaterialApp` (Cortado light/dark themes, `ThemeMode.system`), and runs the application.
   * Registers the localization delegates (`AppLocalizations.localizationsDelegates` / `supportedLocales`) and sets the OS task-switcher title via `onGenerateTitle` (localized `appTitle`).
   * Contains `RootGate`: the first-launch gate that routes to `SettingsScreen` when the deployment is unconfigured (no Base URL/Operator Token in secure storage), otherwise to `AppShell`.
 * **[lib/screens/app_shell.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/app_shell.dart)**
@@ -128,9 +128,9 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
   * Manages the storage and retrieval of offline-cached documents to support running the app in disconnected mode.
   * Encapsulates saving and loading the global documents metadata listing (`documents_list.json`), checking if specific document versions exist in the cache, and scanning the cache directory for version resolution.
 * **[lib/core/theme.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/theme.dart)**
-  * Assembles the Craft `ThemeData` (light + dark) from the design tokens: maps the palette onto a Material `ColorScheme` AND registers the raw token set as a `ThemeExtension`, plus component themes (cards, inputs, buttons, sheets).
+  * Assembles the Cortado `ThemeData` (light + dark) from the design tokens: maps the palette onto a Material `ColorScheme` AND registers the raw token set as a `ThemeExtension`, plus component themes (cards, inputs, buttons, sheets).
 * **[lib/core/design/tokens.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/design/tokens.dart)**
-  * `AppColors` (a `ThemeExtension`) — the Craft-light + Craft-dark palettes (OKLCH→sRGB), shadows, tag tints, and decorative accents. Read anywhere via `context.colors`. Also `AppRadii` and `AppSpacing`.
+  * `AppColors` (a `ThemeExtension`) — the Cortado-light + Cortado-dark palettes (OKLCH→sRGB), shadows, tag tints, and decorative accents. Read anywhere via `context.colors`. Also `AppRadii` and `AppSpacing`.
 * **[lib/core/design/layout.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/design/layout.dart)**
   * `AppLayout` — the adaptive large-screen system: the rail breakpoint, content max-widths (`contentMax`/`formMax`/`readerMax`/`sheetMax`), `gutterFor(width)` and the `AdaptiveGutter` builder widget, plus the `context.isExpandedLayout` / `context.shellBottomInset` extensions. See **Large-screen adaptation** above.
 * **[lib/core/design/typography.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/design/typography.dart)**
@@ -166,7 +166,7 @@ barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dar
 * **[lib/providers/refresh.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/providers/refresh.dart)**
   * `refreshFleetData(ref)` — the single pull-to-refresh routine for both home tabs. Concurrently reloads the document list, the agent fleet, and the health snapshot (`clear: true` for the lists) — the same fetches a cold app open kicks off, so a pull behaves "as if the app were opened anew" regardless of which tab started it. Wired into both Library's and Operate's `RefreshIndicator`.
 
-### 5. UI & Screens (Craft IA)
+### 5. UI & Screens (Cortado IA)
 * **[lib/screens/library_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/library_screen.dart)** — Library ("The Café") tab.
   * Greeting + connection-status pill (taps through to Settings), fleet/menu tickers, a text-forward "Today's Special" featured plate (`DocFeedCard`; currently the newest public doc — curated selection deferred to a future backend feature), a tag-based Collections carousel ("All" → `CollectionsScreen`, tiles → `DocumentListScreen`), and a "Recently plated" list ("See all" → `DocumentListScreen`). Offline banner from cache state. No search bar (Search is its own tab) and no per-doc `OFFLINE READY` badge. **Pull-to-refresh** (a `RefreshIndicator` over the `ListView`) runs the shared `refreshFleetData` — a full document + agent + health reload, identical to an Operate pull.
 * **[lib/screens/search_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/search_screen.dart)** — Search tab.
@@ -185,7 +185,7 @@ barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dar
   * Configure + double-probe test the Base URL and Operator Token (`GET /healthz` then `GET /admin/agents`), save (optional `onSaved` callback, used by the first-launch gate), and clear secure storage. Shows the unauthorized banner.
 
 ### 6. Shared Widgets
-* **[lib/widgets/](file:///Users/kyle/Repos/slopcafe_ui/lib/widgets/)** — Craft primitives composed by every screen: `pill.dart` (`Pill`/`VisBadge`/`DeprecatedBadge` — the honey-toned lifecycle pill, rendered only for `status == 'deprecated'` — /`TagChip` — the tinted, tappable tag chip), `doc_feed_card.dart` (`DocFeedCard` — the text-forward "plate" card shared by Library / Collections / document lists; deprecated docs carry the `DeprecatedBadge` beside the visibility marker), `app_button.dart` (`AppButton`/`AppIconButton`), `press_card.dart` (`PressCard` — now with click cursor + subtle hover lift on pointer devices — /`Tappable` — the cursor-aware `GestureDetector` drop-in used by every plain tap target — /`RiseIn`), `stat.dart` (`MiniStat`/`OpStat`), `section_header.dart` (`SectionHeader`/`MetaDot`/`Eyebrow`/`BackHeader` — the pushed-screen back+title header), `sheets.dart` (`AppSheet`/`SecretSheet`/`showConfirmSheet`/`showDeprecateSheet` — the deprecate flow's sheet: explainer + optional `superseded_by` field, returns the trimmed target or null on cancel; the caller owns the POST — /`CopyField`/`SheetActionRow`; `showAppSheet` caps every modal sheet at `AppLayout.sheetMax` on wide windows), `toast.dart` (compact fixed width on wide windows), `cafe_logo.dart`. Status-surfacing render coverage lives in [test/status_lifecycle_test.dart](file:///Users/kyle/Repos/slopcafe_ui/test/status_lifecycle_test.dart).
+* **[lib/widgets/](file:///Users/kyle/Repos/slopcafe_ui/lib/widgets/)** — Cortado primitives composed by every screen: `pill.dart` (`Pill`/`VisBadge`/`DeprecatedBadge` — the honey-toned lifecycle pill, rendered only for `status == 'deprecated'` — /`TagChip` — the tinted, tappable tag chip), `doc_feed_card.dart` (`DocFeedCard` — the text-forward "plate" card shared by Library / Collections / document lists; deprecated docs carry the `DeprecatedBadge` beside the visibility marker), `app_button.dart` (`AppButton`/`AppIconButton`), `press_card.dart` (`PressCard` — now with click cursor + subtle hover lift on pointer devices — /`Tappable` — the cursor-aware `GestureDetector` drop-in used by every plain tap target — /`RiseIn`), `stat.dart` (`MiniStat`/`OpStat`), `section_header.dart` (`SectionHeader`/`MetaDot`/`Eyebrow`/`BackHeader` — the pushed-screen back+title header), `sheets.dart` (`AppSheet`/`SecretSheet`/`showConfirmSheet`/`showDeprecateSheet` — the deprecate flow's sheet: explainer + optional `superseded_by` field, returns the trimmed target or null on cancel; the caller owns the POST — /`CopyField`/`SheetActionRow`; `showAppSheet` caps every modal sheet at `AppLayout.sheetMax` on wide windows), `toast.dart` (compact fixed width on wide windows), `cafe_logo.dart`. Status-surfacing render coverage lives in [test/status_lifecycle_test.dart](file:///Users/kyle/Repos/slopcafe_ui/test/status_lifecycle_test.dart).
 
 ---
 

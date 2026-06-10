@@ -2,7 +2,7 @@ import 'package:intl/intl.dart';
 
 import '../l10n/app_localizations.dart';
 
-/// Shared display formatters used across the Craft UI (mirrors the mockup's
+/// Shared display formatters used across the Cortado UI (mirrors the mockup's
 /// `fmtBytes` / `fmtDate` / `relTime`).
 ///
 /// User-facing words (relative-time units, greetings) are pulled from

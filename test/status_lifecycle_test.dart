@@ -1,6 +1,6 @@
 // Render/behaviour test for the lifecycle-status (deprecation) surfacing:
 // the DEPRECATED badge on the document card and the deprecate sheet's
-// confirm/cancel contract. Renders inside the real Craft theme + localization
+// confirm/cancel contract. Renders inside the real Cortado theme + localization
 // harness (so a missing ThemeExtension or ARB key fails here, not at
 // runtime). The POST /admin/documents/:id/status path is network and covered
 // by the generated-layer smoke test.

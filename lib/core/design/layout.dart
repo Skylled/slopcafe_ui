@@ -4,7 +4,7 @@ import 'package:flutter/widgets.dart';
 
 import 'tokens.dart';
 
-/// Craft adaptive-layout tokens & helpers for large-screen (tablet / desktop)
+/// Cortado adaptive-layout tokens & helpers for large-screen (tablet / desktop)
 /// surfaces.
 ///
 /// The system is deliberately small: one width breakpoint decides the shell's

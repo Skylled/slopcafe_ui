@@ -3,7 +3,7 @@ import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 
-/// Lightweight floating toast, styled to match the Craft `useToast` node.
+/// Lightweight floating toast, styled to match the Cortado `useToast` node.
 /// On wide layouts it keeps a compact centered width instead of stretching
 /// across the whole window.
 void showToast(BuildContext context, String message, {bool danger = false}) {

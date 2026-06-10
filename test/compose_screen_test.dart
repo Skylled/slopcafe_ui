@@ -1,7 +1,7 @@
 // Render/behaviour smoke test for the operator authoring (compose) screen.
 //
 // Exercises the parts that don't touch the network: it renders inside the real
-// Craft theme + localization harness (so a missing ThemeExtension or ARB key
+// Cortado theme + localization harness (so a missing ThemeExtension or ARB key
 // would fail here, not just at runtime), toggles write/preview, and checks the
 // empty-content publish guard. The actual POST path is covered separately.
 

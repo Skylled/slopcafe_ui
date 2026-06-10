@@ -26,7 +26,7 @@ Future<T?> showAppSheet<T>(
   );
 }
 
-/// Standard Craft bottom-sheet shell: grab handle, sticky header (eyebrow
+/// Standard Cortado bottom-sheet shell: grab handle, sticky header (eyebrow
 /// subtitle, serif title, optional leading badge, close button) and a scrollable
 /// body. Resizes above the keyboard.
 class AppSheet extends StatelessWidget {

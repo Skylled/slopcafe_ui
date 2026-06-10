@@ -4,7 +4,7 @@ import '../core/design/typography.dart';
 
 enum AppBtnVariant { normal, primary, warm, ghost, danger, outline }
 
-/// The Craft `Btn` primitive — a labelled, optionally-iconed button with the
+/// The Cortado `Btn` primitive — a labelled, optionally-iconed button with the
 /// design's variant set. Use [expand] to fill the available width.
 class AppButton extends StatelessWidget {
   const AppButton(
@@ -89,7 +89,7 @@ class AppButton extends StatelessWidget {
   }
 }
 
-/// Square icon button (the Craft `IconBtn`) with an optional active state.
+/// Square icon button (the Cortado `IconBtn`) with an optional active state.
 class AppIconButton extends StatelessWidget {
   const AppIconButton(
     this.icon, {

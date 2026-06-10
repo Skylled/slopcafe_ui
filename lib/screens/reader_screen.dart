@@ -24,7 +24,7 @@ import '../widgets/sheets.dart';
 import '../widgets/toast.dart';
 import 'document_list_screen.dart';
 
-/// ReaderScreen — the Craft "plate". A full-bleed pushed route built around a
+/// ReaderScreen — the Cortado "plate". A full-bleed pushed route built around a
 /// single rendered WebView. The chrome is intentionally minimal — a compact
 /// top bar, a one-line title, a thin meta row and tappable tags — so the
 /// WebView (which scrolls internally) owns the majority of the screen. It
@@ -548,7 +548,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   }
 
   // ----------------------------------------------------------------
-  // Operator actions (ported, restyled to Craft sheets)
+  // Operator actions (ported, restyled to Cortado sheets)
   // ----------------------------------------------------------------
 
   Future<void> _revokeDocument() async {
