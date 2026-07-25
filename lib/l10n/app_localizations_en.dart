@@ -271,6 +271,206 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get linkGraph => 'Link graph';
+
+  @override
+  String get linkGraphSubtitle => 'Backlinks, link rot, orphans';
+
+  @override
+  String get linkGraphBody =>
+      'The link graph records every on-platform link between documents, and stays current with each write. It powers a document\'s backlinks, its broken-link report, and orphan detection. Documents published before the graph shipped have no rows until it is rebuilt.';
+
+  @override
+  String get linkBackfillTitle => 'Rebuild link graph';
+
+  @override
+  String get linkBackfillOptionBody =>
+      'Re-extract every live document\'s links from its stored render. Cheap and deterministic — safe to run any time to reconcile.';
+
+  @override
+  String get linkBackfillConfirmBody =>
+      'This re-extracts links for every live document. Extraction is cheap and deterministic, so it is safe to repeat — run it once after the graph ships, or any time you want the corpus reconciled.';
+
+  @override
+  String get linkBackfillCta => 'Rebuild graph';
+
+  @override
+  String get linkBackfillRunning => 'Rebuilding the link graph…';
+
+  @override
+  String linkBackfillDone(int updated, int links) {
+    return 'Link graph rebuilt · $updated documents, $links links';
+  }
+
+  @override
+  String linkBackfillPartial(int unreadable) {
+    return '$unreadable documents couldn\'t be read and were skipped. Run it again to retry them.';
+  }
+
+  @override
+  String linkBackfillFailed(String error) {
+    return 'Link-graph rebuild failed: $error';
+  }
+
+  @override
+  String get orphansTitle => 'Orphans';
+
+  @override
+  String get orphansSubtitle => 'Documents nothing links to';
+
+  @override
+  String get orphansNote =>
+      'Rebuild the link graph first, or every document published before the graph shipped reads as an orphan.';
+
+  @override
+  String get orphansEmpty =>
+      'Nothing is orphaned — every document is linked from somewhere.';
+
+  @override
+  String get orphansLoadFailed => 'Couldn\'t load orphans';
+
+  @override
+  String orphansCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count orphans',
+      one: '1 orphan',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get orphansHint =>
+      'An orphan isn\'t an error — a document only ever shared by URL is a perfectly good one. This is a curation worklist.';
+
+  @override
+  String get linksAction => 'Links';
+
+  @override
+  String get linksSubtitle => 'Link graph';
+
+  @override
+  String get linksLoadFailed => 'Couldn\'t load the link graph';
+
+  @override
+  String get linksBacklinksHeading => 'Referenced by';
+
+  @override
+  String get linksOutboundHeading => 'Links out';
+
+  @override
+  String get linksNoBacklinks => 'No other document links here.';
+
+  @override
+  String get linksNoOutbound => 'This document links nowhere on the platform.';
+
+  @override
+  String get linksNoGraph =>
+      'No links recorded for this document. If it was published before the link graph shipped, rebuild the graph from Operate › Documents.';
+
+  @override
+  String linksBrokenNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count links out are broken',
+      one: '1 link out is broken',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get linksGraphCaveat =>
+      'Backlinks reflect each document\'s current version, which on a gated public document isn\'t what readers are served.';
+
+  @override
+  String get linkStateLive => 'LIVE';
+
+  @override
+  String get linkStateRedirected => 'REDIRECTED';
+
+  @override
+  String get linkStateRetired => 'RETIRED';
+
+  @override
+  String get linkStateMissing => 'MISSING';
+
+  @override
+  String get linkStateUnknown => 'UNKNOWN';
+
+  @override
+  String get linksRepairAction => 'Repair name';
+
+  @override
+  String get slugTombstones => 'Retired names';
+
+  @override
+  String get slugTombstonesSubtitle => 'Redirect or release a retired slug';
+
+  @override
+  String get slugTombstoneBody =>
+      'A slug is retired when its document is revoked or renamed, and is never reused. A retired name can forward to another document, or be released back to the pool.';
+
+  @override
+  String get slugTombstoneLookupNote =>
+      'There is no way to browse retired names — enter one you know, or reach this from a broken link.';
+
+  @override
+  String get slugRedirectLabel => 'FORWARD TO';
+
+  @override
+  String get slugRedirectNote =>
+      'The target must be a live document. Forwarding is loud — visitors are told the name moved, and links are never followed silently.';
+
+  @override
+  String get slugSetRedirect => 'Set redirect';
+
+  @override
+  String get slugClearRedirect => 'Clear redirect';
+
+  @override
+  String get slugRelease => 'Release name';
+
+  @override
+  String get slugReleaseTitle => 'Release this name?';
+
+  @override
+  String get slugReleaseBody =>
+      'This returns the name to the pool so a future publish can claim it. Any link still addressing it would then reach a different document than its author meant — which is why releasing is separate from clearing a redirect.';
+
+  @override
+  String get slugReleaseCta => 'Release';
+
+  @override
+  String slugRedirectSet(String slug, String target) {
+    return '“$slug” now forwards to $target';
+  }
+
+  @override
+  String slugRedirectCleared(String slug) {
+    return '“$slug” is a plain tombstone again';
+  }
+
+  @override
+  String slugReleasedToast(String slug) {
+    return '“$slug” released — a future publish can claim it';
+  }
+
+  @override
+  String get slugNotRetiredToast =>
+      'That name isn\'t retired — a live slug serves its own document.';
+
+  @override
+  String get slugBadTargetToast =>
+      'That target isn\'t a live document — a redirect can only point at one.';
+
+  @override
+  String failedSlugUpdate(String error) {
+    return 'Failed to update the name: $error';
+  }
+
+  @override
   String get backOfHouse => 'Back of house';
 
   @override

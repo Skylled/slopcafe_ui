@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
+import '../core/links.dart';
 import '../l10n/l10n.dart';
 import 'press_card.dart';
 
@@ -114,6 +115,53 @@ class DeprecatedBadge extends StatelessWidget {
       icon: Icons.history_toggle_off,
       small: small,
     );
+  }
+}
+
+/// Resolution-state badge for one outbound link in the link graph.
+///
+/// The tone carries the whole triage: green for a link that works, honey for
+/// one that still reaches a document but through a tombstone redirect (stale,
+/// worth rewriting), red for the three dead states, and neutral for a state
+/// this build doesn't recognise. That last case is deliberately not red —
+/// see [LinkState.unknown].
+class LinkStateBadge extends StatelessWidget {
+  const LinkStateBadge(this.state, {super.key, this.small = true});
+  final LinkState state;
+  final bool small;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final (String label, PillTone tone, IconData icon) = switch (state) {
+      LinkState.live => (l10n.linkStateLive, PillTone.green, Icons.check),
+      LinkState.redirected => (
+        l10n.linkStateRedirected,
+        PillTone.honey,
+        Icons.subdirectory_arrow_right,
+      ),
+      LinkState.retired => (
+        l10n.linkStateRetired,
+        PillTone.red,
+        Icons.block,
+      ),
+      LinkState.revoked => (
+        l10n.revokedUpper,
+        PillTone.red,
+        Icons.delete_outline,
+      ),
+      LinkState.missing => (
+        l10n.linkStateMissing,
+        PillTone.red,
+        Icons.help_outline,
+      ),
+      LinkState.unknown => (
+        l10n.linkStateUnknown,
+        PillTone.neutral,
+        Icons.help_outline,
+      ),
+    };
+    return Pill(label, tone: tone, icon: icon, small: small);
   }
 }
 

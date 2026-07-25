@@ -532,6 +532,318 @@ abstract class AppLocalizations {
   /// **'Backfill failed: {error}'**
   String backfillFailed(String error);
 
+  /// Title of the link-graph management entry and sheet (Operate > Documents).
+  ///
+  /// In en, this message translates to:
+  /// **'Link graph'**
+  String get linkGraph;
+
+  /// Subtitle on the Operate > Documents 'Link graph' entry row.
+  ///
+  /// In en, this message translates to:
+  /// **'Backlinks, link rot, orphans'**
+  String get linkGraphSubtitle;
+
+  /// Intro paragraph in the link-graph sheet explaining what the graph is for.
+  ///
+  /// In en, this message translates to:
+  /// **'The link graph records every on-platform link between documents, and stays current with each write. It powers a document\'s backlinks, its broken-link report, and orphan detection. Documents published before the graph shipped have no rows until it is rebuilt.'**
+  String get linkGraphBody;
+
+  /// Title for the link-graph backfill option and its confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Rebuild link graph'**
+  String get linkBackfillTitle;
+
+  /// Body for the 'Rebuild link graph' option card. Unlike the vector rebuild this is not the costly option, and the copy deliberately says so.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-extract every live document\'s links from its stored render. Cheap and deterministic — safe to run any time to reconcile.'**
+  String get linkBackfillOptionBody;
+
+  /// Confirmation body for the link-graph backfill.
+  ///
+  /// In en, this message translates to:
+  /// **'This re-extracts links for every live document. Extraction is cheap and deterministic, so it is safe to repeat — run it once after the graph ships, or any time you want the corpus reconciled.'**
+  String get linkBackfillConfirmBody;
+
+  /// Confirm button for the link-graph backfill.
+  ///
+  /// In en, this message translates to:
+  /// **'Rebuild graph'**
+  String get linkBackfillCta;
+
+  /// Progress label shown while the link-graph backfill runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Rebuilding the link graph…'**
+  String get linkBackfillRunning;
+
+  /// Success toast after a clean link-graph backfill run.
+  ///
+  /// In en, this message translates to:
+  /// **'Link graph rebuilt · {updated} documents, {links} links'**
+  String linkBackfillDone(int updated, int links);
+
+  /// Warning toast when a backfill scanned more documents than it updated — the contract's stated cause is an unfetchable render, and its stated remedy is a re-run.
+  ///
+  /// In en, this message translates to:
+  /// **'{unreadable} documents couldn\'t be read and were skipped. Run it again to retry them.'**
+  String linkBackfillPartial(int unreadable);
+
+  /// No description provided for @linkBackfillFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Link-graph rebuild failed: {error}'**
+  String linkBackfillFailed(String error);
+
+  /// Title of the orphan-documents worklist (documents nothing links to).
+  ///
+  /// In en, this message translates to:
+  /// **'Orphans'**
+  String get orphansTitle;
+
+  /// Subtitle on the Operate > Documents 'Orphans' entry row.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents nothing links to'**
+  String get orphansSubtitle;
+
+  /// Standing caveat at the top of the orphans list. Kept always-visible because the client cannot distinguish a real orphan from a document with no graph rows yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Rebuild the link graph first, or every document published before the graph shipped reads as an orphan.'**
+  String get orphansNote;
+
+  /// Empty state for the orphans worklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is orphaned — every document is linked from somewhere.'**
+  String get orphansEmpty;
+
+  /// Error state when the orphans request fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load orphans'**
+  String get orphansLoadFailed;
+
+  /// Count of orphaned documents, shown as the worklist's eyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 orphan} other{{count} orphans}}'**
+  String orphansCount(int count);
+
+  /// Explanatory footnote under the orphans list, so the worklist doesn't read as a list of defects.
+  ///
+  /// In en, this message translates to:
+  /// **'An orphan isn\'t an error — a document only ever shared by URL is a perfectly good one. This is a curation worklist.'**
+  String get orphansHint;
+
+  /// Reader more-sheet row that opens the document's link-graph neighborhood.
+  ///
+  /// In en, this message translates to:
+  /// **'Links'**
+  String get linksAction;
+
+  /// Eyebrow above the links sheet title.
+  ///
+  /// In en, this message translates to:
+  /// **'Link graph'**
+  String get linksSubtitle;
+
+  /// Error state inside the links sheet when the request fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the link graph'**
+  String get linksLoadFailed;
+
+  /// Section heading above the backlinks (documents that link to this one).
+  ///
+  /// In en, this message translates to:
+  /// **'Referenced by'**
+  String get linksBacklinksHeading;
+
+  /// Section heading above this document's own on-platform links.
+  ///
+  /// In en, this message translates to:
+  /// **'Links out'**
+  String get linksOutboundHeading;
+
+  /// Empty state for the backlinks section.
+  ///
+  /// In en, this message translates to:
+  /// **'No other document links here.'**
+  String get linksNoBacklinks;
+
+  /// Empty state for the outbound section.
+  ///
+  /// In en, this message translates to:
+  /// **'This document links nowhere on the platform.'**
+  String get linksNoOutbound;
+
+  /// Shown when both directions are empty. Deliberately says "nothing recorded" rather than "nothing links here" — a pre-backfill document is indistinguishable from a genuinely unlinked one.
+  ///
+  /// In en, this message translates to:
+  /// **'No links recorded for this document. If it was published before the link graph shipped, rebuild the graph from Operate › Documents.'**
+  String get linksNoGraph;
+
+  /// Caution note at the top of the links sheet when outbound links are dead.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 link out is broken} other{{count} links out are broken}}'**
+  String linksBrokenNote(int count);
+
+  /// Footnote under the links sheet — the graph tracks current_ver while the byte path may serve an older published version.
+  ///
+  /// In en, this message translates to:
+  /// **'Backlinks reflect each document\'s current version, which on a gated public document isn\'t what readers are served.'**
+  String get linksGraphCaveat;
+
+  /// Outbound-link state badge: a live document answers here.
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE'**
+  String get linkStateLive;
+
+  /// Outbound-link state badge: a retired slug that loudly forwards. Reachable but stale — the link should be rewritten.
+  ///
+  /// In en, this message translates to:
+  /// **'REDIRECTED'**
+  String get linkStateRedirected;
+
+  /// Outbound-link state badge: a retired slug with no redirect (410 Gone). Broken.
+  ///
+  /// In en, this message translates to:
+  /// **'RETIRED'**
+  String get linkStateRetired;
+
+  /// Outbound-link state badge: nothing ever answered here — an unclaimed slug or unknown public ID. Broken.
+  ///
+  /// In en, this message translates to:
+  /// **'MISSING'**
+  String get linkStateMissing;
+
+  /// Outbound-link state badge for a state this build doesn't recognise. Neutral-toned and never counted as broken, so a newer contract value doesn't read as link rot.
+  ///
+  /// In en, this message translates to:
+  /// **'UNKNOWN'**
+  String get linkStateUnknown;
+
+  /// Per-row action on a retired/redirected outbound link, opening the slug-tombstone sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Repair name'**
+  String get linksRepairAction;
+
+  /// Title of the slug-tombstone entry and sheet — retired slugs, which can be redirected or released.
+  ///
+  /// In en, this message translates to:
+  /// **'Retired names'**
+  String get slugTombstones;
+
+  /// Subtitle on the Operate > Documents 'Retired names' entry row.
+  ///
+  /// In en, this message translates to:
+  /// **'Redirect or release a retired slug'**
+  String get slugTombstonesSubtitle;
+
+  /// Explainer at the top of the slug-tombstone sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'A slug is retired when its document is revoked or renamed, and is never reused. A retired name can forward to another document, or be released back to the pool.'**
+  String get slugTombstoneBody;
+
+  /// Note under the manual slug field, explaining why the operator has to type a name (the contract exposes no listing of retired slugs).
+  ///
+  /// In en, this message translates to:
+  /// **'There is no way to browse retired names — enter one you know, or reach this from a broken link.'**
+  String get slugTombstoneLookupNote;
+
+  /// Field label for the redirect target's public ID.
+  ///
+  /// In en, this message translates to:
+  /// **'FORWARD TO'**
+  String get slugRedirectLabel;
+
+  /// Help text under the redirect-target field.
+  ///
+  /// In en, this message translates to:
+  /// **'The target must be a live document. Forwarding is loud — visitors are told the name moved, and links are never followed silently.'**
+  String get slugRedirectNote;
+
+  /// Action that points a retired slug at a live document.
+  ///
+  /// In en, this message translates to:
+  /// **'Set redirect'**
+  String get slugSetRedirect;
+
+  /// Action that drops a retired slug's redirect, reverting it to a plain 410 tombstone. The slug stays retired.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear redirect'**
+  String get slugClearRedirect;
+
+  /// Action that deletes a retired slug's tombstone, returning the name to the pool.
+  ///
+  /// In en, this message translates to:
+  /// **'Release name'**
+  String get slugRelease;
+
+  /// Title of the release-slug confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Release this name?'**
+  String get slugReleaseTitle;
+
+  /// Confirmation body for releasing a slug tombstone; states the consequence that makes it destructive.
+  ///
+  /// In en, this message translates to:
+  /// **'This returns the name to the pool so a future publish can claim it. Any link still addressing it would then reach a different document than its author meant — which is why releasing is separate from clearing a redirect.'**
+  String get slugReleaseBody;
+
+  /// Confirm button for releasing a slug tombstone.
+  ///
+  /// In en, this message translates to:
+  /// **'Release'**
+  String get slugReleaseCta;
+
+  /// Success toast after setting a slug redirect.
+  ///
+  /// In en, this message translates to:
+  /// **'“{slug}” now forwards to {target}'**
+  String slugRedirectSet(String slug, String target);
+
+  /// Success toast after clearing a slug redirect. Deliberately does not say "released" — the slug is still retired.
+  ///
+  /// In en, this message translates to:
+  /// **'“{slug}” is a plain tombstone again'**
+  String slugRedirectCleared(String slug);
+
+  /// Success toast after releasing a slug tombstone.
+  ///
+  /// In en, this message translates to:
+  /// **'“{slug}” released — a future publish can claim it'**
+  String slugReleasedToast(String slug);
+
+  /// Error toast for the 404 on a slug route: the name was never claimed, or still belongs to a live document. Names the cause, which a generic failure would not.
+  ///
+  /// In en, this message translates to:
+  /// **'That name isn\'t retired — a live slug serves its own document.'**
+  String get slugNotRetiredToast;
+
+  /// Error toast for 422 bad_target when setting a redirect.
+  ///
+  /// In en, this message translates to:
+  /// **'That target isn\'t a live document — a redirect can only point at one.'**
+  String get slugBadTargetToast;
+
+  /// No description provided for @failedSlugUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update the name: {error}'**
+  String failedSlugUpdate(String error);
+
   /// Eyebrow above the Operate screen title (café metaphor).
   ///
   /// In en, this message translates to:

@@ -15,6 +15,7 @@ import '../l10n/l10n.dart';
 import '../providers/agent_provider.dart';
 import '../providers/document_provider.dart';
 import '../providers/health_provider.dart';
+import '../providers/links_provider.dart';
 import '../providers/refresh.dart';
 import '../widgets/app_button.dart';
 import '../widgets/doc_feed_card.dart';
@@ -22,9 +23,11 @@ import '../widgets/pill.dart';
 import '../widgets/press_card.dart';
 import '../widgets/section_header.dart';
 import '../widgets/sheets.dart';
+import '../widgets/slug_repair_sheet.dart';
 import '../widgets/stat.dart';
 import '../widgets/toast.dart';
 import 'compose_screen.dart';
+import 'orphans_screen.dart';
 import 'reader_screen.dart';
 
 /// Operate — "The Pass" (back of house). The single most feature-dense screen:
@@ -136,6 +139,19 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
     await showAppSheet<void>(
       context,
       builder: (_) => _BackfillSheet(ref: ref, host: context),
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Documents: the link graph — its rebuild sweep (POST /admin/links/backfill),
+  // the orphan worklist (GET /admin/links/orphans) and the slug tombstones that
+  // repair the link rot it reports. One entry rather than three, because they
+  // are one subsystem and only the first is an action on its own.
+  // -------------------------------------------------------------------------
+  Future<void> _openLinkGraph() async {
+    await showAppSheet<void>(
+      context,
+      builder: (_) => _LinkGraphSheet(ref: ref, host: context),
     );
   }
 
@@ -531,6 +547,42 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
                       const SizedBox(height: 2),
                       Text(
                         l10n.searchIndexSubtitle,
+                        style: AppText.small.copyWith(color: c.textFaint),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, size: 20, color: c.textFaint),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        // Link-graph maintenance: rebuild, orphans, retired names.
+        PressCard(
+          onPress: _openLinkGraph,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: c.surface2,
+              border: Border.all(color: c.lineSoft),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.account_tree_outlined, size: 18, color: c.textDim),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.linkGraph,
+                        style: AppText.titleSm.copyWith(color: c.text),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.linkGraphSubtitle,
                         style: AppText.small.copyWith(color: c.textFaint),
                       ),
                     ],
@@ -2452,6 +2504,144 @@ class _BackfillOption extends StatelessWidget {
             Icon(Icons.chevron_right, size: 20, color: c.textFaint),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ===========================================================================
+// Link-graph sheet: rebuild the graph, browse orphans, repair retired names.
+// ===========================================================================
+class _LinkGraphSheet extends StatefulWidget {
+  const _LinkGraphSheet({required this.ref, required this.host});
+  final WidgetRef ref;
+  final BuildContext host;
+
+  @override
+  State<_LinkGraphSheet> createState() => _LinkGraphSheetState();
+}
+
+class _LinkGraphSheetState extends State<_LinkGraphSheet> {
+  bool _busy = false;
+
+  /// The backfill has only one mode and is cheap, deterministic and idempotent,
+  /// so unlike the vector rebuild there is no expensive option to warn about —
+  /// but it still confirms, because it rewrites rows across the whole corpus
+  /// and a sweep nobody asked for is its own kind of surprise.
+  Future<void> _rebuild() async {
+    final l10n = context.l10n;
+    final confirmed = await showConfirmSheet(
+      widget.host,
+      title: l10n.linkBackfillTitle,
+      body: Text(l10n.linkBackfillConfirmBody),
+      cta: l10n.linkBackfillCta,
+      danger: false,
+    );
+    if (!confirmed || !mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      final summary = await widget.ref
+          .read(linkGraphServiceProvider)
+          .backfillLinks();
+      if (widget.host.mounted) {
+        showToast(
+          widget.host,
+          summary.hasUnreadable
+              ? l10n.linkBackfillPartial(summary.unreadable)
+              : l10n.linkBackfillDone(summary.updated, summary.links),
+          danger: summary.hasUnreadable,
+        );
+      }
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _busy = false);
+        showToast(
+          context,
+          l10n.linkBackfillFailed(ApiError.describe(e)),
+          danger: true,
+        );
+      }
+    }
+  }
+
+  void _openOrphans() {
+    Navigator.of(context).pop();
+    Navigator.of(
+      widget.host,
+    ).push(MaterialPageRoute(builder: (_) => const OrphansScreen()));
+  }
+
+  void _openSlugTombstones() {
+    Navigator.of(context).pop();
+    showSlugRepairSheet(widget.host);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    return AppSheet(
+      title: l10n.linkGraph,
+      subtitle: l10n.backOfHouse,
+      icon: Icons.account_tree_outlined,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.linkGraphBody, style: AppText.body.copyWith(color: c.textDim)),
+          const SizedBox(height: 18),
+          if (_busy)
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: c.surface2,
+                border: Border.all(color: c.lineSoft),
+                borderRadius: BorderRadius.circular(AppRadii.lg),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      color: c.clay,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      l10n.linkBackfillRunning,
+                      style: AppText.small.copyWith(color: c.textDim),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else ...[
+            _BackfillOption(
+              icon: Icons.refresh,
+              title: l10n.linkBackfillTitle,
+              body: l10n.linkBackfillOptionBody,
+              onTap: _rebuild,
+            ),
+            const SizedBox(height: 10),
+            _BackfillOption(
+              icon: Icons.filter_drama_outlined,
+              title: l10n.orphansTitle,
+              body: l10n.orphansSubtitle,
+              onTap: _openOrphans,
+            ),
+            const SizedBox(height: 10),
+            _BackfillOption(
+              icon: Icons.link_off,
+              title: l10n.slugTombstones,
+              body: l10n.slugTombstonesSubtitle,
+              onTap: _openSlugTombstones,
+            ),
+          ],
+        ],
       ),
     );
   }

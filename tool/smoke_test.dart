@@ -23,6 +23,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:slopcafe_ui/api/api.dart';
+import 'package:slopcafe_ui/core/links.dart';
 import 'package:slopcafe_ui/core/publication.dart';
 
 int _failures = 0;
@@ -181,6 +182,72 @@ Future<void> main() async {
     _check('parses without throwing', false, '$e');
   }
 
+  // --- 3b. Fixture: the link graph on an outbound-link report ----------------
+  //
+  // The graph resolves each link's target at read time, so the five states are
+  // the app's only evidence of link rot. What this pins is the two rules that
+  // are easy to get subtly wrong: `redirected` still reaches a document (stale,
+  // not dead), and the slug repair applies to a narrower set than "broken" —
+  // a name nothing ever claimed has no tombstone to redirect, and a /d/ link
+  // has no slug at all.
+  stdout.writeln('\nLink-graph fixture (outbound link states):');
+  try {
+    final graph = DocumentLinksResponse.fromJson({
+      'public_id': 'pub_promoted_demo',
+      'backlinks': [revokedJson],
+      'outbound': [
+        {
+          'kind': 'slug',
+          'value': 'live-target',
+          'state': 'live',
+          'target_public_id': 'pub_live_target',
+          'title': 'A live document',
+        },
+        {
+          'kind': 'slug',
+          'value': 'old-name',
+          'state': 'redirected',
+          'target_public_id': 'pub_forward_target',
+          'title': null,
+        },
+        {'kind': 'slug', 'value': 'dead-name', 'state': 'retired'},
+        {'kind': 'public_id', 'value': 'pub_gone', 'state': 'revoked'},
+        {'kind': 'slug', 'value': 'never-claimed', 'state': 'missing'},
+      ],
+    });
+    _check('parses without throwing', true);
+    _check('backlinks parse as listing rows', graph.backlinks.length == 1);
+    _check('outbound preserves authored order', graph.outbound.length == 5);
+    _check(
+      'nullable target_public_id survives on a broken link',
+      graph.outbound[2].targetPublicId == null,
+    );
+    _check('three dead links are counted as broken', graph.brokenCount == 3);
+    _check(
+      'a redirect is stale, not broken',
+      !graph.outbound[1].isBroken && graph.outbound[1].canOpen,
+    );
+    _check(
+      'a retired slug is repairable',
+      graph.outbound[2].canRepairSlug,
+    );
+    _check(
+      'a missing name is broken but not repairable',
+      graph.outbound[4].isBroken && !graph.outbound[4].canRepairSlug,
+    );
+    _check(
+      'a /d/ link is never repairable',
+      !graph.outbound[3].canRepairSlug,
+    );
+    _check(
+      'an unrecognised state degrades to unknown and reads as healthy',
+      LinkState.fromWire('a-state-from-the-future') == LinkState.unknown &&
+          !LinkState.unknown.isBroken,
+    );
+  } catch (e) {
+    _check('parses without throwing', false, '$e');
+  }
+
   // --- 4. Live: GET /healthz (public) ----------------------------------------
   stdout.writeln('\nLive GET /healthz (public):');
   try {
@@ -264,9 +331,77 @@ Future<void> main() async {
     } catch (e) {
       _check('search parses', false, '$e');
     }
+
+    // Read-only halves of the link graph. The backfill sweep and the three slug
+    // mutators are deliberately NOT exercised here: this script runs against
+    // prod, and every one of them writes.
+    stdout.writeln('\nLive authenticated GET /admin/links/orphans:');
+    try {
+      final res = await dio.get('/admin/links/orphans', options: auth);
+      _check('HTTP 200', res.statusCode == 200, '${res.statusCode}');
+      final orphans = OrphanDocumentsResponse.fromJson(
+        Map<String, dynamic>.from(res.data as Map),
+      );
+      _check('parsed ${orphans.documents.length} orphans', true);
+      _check(
+        'orphan rows are live documents',
+        orphans.documents.every((d) => !d.isRevoked),
+      );
+    } catch (e) {
+      _check('orphans parses', false, '$e');
+    }
+
+    stdout.writeln('\nLive authenticated GET /d/:id/links:');
+    try {
+      final listRes = await dio.get(
+        '/admin/documents',
+        queryParameters: {'limit': 50},
+        options: auth,
+      );
+      final live = ListDocumentsResponse.fromJson(
+        Map<String, dynamic>.from(listRes.data as Map),
+      ).documents.where((d) => !d.isRevoked).toList();
+
+      if (live.isEmpty) {
+        stdout.writeln('  (no live document to probe)');
+      } else {
+        final res = await dio.get(
+          '/d/${live.first.publicId}/links',
+          options: auth,
+        );
+        _check('HTTP 200', res.statusCode == 200, '${res.statusCode}');
+        final graph = DocumentLinksResponse.fromJson(
+          Map<String, dynamic>.from(res.data as Map),
+        );
+        _check(
+          'graph is for the document we asked about',
+          graph.publicId == live.first.publicId,
+        );
+        _check(
+          'parsed ${graph.backlinks.length} backlinks, '
+          '${graph.outbound.length} outbound (${graph.brokenCount} broken)',
+          true,
+        );
+        // The forward-compat guarantee, checked against whatever prod actually
+        // sends: an unrecognised state would silently read as healthy, so this
+        // fails loudly instead if the contract grew one.
+        final unknowns = graph.outbound
+            .where((l) => l.linkState == LinkState.unknown)
+            .map((l) => l.state)
+            .toSet();
+        _check(
+          'every outbound state is one this build knows',
+          unknowns.isEmpty,
+          unknowns.isEmpty ? null : 'unrecognised: ${unknowns.join(", ")}',
+        );
+      }
+    } catch (e) {
+      _check('links parses', false, '$e');
+    }
   } else {
     stdout.writeln(
-      '\n(skipping authenticated list/search — set OPERATOR_TOKEN to enable)',
+      '\n(skipping authenticated list/search/link-graph — set OPERATOR_TOKEN '
+      'to enable)',
     );
   }
 

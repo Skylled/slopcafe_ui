@@ -13,15 +13,18 @@ import '../core/design/typography.dart';
 import '../core/document_cache.dart';
 import '../core/format.dart';
 import '../api/api.dart';
+import '../core/links.dart';
 import '../core/publication.dart';
 import '../core/secure_storage.dart';
 import '../l10n/l10n.dart';
 import '../providers/document_provider.dart';
+import '../providers/links_provider.dart';
 import '../widgets/app_button.dart';
 import '../widgets/pill.dart';
 import '../widgets/press_card.dart';
 import '../widgets/section_header.dart';
 import '../widgets/sheets.dart';
+import '../widgets/slug_repair_sheet.dart';
 import '../widgets/toast.dart';
 import 'document_list_screen.dart';
 
@@ -1218,6 +1221,143 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     );
   }
 
+  /// The document's link-graph neighborhood, read live from
+  /// `GET /d/:id/links`.
+  ///
+  /// Fetched per open and never cached, for the same reason the version sheet
+  /// is: `backlinks` describes *other* documents' current versions and
+  /// `outbound` resolves its targets at read time, so any write anywhere in the
+  /// corpus can change this answer. The future is started outside the builder
+  /// so a sheet rebuild doesn't re-issue the request.
+  void _openLinksSheet() {
+    final l10n = context.l10n;
+    final graph = ref
+        .read(linkGraphServiceProvider)
+        .fetchLinks(_currentDoc.publicId);
+
+    showAppSheet<void>(
+      context,
+      builder: (sheetContext) {
+        final c = sheetContext.colors;
+        return AppSheet(
+          title: l10n.linksAction,
+          subtitle: l10n.linksSubtitle,
+          icon: Icons.account_tree_outlined,
+          child: FutureBuilder<DocumentLinksResponse>(
+            future: graph,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 36),
+                  child: Center(
+                    child: CircularProgressIndicator(color: c.clay),
+                  ),
+                );
+              }
+              final data = snapshot.data;
+              if (data == null) {
+                return Row(
+                  children: [
+                    Icon(Icons.cloud_off, size: 17, color: c.red),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Text(
+                        l10n.linksLoadFailed,
+                        style: AppText.small.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: c.red,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }
+              return _buildLinkGraph(sheetContext, data);
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  /// The body of the links sheet once the neighborhood has landed.
+  Widget _buildLinkGraph(BuildContext sheetContext, DocumentLinksResponse graph) {
+    final c = sheetContext.colors;
+    final l10n = sheetContext.l10n;
+    final broken = graph.brokenCount;
+
+    if (graph.hasNoGraph) {
+      return _SheetNote(icon: Icons.link_off, text: l10n.linksNoGraph);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (broken > 0)
+          _SheetNote(
+            icon: Icons.report_problem_outlined,
+            text: l10n.linksBrokenNote(broken),
+          ),
+        _LinkSectionLabel(l10n.linksBacklinksHeading),
+        if (graph.backlinks.isEmpty)
+          _LinkEmptyLine(l10n.linksNoBacklinks)
+        else
+          // Backlinks arrive as full listing rows, so the Reader opens straight
+          // onto them — no resolution hop, unlike an outbound link, which
+          // carries only the raw name its author typed.
+          for (final doc in graph.backlinks)
+            _BacklinkRow(
+              doc: doc,
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => ReaderScreen(doc: doc)),
+                );
+              },
+            ),
+        const SizedBox(height: 18),
+        _LinkSectionLabel(l10n.linksOutboundHeading),
+        if (graph.outbound.isEmpty)
+          _LinkEmptyLine(l10n.linksNoOutbound)
+        else
+          for (final link in graph.outbound)
+            _OutboundLinkRow(
+              link: link,
+              onTap: link.canOpen
+                  ? () {
+                      Navigator.of(sheetContext).pop();
+                      _openLinkTarget(link.targetPublicId!);
+                    }
+                  : null,
+              onRepair: link.canRepairSlug
+                  ? () {
+                      Navigator.of(sheetContext).pop();
+                      showSlugRepairSheet(context, initialSlug: link.value);
+                    }
+                  : null,
+            ),
+        const SizedBox(height: 14),
+        Text(
+          l10n.linksGraphCaveat,
+          style: AppText.small.copyWith(color: c.textFaint, height: 1.4),
+        ),
+      ],
+    );
+  }
+
+  /// Opens the document an outbound link resolves to.
+  ///
+  /// The graph hands back a `target_public_id` rather than a listing, so this
+  /// takes the same resolution path an in-WebView link tap does — which also
+  /// means a private or unlisted target still opens, rather than dead-ending.
+  Future<void> _openLinkTarget(String publicId) async {
+    final doc = await _resolveDocumentListing(publicId, null);
+    if (doc == null || !mounted) return;
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => ReaderScreen(doc: doc)));
+  }
+
   void _openMoreSheet() {
     final isPublic = _currentDoc.visibility == 'public';
     final l10n = context.l10n;
@@ -1251,6 +1391,19 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                           '$_baseUrl/d/${_currentDoc.publicId}',
                           l10n.linkCopied,
                         );
+                      }
+                    : null,
+              ),
+              SheetActionRow(
+                icon: Icons.account_tree_outlined,
+                label: l10n.linksAction,
+                // Revoke deletes the document's link rows and `/links` answers
+                // 404 for a revoked id, so there is no neighborhood left to
+                // show — offering the row there would only produce an error.
+                onTap: !_currentDoc.isRevoked
+                    ? () {
+                        Navigator.of(sheetContext).pop();
+                        _openLinksSheet();
                       }
                     : null,
               ),
@@ -2082,6 +2235,209 @@ class _VersionRow extends StatelessWidget {
                   ),
                 ),
               ],
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ===========================================================================
+// Link graph (GET /d/:id/links) — the sheet's section labels and rows.
+// ===========================================================================
+
+/// Uppercase label above a section of the links sheet.
+class _LinkSectionLabel extends StatelessWidget {
+  const _LinkSectionLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(2, 0, 2, 8),
+      child: Text(
+        text,
+        style: AppText.label.copyWith(
+          fontSize: 12,
+          color: c.textFaint,
+          letterSpacing: 0.6,
+        ),
+      ),
+    );
+  }
+}
+
+/// The "nothing here" line under an empty section of the links sheet.
+class _LinkEmptyLine extends StatelessWidget {
+  const _LinkEmptyLine(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(2, 0, 2, 4),
+      child: Text(text, style: AppText.small.copyWith(color: c.textFaint)),
+    );
+  }
+}
+
+/// One document that links to the one being read.
+///
+/// Backlinks are full listing rows for documents the operator may not have
+/// open anywhere else — including private ones, which is why this surface is
+/// credentialed — so the row shows enough to identify the document without
+/// opening it.
+class _BacklinkRow extends StatelessWidget {
+  const _BacklinkRow({required this.doc, required this.onTap});
+  final DocumentListing doc;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadii.lg),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        child: Row(
+          children: [
+            Icon(Icons.subdirectory_arrow_left, size: 17, color: c.textFaint),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    doc.title ?? l10n.untitledPlain,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.titleSm.copyWith(color: c.text),
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      VisBadge(doc.visibility),
+                      if (doc.status == 'deprecated') ...[
+                        const SizedBox(width: 6),
+                        const DeprecatedBadge(),
+                      ],
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          relTime(l10n, doc.updatedAt),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.small.copyWith(color: c.textFaint),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right, size: 18, color: c.textFaint),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One on-platform link this document carries, with the state it resolves to.
+///
+/// The raw addressed name is shown as the path that was authored (`/s/name` or
+/// `/d/id`) rather than as a resolved title, because that is the string an
+/// operator has to go and find in the source to fix it. A resolved title sits
+/// underneath as confirmation of where it actually lands.
+class _OutboundLinkRow extends StatelessWidget {
+  const _OutboundLinkRow({
+    required this.link,
+    required this.onTap,
+    required this.onRepair,
+  });
+
+  final OutboundLink link;
+
+  /// Null when nothing resolves — the three broken states carry no target.
+  final VoidCallback? onTap;
+
+  /// Null unless a slug tombstone is the thing standing in the way.
+  final VoidCallback? onRepair;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    final state = link.linkState;
+    final prefix = link.linkKind == LinkKind.publicId ? '/d/' : '/s/';
+    final dotColor = switch (state) {
+      LinkState.live => c.green,
+      LinkState.redirected => c.honey,
+      LinkState.unknown => c.line,
+      _ => c.red,
+    };
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadii.lg),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 9,
+                  height: 9,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: dotColor,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '$prefix${link.value}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.mono.copyWith(fontSize: 13, color: c.text),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                LinkStateBadge(state),
+              ],
+            ),
+            if (link.title != null && link.title!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.only(left: 21),
+                child: Text(
+                  link.title!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.small.copyWith(color: c.textFaint),
+                ),
+              ),
+            ],
+            if (onRepair != null) ...[
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.only(left: 21),
+                child: AppButton(
+                  l10n.linksRepairAction,
+                  variant: AppBtnVariant.outline,
+                  icon: Icons.build_outlined,
+                  small: true,
+                  onPressed: onRepair,
+                ),
+              ),
             ],
           ],
         ),
