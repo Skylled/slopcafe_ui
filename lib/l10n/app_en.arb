@@ -498,9 +498,94 @@
   "versionHistory": "Version history",
   "onTheMenu": "On the menu",
   "@onTheMenu": { "description": "Subtitle of the version-history sheet (café metaphor)." },
-  "currentBadge": "CURRENT",
-  "earlier": "earlier",
-  "@earlier": { "description": "Timestamp fallback for historical versions in the version list." },
+  "versionHistoryLoadFailed": "Couldn't load version history",
+  "@versionHistoryLoadFailed": {
+    "description": "Error line shown in place of the list when the version-history request fails."
+  },
+
+  "versionBadgeLive": "LIVE",
+  "@versionBadgeLive": {
+    "description": "Badge on the row in the version list that readers are actually served. \"Live\" means the published version — the bytes anyone visiting the document's public URL receives — which is not necessarily the newest version. Uppercase to match the other badges."
+  },
+  "versionBadgeCurrent": "CURRENT",
+  "@versionBadgeCurrent": {
+    "description": "Badge on the newest version in the version list. The current version is what the operator and every credentialed view read; on a public document whose older version is still published, CURRENT and LIVE sit on two different rows. Uppercase to match the other badges."
+  },
+  "versionNoSource": "No source retained",
+  "@versionNoSource": {
+    "description": "Sub-label on a version row whose original source bytes were never kept by the server."
+  },
+  "versionNoSourceHint": "This version predates source retention and can't be restored.",
+  "@versionNoSourceHint": {
+    "description": "Explanation shown when the operator selects a version with no retained source: restoring copies the stored source into a new version, so a version without one cannot be restored."
+  },
+  "versionAuthorBy": "by {name}",
+  "@versionAuthorBy": {
+    "description": "Attribution fragment in a version row's meta line, e.g. \"by Kitchen Bot\" — the agent or operator that wrote that version.",
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "versionNotFoundToast": "That version no longer exists",
+  "@versionNotFoundToast": {
+    "description": "Toast when an action targets a version the server no longer has (the version_not_found error), usually because the history changed after this list was loaded."
+  },
+
+  "liveVersionLabel": "Live v{version}",
+  "@liveVersionLabel": {
+    "description": "Label naming the version readers are actually served, e.g. \"Live v3\". \"Live\" means published — the version anyone opening the document's public URL receives — as opposed to the newest version, which may still be unpublished. The value may be a number or an em dash when unknown.",
+    "placeholders": { "version": { "type": "String" } }
+  },
+  "notLiveBadge": "NOT LIVE",
+  "@notLiveBadge": {
+    "description": "Badge marking a document whose newest version has not been published, so readers are still being served an older version. Uppercase to match the other badges."
+  },
+  "unpublishedWorkNote": "v{current} isn't live yet — readers see v{published}.",
+  "@unpublishedWorkNote": {
+    "description": "Note under a document with unpublished work: {current} is the newest version, which only the operator sees, and {published} is the older version still being served to everyone else.",
+    "placeholders": { "current": { "type": "int" }, "published": { "type": "int" } }
+  },
+  "nothingPublishedYet": "Nothing published yet",
+  "@nothingPublishedYet": {
+    "description": "Shown where a live version would be named, for a public document on which no version has ever been published."
+  },
+
+  "publishAction": "Publish",
+  "@publishAction": {
+    "description": "Action that makes the selected version the live one — the version every reader is served from then on."
+  },
+  "publishVersionTitle": "Publish v{version}?",
+  "@publishVersionTitle": {
+    "description": "Title of the confirmation sheet before making a version live, e.g. \"Publish v4?\".",
+    "placeholders": { "version": { "type": "int" } }
+  },
+  "publishVersionBody": "Everyone who reads this document — including the anonymous internet — will see v{version}.",
+  "@publishVersionBody": {
+    "description": "Body of the publish confirmation sheet. States the consequence plainly: publishing is a public act with no audience restriction, so keep this wording unambiguous.",
+    "placeholders": { "version": { "type": "int" } }
+  },
+  "publishedToast": "v{version} is now live",
+  "@publishedToast": {
+    "description": "Toast after publishing succeeds: that version is now the one readers are served.",
+    "placeholders": { "version": { "type": "int" } }
+  },
+  "publishFailedToast": "Couldn't publish that version",
+  "@publishFailedToast": {
+    "description": "Toast when publishing fails; the live version is unchanged."
+  },
+
+  "readerServedBannerTitle": "You're reading the live version",
+  "@readerServedBannerTitle": {
+    "description": "Banner heading in the Reader when the document's newest version has not been published, so the operator is looking at the same older version readers get."
+  },
+  "readerServedBannerBody": "v{current} is newer and hasn't been published.",
+  "@readerServedBannerBody": {
+    "description": "Body of that Reader banner, naming the newest version that exists but is not yet served to readers.",
+    "placeholders": { "current": { "type": "int" } }
+  },
+  "readerViewNewestAction": "View v{version}",
+  "@readerViewNewestAction": {
+    "description": "Action on that Reader banner that switches the view to the newest, not-yet-published version, e.g. \"View v5\".",
+    "placeholders": { "version": { "type": "int" } }
+  },
   "viewingHistoricalShort": "Viewing historical v{version} — not the live version.",
   "@viewingHistoricalShort": {
     "description": "Banner inside the version-history sheet when a historical version is selected.",
@@ -516,11 +601,14 @@
     "description": "Title/CTA/button for restoring a historical version, e.g. \"Restore v2\".",
     "placeholders": { "version": { "type": "int" } }
   },
-  "restoreVersionBody": "This creates a new live version of the document with the exact contents of v{version}.",
-  "@restoreVersionBody": { "placeholders": { "version": { "type": "int" } } },
-  "restoredVersion": "Restored v{version} (now live as v{newVer})",
+  "restoreVersionBody": "This creates a new version of the document with the exact contents of v{version}.",
+  "@restoreVersionBody": {
+    "description": "Body of the restore confirmation sheet. Says \"a new version\", not \"a new live version\": restore moves current_ver and leaves published_ver alone, so on a gated public document the restored head is not what readers are served until it is published.",
+    "placeholders": { "version": { "type": "int" } }
+  },
+  "restoredVersion": "Restored v{version} as v{newVer}",
   "@restoredVersion": {
-    "description": "Toast after restoring a version.",
+    "description": "Toast after restoring a version. Deliberately does NOT say the new version is live: restore is restore-as-new, so it moves current_ver and leaves published_ver exactly where it was — on a gated public document readers keep getting the older published version, and the served-version banner is what explains that.",
     "placeholders": { "version": { "type": "int" }, "newVer": { "type": "int" } }
   },
   "restoreFailed": "Restore failed: {error}",

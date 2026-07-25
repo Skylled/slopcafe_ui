@@ -8,6 +8,7 @@ import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/format.dart';
+import '../core/publication.dart';
 import '../api/api.dart';
 import '../core/secure_storage.dart';
 import '../l10n/l10n.dart';
@@ -16,6 +17,7 @@ import '../providers/document_provider.dart';
 import '../providers/health_provider.dart';
 import '../providers/refresh.dart';
 import '../widgets/app_button.dart';
+import '../widgets/doc_feed_card.dart';
 import '../widgets/pill.dart';
 import '../widgets/press_card.dart';
 import '../widgets/section_header.dart';
@@ -27,7 +29,7 @@ import 'reader_screen.dart';
 
 /// Operate — "The Pass" (back of house). The single most feature-dense screen:
 /// fleet/document statistics, R2 storage, an agent kitchen (mint/keys/OAuth/kill)
-/// and an admin document list (visibility/slug/tags/revoke).
+/// and an admin document list (visibility/slug/tags/publish/revoke).
 ///
 /// Ported from the legacy `agents_screen`, `agent_detail_screen`,
 /// `documents_screen` and `document_detail_screen`. All API/cache/confirm wiring
@@ -1017,6 +1019,17 @@ class _AdminDocRow extends StatelessWidget {
                 const DeprecatedBadge(),
                 const SizedBox(width: 6),
               ],
+              // The subtitle above names the head, which since contract 2.0.0 is
+              // no longer what a reader of a public document is served: the byte
+              // path hands out `published_ver` once anything has been promoted.
+              // The listing row carries both numbers, so proven divergence is a
+              // pure function of the row and needs no per-document probing. The
+              // marker is the shared [NotLiveBadge] so this row reads identically
+              // to the same document on the Library, Search and feed surfaces.
+              if (doc.hasUnpublishedWork) ...[
+                const NotLiveBadge(),
+                const SizedBox(width: 6),
+              ],
               Icon(
                 doc.visibility == 'public' ? Icons.public : Icons.lock_outline,
                 size: 14,
@@ -1835,7 +1848,8 @@ class _KeyRow extends StatelessWidget {
 }
 
 // ===========================================================================
-// Document admin actions sheet (visibility / slug / tags / copy / revoke).
+// Document admin actions sheet (visibility / publish / slug / tags / copy /
+// revoke).
 // ===========================================================================
 class _DocActionsSheet extends StatefulWidget {
   const _DocActionsSheet({
@@ -1937,6 +1951,93 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
     }
   }
 
+  /// Promote the head to the publication pointer via `POST /admin/documents/:id/
+  /// promote` — the operator-only way to move what the HTML byte path serves.
+  ///
+  /// The Pass publishes the CURRENT version and nothing else. Picking an
+  /// arbitrary version out of the history is a different intent (a rollback),
+  /// it needs the history's dates, authors and `source_present` to be made
+  /// safely, and the Reader already owns that surface; here the two numbers on
+  /// the row have already said exactly what would change, so an intermediate
+  /// list would be a picker with one sane answer in it. Publishing the head
+  /// also costs no extra request, which keeps this sheet instant.
+  ///
+  /// Promote is not a write — it bumps no version and re-runs no sanitizer — but
+  /// it is what the anonymous internet reads, so it is confirmed like one.
+  Future<void> _publishCurrent() async {
+    final l10n = context.l10n;
+    final c = context.colors;
+    final version = _doc.currentVer;
+    if (version == null) return;
+
+    final confirmed = await showConfirmSheet(
+      widget.host,
+      title: l10n.publishVersionTitle(version),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(l10n.publishVersionBody(version)),
+          // Promote is legal on a private document and worth doing — it stages
+          // the choice before the door opens, and the later flip to public keeps
+          // it — but nothing about that document is being read by anyone yet, so
+          // the sentence above is qualified rather than left to imply it is live.
+          if (!_doc.isPublic) ...[
+            const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.lock_outline, size: 15, color: c.textFaint),
+                const SizedBox(width: 8),
+                Expanded(child: Text(l10n.makePrivateBody)),
+              ],
+            ),
+          ],
+        ],
+      ),
+      cta: l10n.publishAction,
+      danger: false,
+    );
+    if (!confirmed) return;
+
+    setState(() => _busy = true);
+    try {
+      final promoted = await widget.ref
+          .read(documentsListProvider.notifier)
+          .promoteVersion(_doc.publicId, version);
+      // The response is canonical for `published_ver`, so fold it onto the
+      // listing this sheet is showing — that copy always exists, whereas the row
+      // in the loaded list may not.
+      if (mounted) {
+        setState(
+          () => _doc = _doc.copyWith(publishedVer: promoted.publishedVer),
+        );
+      }
+      if (widget.host.mounted) {
+        // Report what the backend actually pointed at rather than what we asked
+        // for.
+        showToast(widget.host, l10n.publishedToast(promoted.publishedVer));
+      }
+    } catch (e) {
+      if (mounted) {
+        // The head we read off the row can be gone by the time we promote it —
+        // a restore or a revoke elsewhere rewrites the history under us — and
+        // "that version no longer exists" tells the operator to reopen the list
+        // in a way that a generic failure does not.
+        final code = ApiError.fromException(e).code;
+        showToast(
+          context,
+          code == ErrorCode.versionNotFound
+              ? l10n.versionNotFoundToast
+              : l10n.publishFailedToast,
+          danger: true,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _editSlugAndTags() async {
     await showAppSheet<void>(
       widget.host,
@@ -2020,6 +2121,25 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
     final l10n = context.l10n;
     final isPublic = _doc.visibility == 'public';
     final isDeprecated = _doc.status == 'deprecated';
+    final currentVer = _doc.currentVer;
+    final publishedVer = _doc.publishedVer;
+    final servedVer = _doc.servedVer;
+    final holdingBack = _doc.hasUnpublishedWork;
+
+    // Promote is only worth offering where it would move something: there has
+    // to be a head to point at, and it must not already be the published one
+    // (the backend accepts that happily, but it is a no-op dressed up as a
+    // decision). Private documents keep the action — promoting one stages the
+    // choice before the door opens, and the later flip to public keeps it.
+    final canPublish = currentVer != null && publishedVer != currentVer;
+
+    // `hasUnpublishedWork` already proves both numbers are present; restating
+    // the null checks here is what lets Dart promote them to non-null.
+    final String? unpublishedNote =
+        (holdingBack && currentVer != null && publishedVer != null)
+        ? l10n.unpublishedWorkNote(currentVer, publishedVer)
+        : null;
+
     return AppSheet(
       title: _doc.title ?? l10n.untitled,
       subtitle: l10n.documentActions,
@@ -2035,14 +2155,47 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
                 const DeprecatedBadge(),
                 const SizedBox(width: 8),
               ],
-              if (_doc.currentVer != null)
+              // The head. A public document that is serving its head says so
+              // once, in the pill beside this one, rather than twice.
+              if (currentVer != null && (!isPublic || holdingBack))
                 Pill(
-                  'v${_doc.currentVer}',
+                  l10n.versionLabel('$currentVer'),
                   tone: PillTone.neutral,
                   small: true,
                 ),
+              // What a reader is actually handed. Only public documents serve
+              // anything, so a private one gets no claim about being live —
+              // even when a version has already been staged for it. Honey while
+              // the gate holds newer work back, matching the row's marker.
+              if (isPublic && servedVer != null) ...[
+                if (holdingBack) const SizedBox(width: 8),
+                Pill(
+                  l10n.liveVersionLabel('$servedVer'),
+                  tone: holdingBack ? PillTone.honey : PillTone.neutral,
+                  small: true,
+                ),
+              ],
             ],
           ),
+          // Says out loud what the two pills only imply: the newest version is
+          // sitting behind the publication gate and every reader — including
+          // the anonymous internet — is being handed the older published one.
+          if (unpublishedNote != null) ...[
+            const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.pending_outlined, size: 14, color: c.honeyD),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    unpublishedNote,
+                    style: AppText.small.copyWith(color: c.honeyD),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 12),
           if (_busy)
             Padding(
@@ -2058,6 +2211,17 @@ class _DocActionsSheetState extends State<_DocActionsSheet> {
                 ),
               ),
             ),
+          // Publication leads: it is the only action in this sheet that changes
+          // what a reader is handed, and it is what the row's NOT LIVE marker
+          // sent the operator in here to do.
+          if (canPublish) ...[
+            SheetActionRow(
+              icon: Icons.publish_outlined,
+              label: l10n.publishAction,
+              onTap: _busy ? null : _publishCurrent,
+            ),
+            Divider(color: c.lineSoft, height: 16),
+          ],
           SheetActionRow(
             icon: isPublic ? Icons.lock_outline : Icons.public,
             label: isPublic ? l10n.makePrivate : l10n.makePublic,

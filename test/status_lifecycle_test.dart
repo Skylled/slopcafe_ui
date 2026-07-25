@@ -14,10 +14,17 @@ import 'package:slopcafe_ui/widgets/doc_feed_card.dart';
 import 'package:slopcafe_ui/widgets/pill.dart';
 import 'package:slopcafe_ui/widgets/sheets.dart';
 
+// `updatedAt` sits after `currentVersionAt` on purpose: contract 2.0.0 tracks
+// the last content write separately from the last touch of any kind, so the
+// real-world shape of a document that was retagged or deprecated after its last
+// write is a row whose metadata moved without its version doing so. Deprecating
+// a document is exactly that kind of touch, which is what this file exercises.
 DocumentListing _doc({String status = 'active', String? supersededBy}) =>
     DocumentListing(
       publicId: 'abcdefghijklmnopqrstuv',
       createdAt: DateTime(2026, 5, 1),
+      currentVersionAt: DateTime(2026, 5, 1),
+      updatedAt: DateTime(2026, 5, 12),
       createdByKind: 'agent',
       tags: const [],
       status: status,
@@ -39,7 +46,12 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      _harness(DocFeedCard(doc: _doc(status: 'deprecated'), onOpen: (_) {})),
+      _harness(
+        DocFeedCard(
+          doc: _doc(status: 'deprecated'),
+          onOpen: (_) {},
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -48,9 +60,7 @@ void main() {
   });
 
   testWidgets('active document card carries no badge', (tester) async {
-    await tester.pumpWidget(
-      _harness(DocFeedCard(doc: _doc(), onOpen: (_) {})),
-    );
+    await tester.pumpWidget(_harness(DocFeedCard(doc: _doc(), onOpen: (_) {})));
     await tester.pumpAndSettle();
 
     expect(find.byType(DeprecatedBadge), findsNothing);
@@ -75,10 +85,7 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(
-      find.byType(TextField),
-      '  hdbOcFnhL1y9fe0tWpBvXA ',
-    );
+    await tester.enterText(find.byType(TextField), '  hdbOcFnhL1y9fe0tWpBvXA ');
     // 'Mark deprecated' is both the sheet title and the CTA; tap the CTA.
     await tester.tap(find.text('Mark deprecated').last);
     await tester.pumpAndSettle();

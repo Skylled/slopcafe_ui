@@ -3,7 +3,9 @@
 // Validates that the generated models (lib/api/models.dart) and the ErrorCode
 // envelope (lib/api/api_error.dart) correctly handle what the real backend
 // sends, focusing on the OpenAPI-3.1 nullability risk (a revoked document has
-// null current_ver/current_size/slug).
+// null current_ver/current_size/slug) and on contract 2.0.0's publication gate,
+// where a listing row carries both current_ver and published_ver and only the
+// serving rule says which one a visitor actually receives.
 //
 //   dart run tool/smoke_test.dart
 //
@@ -21,6 +23,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:slopcafe_ui/api/api.dart';
+import 'package:slopcafe_ui/core/publication.dart';
 
 int _failures = 0;
 
@@ -45,14 +48,22 @@ Future<void> main() async {
 
   // --- 1. Fixture: a REVOKED document (the OpenAPI-3.1 nullability risk) ------
   stdout.writeln('Revoked-document fixture (nullable fields):');
+  // `updated_at` is required from contract 2.0.0 and is the last touch of any
+  // kind, so on a revoked document it is the revocation itself — later than the
+  // (now null) content write this row no longer has.
   final revokedJson = {
     'public_id': 'pub_revoked_demo',
     'current_ver': null,
     'created_at': '2026-01-02T03:04:05.000Z',
+    'updated_at': '2026-02-03T04:05:06.000Z',
+    'current_version_at': null,
     'created_by_id': null,
     'created_by_name': null,
     'created_by_kind': 'agent',
     'current_size': null,
+    'current_source_sha256': null,
+    'published_ver': null,
+    'published_source_sha256': null,
     'revoked_at': '2026-02-03T04:05:06.000Z',
     'title': null,
     'description': null,
@@ -69,8 +80,11 @@ Future<void> main() async {
     _check('currentSize is null', doc.currentSize == null);
     _check('slug is null', doc.slug == null);
     _check('title is null', doc.title == null);
+    _check('publishedVer is null', doc.publishedVer == null);
+    _check('currentVersionAt is null', doc.currentVersionAt == null);
     _check('isRevoked == true', doc.isRevoked == true);
     _check('createdAt parsed to DateTime', doc.createdAt.year == 2026);
+    _check('updatedAt parsed to DateTime', doc.updatedAt.month == 2);
     // Round-trips back to identical snake_case JSON (the offline-cache contract).
     final round = DocumentListing.fromJson(doc.toJson());
     _check(
@@ -101,7 +115,73 @@ Future<void> main() async {
     _check('parses without throwing', false, '$e');
   }
 
-  // --- 3. Live: GET /healthz (public) ----------------------------------------
+  // --- 3. Fixture: the 2.0.0 publication gate on a listing row ---------------
+  //
+  // The admin list and search still report `current_ver`, so from 2.0.0 a row
+  // alone no longer says what a visitor is served. This checks that the two
+  // numbers survive the round-trip and that the serving rule reads them the way
+  // the backend does — a public document that has been promoted serves its
+  // published version to everyone, while the same numbers on a private document
+  // serve current, because there is nobody the gate is holding back.
+  stdout.writeln('\nPublication-gate fixture (published_ver vs current_ver):');
+  try {
+    final promotedJson = {
+      ...revokedJson,
+      'public_id': 'pub_promoted_demo',
+      'revoked_at': null,
+      'visibility': 'public',
+      'current_ver': 8,
+      'published_ver': 4,
+      'current_size': 2048,
+      'slug': 'promoted-demo',
+      'title': 'Promoted demo',
+      'created_at': '2026-01-02T03:04:05.000Z',
+      'current_version_at': '2026-03-04T05:06:07.000Z',
+      'updated_at': '2026-03-09T10:11:12.000Z',
+    };
+    final promoted = DocumentListing.fromJson(promotedJson);
+    _check('parses without throwing', true);
+    _check('currentVer == 8', promoted.currentVer == 8);
+    _check('publishedVer == 4', promoted.publishedVer == 4);
+    _check(
+      'updatedAt is after currentVersionAt (retagged since the last write)',
+      promoted.updatedAt.isAfter(promoted.currentVersionAt!),
+    );
+    _check(
+      'public + promoted serves the published version',
+      promoted.servedVer == 4,
+    );
+    _check(
+      'public + promoted reports unpublished work',
+      promoted.hasUnpublishedWork,
+    );
+
+    final privateSameNumbers = promoted.copyWith(visibility: 'private');
+    _check(
+      'private serves current regardless of published_ver',
+      privateSameNumbers.servedVer == 8,
+    );
+    _check(
+      'private reports no unpublished work',
+      !privateSameNumbers.hasUnpublishedWork,
+    );
+
+    final neverPromoted = promoted.copyWith(publishedVer: null);
+    _check(
+      'public + never promoted serves current',
+      neverPromoted.servedVer == 8 && !neverPromoted.hasUnpublishedWork,
+    );
+
+    final round = DocumentListing.fromJson(promoted.toJson());
+    _check(
+      'toJson/fromJson preserves published_ver',
+      round.publishedVer == 4 && round.servedVer == 4,
+    );
+  } catch (e) {
+    _check('parses without throwing', false, '$e');
+  }
+
+  // --- 4. Live: GET /healthz (public) ----------------------------------------
   stdout.writeln('\nLive GET /healthz (public):');
   try {
     final res = await dio.get('/healthz');
@@ -128,7 +208,7 @@ Future<void> main() async {
     _check('healthz reachable + parses', false, '$e');
   }
 
-  // --- 4. Live: unauthenticated admin call -> ErrorBody envelope -------------
+  // --- 5. Live: unauthenticated admin call -> ErrorBody envelope -------------
   stdout.writeln('\nLive GET /admin/agents without auth (error envelope):');
   try {
     final res = await dio.get('/admin/agents');
@@ -144,7 +224,7 @@ Future<void> main() async {
     _check('admin/agents reachable', false, '$e');
   }
 
-  // --- 5. Live (optional, authenticated): list -> search ---------------------
+  // --- 6. Live (optional, authenticated): list -> search ---------------------
   if (token != null && token.isNotEmpty) {
     final auth = Options(headers: {'Authorization': 'Bearer $token'});
     stdout.writeln('\nLive authenticated GET /admin/documents:');

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/format.dart';
+import '../core/publication.dart';
 import '../l10n/l10n.dart';
 import '../api/api.dart';
 import 'pill.dart';
@@ -128,6 +129,16 @@ class DocFeedCard extends StatelessWidget {
                     l10n.versionLabel('${doc.currentVer}'),
                     style: AppText.monoLabel.copyWith(color: c.textFaint),
                   ),
+                  // The version this row names is the document's head, which
+                  // since contract 2.0.0 is not necessarily what a reader is
+                  // served, so the marker sits with the number it qualifies
+                  // rather than up in the status corner. A revoked document
+                  // serves nobody, so the publication gate is moot there — the
+                  // same reason the DEPRECATED badge stays off a revoked card.
+                  if (!isRevoked && doc.hasUnpublishedWork) ...[
+                    const SizedBox(width: 6),
+                    const NotLiveBadge(),
+                  ],
                 ],
                 const MetaDot(),
                 Text(
@@ -160,6 +171,33 @@ class DocFeedCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// NOT LIVE marker — contract 2.0.0's publication gate, seen from a listing row.
+///
+/// Render it only where [DocumentPublication.hasUnpublishedWork] holds: the
+/// document is public, a version has been promoted, and it is not the current
+/// one, so everybody reading the document — the anonymous internet included —
+/// is served older bytes than the version the row names. The listing is the
+/// reliable place to say this: every row already carries `visibility` and
+/// `published_ver`, so the state is known without probing each document.
+///
+/// It is deliberately the same honey [Pill] as [DeprecatedBadge]. Both are
+/// cautions about a document's state rather than the red of a revoked kill, and
+/// they have to read as siblings on the surfaces where they land together.
+class NotLiveBadge extends StatelessWidget {
+  const NotLiveBadge({super.key, this.small = true});
+  final bool small;
+
+  @override
+  Widget build(BuildContext context) {
+    return Pill(
+      context.l10n.notLiveBadge,
+      tone: PillTone.honey,
+      icon: Icons.pending_outlined,
+      small: small,
     );
   }
 }

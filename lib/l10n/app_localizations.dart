@@ -1636,17 +1636,119 @@ abstract class AppLocalizations {
   /// **'On the menu'**
   String get onTheMenu;
 
-  /// No description provided for @currentBadge.
+  /// Error line shown in place of the list when the version-history request fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load version history'**
+  String get versionHistoryLoadFailed;
+
+  /// Badge on the row in the version list that readers are actually served. "Live" means the published version — the bytes anyone visiting the document's public URL receives — which is not necessarily the newest version. Uppercase to match the other badges.
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE'**
+  String get versionBadgeLive;
+
+  /// Badge on the newest version in the version list. The current version is what the operator and every credentialed view read; on a public document whose older version is still published, CURRENT and LIVE sit on two different rows. Uppercase to match the other badges.
   ///
   /// In en, this message translates to:
   /// **'CURRENT'**
-  String get currentBadge;
+  String get versionBadgeCurrent;
 
-  /// Timestamp fallback for historical versions in the version list.
+  /// Sub-label on a version row whose original source bytes were never kept by the server.
   ///
   /// In en, this message translates to:
-  /// **'earlier'**
-  String get earlier;
+  /// **'No source retained'**
+  String get versionNoSource;
+
+  /// Explanation shown when the operator selects a version with no retained source: restoring copies the stored source into a new version, so a version without one cannot be restored.
+  ///
+  /// In en, this message translates to:
+  /// **'This version predates source retention and can\'t be restored.'**
+  String get versionNoSourceHint;
+
+  /// Attribution fragment in a version row's meta line, e.g. "by Kitchen Bot" — the agent or operator that wrote that version.
+  ///
+  /// In en, this message translates to:
+  /// **'by {name}'**
+  String versionAuthorBy(String name);
+
+  /// Toast when an action targets a version the server no longer has (the version_not_found error), usually because the history changed after this list was loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'That version no longer exists'**
+  String get versionNotFoundToast;
+
+  /// Label naming the version readers are actually served, e.g. "Live v3". "Live" means published — the version anyone opening the document's public URL receives — as opposed to the newest version, which may still be unpublished. The value may be a number or an em dash when unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Live v{version}'**
+  String liveVersionLabel(String version);
+
+  /// Badge marking a document whose newest version has not been published, so readers are still being served an older version. Uppercase to match the other badges.
+  ///
+  /// In en, this message translates to:
+  /// **'NOT LIVE'**
+  String get notLiveBadge;
+
+  /// Note under a document with unpublished work: {current} is the newest version, which only the operator sees, and {published} is the older version still being served to everyone else.
+  ///
+  /// In en, this message translates to:
+  /// **'v{current} isn\'t live yet — readers see v{published}.'**
+  String unpublishedWorkNote(int current, int published);
+
+  /// Shown where a live version would be named, for a public document on which no version has ever been published.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing published yet'**
+  String get nothingPublishedYet;
+
+  /// Action that makes the selected version the live one — the version every reader is served from then on.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish'**
+  String get publishAction;
+
+  /// Title of the confirmation sheet before making a version live, e.g. "Publish v4?".
+  ///
+  /// In en, this message translates to:
+  /// **'Publish v{version}?'**
+  String publishVersionTitle(int version);
+
+  /// Body of the publish confirmation sheet. States the consequence plainly: publishing is a public act with no audience restriction, so keep this wording unambiguous.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone who reads this document — including the anonymous internet — will see v{version}.'**
+  String publishVersionBody(int version);
+
+  /// Toast after publishing succeeds: that version is now the one readers are served.
+  ///
+  /// In en, this message translates to:
+  /// **'v{version} is now live'**
+  String publishedToast(int version);
+
+  /// Toast when publishing fails; the live version is unchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t publish that version'**
+  String get publishFailedToast;
+
+  /// Banner heading in the Reader when the document's newest version has not been published, so the operator is looking at the same older version readers get.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re reading the live version'**
+  String get readerServedBannerTitle;
+
+  /// Body of that Reader banner, naming the newest version that exists but is not yet served to readers.
+  ///
+  /// In en, this message translates to:
+  /// **'v{current} is newer and hasn\'t been published.'**
+  String readerServedBannerBody(int current);
+
+  /// Action on that Reader banner that switches the view to the newest, not-yet-published version, e.g. "View v5".
+  ///
+  /// In en, this message translates to:
+  /// **'View v{version}'**
+  String readerViewNewestAction(int version);
 
   /// Banner inside the version-history sheet when a historical version is selected.
   ///
@@ -1666,16 +1768,16 @@ abstract class AppLocalizations {
   /// **'Restore v{version}'**
   String restoreVersionTitle(int version);
 
-  /// No description provided for @restoreVersionBody.
+  /// Body of the restore confirmation sheet. Says "a new version", not "a new live version": restore moves current_ver and leaves published_ver alone, so on a gated public document the restored head is not what readers are served until it is published.
   ///
   /// In en, this message translates to:
-  /// **'This creates a new live version of the document with the exact contents of v{version}.'**
+  /// **'This creates a new version of the document with the exact contents of v{version}.'**
   String restoreVersionBody(int version);
 
-  /// Toast after restoring a version.
+  /// Toast after restoring a version. Deliberately does NOT say the new version is live: restore is restore-as-new, so it moves current_ver and leaves published_ver exactly where it was — on a gated public document readers keep getting the older published version, and the served-version banner is what explains that.
   ///
   /// In en, this message translates to:
-  /// **'Restored v{version} (now live as v{newVer})'**
+  /// **'Restored v{version} as v{newVer}'**
   String restoredVersion(int version, int newVer);
 
   /// No description provided for @restoreFailed.

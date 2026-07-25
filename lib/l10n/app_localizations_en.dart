@@ -925,10 +925,78 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onTheMenu => 'On the menu';
 
   @override
-  String get currentBadge => 'CURRENT';
+  String get versionHistoryLoadFailed => 'Couldn\'t load version history';
 
   @override
-  String get earlier => 'earlier';
+  String get versionBadgeLive => 'LIVE';
+
+  @override
+  String get versionBadgeCurrent => 'CURRENT';
+
+  @override
+  String get versionNoSource => 'No source retained';
+
+  @override
+  String get versionNoSourceHint =>
+      'This version predates source retention and can\'t be restored.';
+
+  @override
+  String versionAuthorBy(String name) {
+    return 'by $name';
+  }
+
+  @override
+  String get versionNotFoundToast => 'That version no longer exists';
+
+  @override
+  String liveVersionLabel(String version) {
+    return 'Live v$version';
+  }
+
+  @override
+  String get notLiveBadge => 'NOT LIVE';
+
+  @override
+  String unpublishedWorkNote(int current, int published) {
+    return 'v$current isn\'t live yet — readers see v$published.';
+  }
+
+  @override
+  String get nothingPublishedYet => 'Nothing published yet';
+
+  @override
+  String get publishAction => 'Publish';
+
+  @override
+  String publishVersionTitle(int version) {
+    return 'Publish v$version?';
+  }
+
+  @override
+  String publishVersionBody(int version) {
+    return 'Everyone who reads this document — including the anonymous internet — will see v$version.';
+  }
+
+  @override
+  String publishedToast(int version) {
+    return 'v$version is now live';
+  }
+
+  @override
+  String get publishFailedToast => 'Couldn\'t publish that version';
+
+  @override
+  String get readerServedBannerTitle => 'You\'re reading the live version';
+
+  @override
+  String readerServedBannerBody(int current) {
+    return 'v$current is newer and hasn\'t been published.';
+  }
+
+  @override
+  String readerViewNewestAction(int version) {
+    return 'View v$version';
+  }
 
   @override
   String viewingHistoricalShort(int version) {
@@ -947,12 +1015,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String restoreVersionBody(int version) {
-    return 'This creates a new live version of the document with the exact contents of v$version.';
+    return 'This creates a new version of the document with the exact contents of v$version.';
   }
 
   @override
   String restoredVersion(int version, int newVer) {
-    return 'Restored v$version (now live as v$newVer)';
+    return 'Restored v$version as v$newVer';
   }
 
   @override

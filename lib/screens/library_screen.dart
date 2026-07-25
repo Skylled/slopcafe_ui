@@ -6,6 +6,7 @@ import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/format.dart';
+import '../core/publication.dart';
 import '../l10n/l10n.dart';
 import '../api/api.dart';
 import '../providers/agent_provider.dart';
@@ -516,12 +517,27 @@ class _DocRow extends StatelessWidget {
                         l10n.versionLabel('${doc.currentVer ?? '—'}'),
                         style: AppText.monoLabel.copyWith(color: c.textFaint),
                       ),
+                      // Same marker, same placement as the feed card: the row
+                      // names the head version, which a public document does
+                      // not necessarily serve.
+                      if (!doc.isRevoked && doc.hasUnpublishedWork) ...[
+                        const SizedBox(width: 6),
+                        const NotLiveBadge(),
+                      ],
                       const MetaDot(),
-                      Text(
-                        relTime(l10n, doc.createdAt),
-                        style: AppText.small.copyWith(
-                          fontSize: 12.5,
-                          color: c.textFaint,
+                      // Both ends of this line flex. Once the marker joins a
+                      // row this compact there is no slack left on a narrow
+                      // phone, and a clipped tag or timestamp reads better than
+                      // an overflow stripe.
+                      Flexible(
+                        child: Text(
+                          relTime(l10n, doc.createdAt),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.small.copyWith(
+                            fontSize: 12.5,
+                            color: c.textFaint,
+                          ),
                         ),
                       ),
                     ],

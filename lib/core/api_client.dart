@@ -89,6 +89,23 @@ final dioProvider = Provider<Dio>((ref) {
           options.headers['Authorization'] = 'Bearer $token';
         }
 
+        // `dart:io` sends no Accept header at all unless one is set explicitly,
+        // and Cloudflare strips the ETag from the response to a request that
+        // arrives without one. That header is how every version-resolution path
+        // in the app learns which version it is holding (see
+        // `lib/core/publication.dart`), so its absence doesn't fail loudly — it
+        // silently degrades reader caching, revalidation and the published-vs-
+        // current comparison. `*/*` is the neutral value: it constrains nothing
+        // about what the server may return, it only keeps the validator intact.
+        // A caller that set its own Accept (a byte path asking for HTML, say)
+        // knows better than this interceptor and is never overridden.
+        final hasAccept = options.headers.keys.any(
+          (key) => key.trim().toLowerCase() == 'accept',
+        );
+        if (!hasAccept) {
+          options.headers['Accept'] = '*/*';
+        }
+
         // Redacted developer logging
         if (kDebugMode) {
           final headersRedacted = Map<String, dynamic>.from(options.headers);

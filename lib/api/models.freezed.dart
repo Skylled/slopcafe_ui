@@ -1107,9 +1107,290 @@ as String,
 
 
 /// @nodoc
+mixin _$DocumentLinksResponse {
+
+@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'backlinks') List<DocumentListing> get backlinks;@JsonKey(name: 'outbound') List<OutboundLink> get outbound;
+/// Create a copy of DocumentLinksResponse
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$DocumentLinksResponseCopyWith<DocumentLinksResponse> get copyWith => _$DocumentLinksResponseCopyWithImpl<DocumentLinksResponse>(this as DocumentLinksResponse, _$identity);
+
+  /// Serializes this DocumentLinksResponse to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DocumentLinksResponse&&(identical(other.publicId, publicId) || other.publicId == publicId)&&const DeepCollectionEquality().equals(other.backlinks, backlinks)&&const DeepCollectionEquality().equals(other.outbound, outbound));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,publicId,const DeepCollectionEquality().hash(backlinks),const DeepCollectionEquality().hash(outbound));
+
+@override
+String toString() {
+  return 'DocumentLinksResponse(publicId: $publicId, backlinks: $backlinks, outbound: $outbound)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $DocumentLinksResponseCopyWith<$Res>  {
+  factory $DocumentLinksResponseCopyWith(DocumentLinksResponse value, $Res Function(DocumentLinksResponse) _then) = _$DocumentLinksResponseCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'backlinks') List<DocumentListing> backlinks,@JsonKey(name: 'outbound') List<OutboundLink> outbound
+});
+
+
+
+
+}
+/// @nodoc
+class _$DocumentLinksResponseCopyWithImpl<$Res>
+    implements $DocumentLinksResponseCopyWith<$Res> {
+  _$DocumentLinksResponseCopyWithImpl(this._self, this._then);
+
+  final DocumentLinksResponse _self;
+  final $Res Function(DocumentLinksResponse) _then;
+
+/// Create a copy of DocumentLinksResponse
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? backlinks = null,Object? outbound = null,}) {
+  return _then(_self.copyWith(
+publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
+as String,backlinks: null == backlinks ? _self.backlinks : backlinks // ignore: cast_nullable_to_non_nullable
+as List<DocumentListing>,outbound: null == outbound ? _self.outbound : outbound // ignore: cast_nullable_to_non_nullable
+as List<OutboundLink>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [DocumentLinksResponse].
+extension DocumentLinksResponsePatterns on DocumentLinksResponse {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _DocumentLinksResponse value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _DocumentLinksResponse() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _DocumentLinksResponse value)  $default,){
+final _that = this;
+switch (_that) {
+case _DocumentLinksResponse():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _DocumentLinksResponse value)?  $default,){
+final _that = this;
+switch (_that) {
+case _DocumentLinksResponse() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'backlinks')  List<DocumentListing> backlinks, @JsonKey(name: 'outbound')  List<OutboundLink> outbound)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _DocumentLinksResponse() when $default != null:
+return $default(_that.publicId,_that.backlinks,_that.outbound);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'backlinks')  List<DocumentListing> backlinks, @JsonKey(name: 'outbound')  List<OutboundLink> outbound)  $default,) {final _that = this;
+switch (_that) {
+case _DocumentLinksResponse():
+return $default(_that.publicId,_that.backlinks,_that.outbound);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'backlinks')  List<DocumentListing> backlinks, @JsonKey(name: 'outbound')  List<OutboundLink> outbound)?  $default,) {final _that = this;
+switch (_that) {
+case _DocumentLinksResponse() when $default != null:
+return $default(_that.publicId,_that.backlinks,_that.outbound);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _DocumentLinksResponse implements DocumentLinksResponse {
+  const _DocumentLinksResponse({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'backlinks') required final  List<DocumentListing> backlinks, @JsonKey(name: 'outbound') required final  List<OutboundLink> outbound}): _backlinks = backlinks,_outbound = outbound;
+  factory _DocumentLinksResponse.fromJson(Map<String, dynamic> json) => _$DocumentLinksResponseFromJson(json);
+
+@override@JsonKey(name: 'public_id') final  String publicId;
+ final  List<DocumentListing> _backlinks;
+@override@JsonKey(name: 'backlinks') List<DocumentListing> get backlinks {
+  if (_backlinks is EqualUnmodifiableListView) return _backlinks;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_backlinks);
+}
+
+ final  List<OutboundLink> _outbound;
+@override@JsonKey(name: 'outbound') List<OutboundLink> get outbound {
+  if (_outbound is EqualUnmodifiableListView) return _outbound;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_outbound);
+}
+
+
+/// Create a copy of DocumentLinksResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$DocumentLinksResponseCopyWith<_DocumentLinksResponse> get copyWith => __$DocumentLinksResponseCopyWithImpl<_DocumentLinksResponse>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$DocumentLinksResponseToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DocumentLinksResponse&&(identical(other.publicId, publicId) || other.publicId == publicId)&&const DeepCollectionEquality().equals(other._backlinks, _backlinks)&&const DeepCollectionEquality().equals(other._outbound, _outbound));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,publicId,const DeepCollectionEquality().hash(_backlinks),const DeepCollectionEquality().hash(_outbound));
+
+@override
+String toString() {
+  return 'DocumentLinksResponse(publicId: $publicId, backlinks: $backlinks, outbound: $outbound)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$DocumentLinksResponseCopyWith<$Res> implements $DocumentLinksResponseCopyWith<$Res> {
+  factory _$DocumentLinksResponseCopyWith(_DocumentLinksResponse value, $Res Function(_DocumentLinksResponse) _then) = __$DocumentLinksResponseCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'backlinks') List<DocumentListing> backlinks,@JsonKey(name: 'outbound') List<OutboundLink> outbound
+});
+
+
+
+
+}
+/// @nodoc
+class __$DocumentLinksResponseCopyWithImpl<$Res>
+    implements _$DocumentLinksResponseCopyWith<$Res> {
+  __$DocumentLinksResponseCopyWithImpl(this._self, this._then);
+
+  final _DocumentLinksResponse _self;
+  final $Res Function(_DocumentLinksResponse) _then;
+
+/// Create a copy of DocumentLinksResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? backlinks = null,Object? outbound = null,}) {
+  return _then(_DocumentLinksResponse(
+publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
+as String,backlinks: null == backlinks ? _self._backlinks : backlinks // ignore: cast_nullable_to_non_nullable
+as List<DocumentListing>,outbound: null == outbound ? _self._outbound : outbound // ignore: cast_nullable_to_non_nullable
+as List<OutboundLink>,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$DocumentListing {
 
-@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'created_by_kind') String get createdByKind;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'status') String get status;@JsonKey(name: 'visibility') String get visibility;@JsonKey(name: 'current_ver') int? get currentVer;@JsonKey(name: 'created_by_id') String? get createdById;@JsonKey(name: 'created_by_name') String? get createdByName;@JsonKey(name: 'current_size') int? get currentSize;@JsonKey(name: 'revoked_at') DateTime? get revokedAt;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;@JsonKey(name: 'superseded_by') String? get supersededBy;
+@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'created_by_kind') String get createdByKind;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'status') String get status;@JsonKey(name: 'visibility') String get visibility;@JsonKey(name: 'current_ver') int? get currentVer;@JsonKey(name: 'current_version_at') DateTime? get currentVersionAt;@JsonKey(name: 'created_by_id') String? get createdById;@JsonKey(name: 'created_by_name') String? get createdByName;@JsonKey(name: 'current_size') int? get currentSize;@JsonKey(name: 'current_source_sha256') String? get currentSourceSha256;@JsonKey(name: 'published_ver') int? get publishedVer;@JsonKey(name: 'published_source_sha256') String? get publishedSourceSha256;@JsonKey(name: 'revoked_at') DateTime? get revokedAt;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;@JsonKey(name: 'superseded_by') String? get supersededBy;
 /// Create a copy of DocumentListing
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1122,16 +1403,16 @@ $DocumentListingCopyWith<DocumentListing> get copyWith => _$DocumentListingCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DocumentListing&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DocumentListing&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.currentVersionAt, currentVersionAt) || other.currentVersionAt == currentVersionAt)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.currentSourceSha256, currentSourceSha256) || other.currentSourceSha256 == currentSourceSha256)&&(identical(other.publishedVer, publishedVer) || other.publishedVer == publishedVer)&&(identical(other.publishedSourceSha256, publishedSourceSha256) || other.publishedSourceSha256 == publishedSourceSha256)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,publicId,createdAt,createdByKind,const DeepCollectionEquality().hash(tags),status,visibility,currentVer,createdById,createdByName,currentSize,revokedAt,title,description,slug,supersededBy);
+int get hashCode => Object.hashAll([runtimeType,publicId,createdAt,updatedAt,createdByKind,const DeepCollectionEquality().hash(tags),status,visibility,currentVer,currentVersionAt,createdById,createdByName,currentSize,currentSourceSha256,publishedVer,publishedSourceSha256,revokedAt,title,description,slug,supersededBy]);
 
 @override
 String toString() {
-  return 'DocumentListing(publicId: $publicId, createdAt: $createdAt, createdByKind: $createdByKind, tags: $tags, status: $status, visibility: $visibility, currentVer: $currentVer, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy)';
+  return 'DocumentListing(publicId: $publicId, createdAt: $createdAt, updatedAt: $updatedAt, createdByKind: $createdByKind, tags: $tags, status: $status, visibility: $visibility, currentVer: $currentVer, currentVersionAt: $currentVersionAt, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, currentSourceSha256: $currentSourceSha256, publishedVer: $publishedVer, publishedSourceSha256: $publishedSourceSha256, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy)';
 }
 
 
@@ -1142,7 +1423,7 @@ abstract mixin class $DocumentListingCopyWith<$Res>  {
   factory $DocumentListingCopyWith(DocumentListing value, $Res Function(DocumentListing) _then) = _$DocumentListingCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'current_version_at') DateTime? currentVersionAt,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'current_source_sha256') String? currentSourceSha256,@JsonKey(name: 'published_ver') int? publishedVer,@JsonKey(name: 'published_source_sha256') String? publishedSourceSha256,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy
 });
 
 
@@ -1159,19 +1440,24 @@ class _$DocumentListingCopyWithImpl<$Res>
 
 /// Create a copy of DocumentListing
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? createdAt = null,Object? createdByKind = null,Object? tags = null,Object? status = null,Object? visibility = null,Object? currentVer = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? createdAt = null,Object? updatedAt = null,Object? createdByKind = null,Object? tags = null,Object? status = null,Object? visibility = null,Object? currentVer = freezed,Object? currentVersionAt = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? currentSourceSha256 = freezed,Object? publishedVer = freezed,Object? publishedSourceSha256 = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,}) {
   return _then(_self.copyWith(
 publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,createdByKind: null == createdByKind ? _self.createdByKind : createdByKind // ignore: cast_nullable_to_non_nullable
 as String,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
 as List<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
 as String,currentVer: freezed == currentVer ? _self.currentVer : currentVer // ignore: cast_nullable_to_non_nullable
-as int?,createdById: freezed == createdById ? _self.createdById : createdById // ignore: cast_nullable_to_non_nullable
+as int?,currentVersionAt: freezed == currentVersionAt ? _self.currentVersionAt : currentVersionAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,createdById: freezed == createdById ? _self.createdById : createdById // ignore: cast_nullable_to_non_nullable
 as String?,createdByName: freezed == createdByName ? _self.createdByName : createdByName // ignore: cast_nullable_to_non_nullable
 as String?,currentSize: freezed == currentSize ? _self.currentSize : currentSize // ignore: cast_nullable_to_non_nullable
-as int?,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
+as int?,currentSourceSha256: freezed == currentSourceSha256 ? _self.currentSourceSha256 : currentSourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,publishedVer: freezed == publishedVer ? _self.publishedVer : publishedVer // ignore: cast_nullable_to_non_nullable
+as int?,publishedSourceSha256: freezed == publishedSourceSha256 ? _self.publishedSourceSha256 : publishedSourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,slug: freezed == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -1261,10 +1547,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'current_version_at')  DateTime? currentVersionAt, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'current_source_sha256')  String? currentSourceSha256, @JsonKey(name: 'published_ver')  int? publishedVer, @JsonKey(name: 'published_source_sha256')  String? publishedSourceSha256, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DocumentListing() when $default != null:
-return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
+return $default(_that.publicId,_that.createdAt,_that.updatedAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.currentVer,_that.currentVersionAt,_that.createdById,_that.createdByName,_that.currentSize,_that.currentSourceSha256,_that.publishedVer,_that.publishedSourceSha256,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
   return orElse();
 
 }
@@ -1282,10 +1568,10 @@ return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'current_version_at')  DateTime? currentVersionAt, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'current_source_sha256')  String? currentSourceSha256, @JsonKey(name: 'published_ver')  int? publishedVer, @JsonKey(name: 'published_source_sha256')  String? publishedSourceSha256, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)  $default,) {final _that = this;
 switch (_that) {
 case _DocumentListing():
-return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
+return $default(_that.publicId,_that.createdAt,_that.updatedAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.currentVer,_that.currentVersionAt,_that.createdById,_that.createdByName,_that.currentSize,_that.currentSourceSha256,_that.publishedVer,_that.publishedSourceSha256,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1302,10 +1588,10 @@ return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'current_version_at')  DateTime? currentVersionAt, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'current_source_sha256')  String? currentSourceSha256, @JsonKey(name: 'published_ver')  int? publishedVer, @JsonKey(name: 'published_source_sha256')  String? publishedSourceSha256, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)?  $default,) {final _that = this;
 switch (_that) {
 case _DocumentListing() when $default != null:
-return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
+return $default(_that.publicId,_that.createdAt,_that.updatedAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.currentVer,_that.currentVersionAt,_that.createdById,_that.createdByName,_that.currentSize,_that.currentSourceSha256,_that.publishedVer,_that.publishedSourceSha256,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
   return null;
 
 }
@@ -1317,11 +1603,12 @@ return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_t
 @JsonSerializable()
 
 class _DocumentListing extends DocumentListing {
-  const _DocumentListing({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'created_by_kind') required this.createdByKind, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'status') required this.status, @JsonKey(name: 'visibility') required this.visibility, @JsonKey(name: 'current_ver') this.currentVer, @JsonKey(name: 'created_by_id') this.createdById, @JsonKey(name: 'created_by_name') this.createdByName, @JsonKey(name: 'current_size') this.currentSize, @JsonKey(name: 'revoked_at') this.revokedAt, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug, @JsonKey(name: 'superseded_by') this.supersededBy}): _tags = tags,super._();
+  const _DocumentListing({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'created_by_kind') required this.createdByKind, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'status') required this.status, @JsonKey(name: 'visibility') required this.visibility, @JsonKey(name: 'current_ver') this.currentVer, @JsonKey(name: 'current_version_at') this.currentVersionAt, @JsonKey(name: 'created_by_id') this.createdById, @JsonKey(name: 'created_by_name') this.createdByName, @JsonKey(name: 'current_size') this.currentSize, @JsonKey(name: 'current_source_sha256') this.currentSourceSha256, @JsonKey(name: 'published_ver') this.publishedVer, @JsonKey(name: 'published_source_sha256') this.publishedSourceSha256, @JsonKey(name: 'revoked_at') this.revokedAt, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug, @JsonKey(name: 'superseded_by') this.supersededBy}): _tags = tags,super._();
   factory _DocumentListing.fromJson(Map<String, dynamic> json) => _$DocumentListingFromJson(json);
 
 @override@JsonKey(name: 'public_id') final  String publicId;
 @override@JsonKey(name: 'created_at') final  DateTime createdAt;
+@override@JsonKey(name: 'updated_at') final  DateTime updatedAt;
 @override@JsonKey(name: 'created_by_kind') final  String createdByKind;
  final  List<String> _tags;
 @override@JsonKey(name: 'tags') List<String> get tags {
@@ -1333,9 +1620,13 @@ class _DocumentListing extends DocumentListing {
 @override@JsonKey(name: 'status') final  String status;
 @override@JsonKey(name: 'visibility') final  String visibility;
 @override@JsonKey(name: 'current_ver') final  int? currentVer;
+@override@JsonKey(name: 'current_version_at') final  DateTime? currentVersionAt;
 @override@JsonKey(name: 'created_by_id') final  String? createdById;
 @override@JsonKey(name: 'created_by_name') final  String? createdByName;
 @override@JsonKey(name: 'current_size') final  int? currentSize;
+@override@JsonKey(name: 'current_source_sha256') final  String? currentSourceSha256;
+@override@JsonKey(name: 'published_ver') final  int? publishedVer;
+@override@JsonKey(name: 'published_source_sha256') final  String? publishedSourceSha256;
 @override@JsonKey(name: 'revoked_at') final  DateTime? revokedAt;
 @override@JsonKey(name: 'title') final  String? title;
 @override@JsonKey(name: 'description') final  String? description;
@@ -1355,16 +1646,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DocumentListing&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DocumentListing&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.currentVersionAt, currentVersionAt) || other.currentVersionAt == currentVersionAt)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.currentSourceSha256, currentSourceSha256) || other.currentSourceSha256 == currentSourceSha256)&&(identical(other.publishedVer, publishedVer) || other.publishedVer == publishedVer)&&(identical(other.publishedSourceSha256, publishedSourceSha256) || other.publishedSourceSha256 == publishedSourceSha256)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,publicId,createdAt,createdByKind,const DeepCollectionEquality().hash(_tags),status,visibility,currentVer,createdById,createdByName,currentSize,revokedAt,title,description,slug,supersededBy);
+int get hashCode => Object.hashAll([runtimeType,publicId,createdAt,updatedAt,createdByKind,const DeepCollectionEquality().hash(_tags),status,visibility,currentVer,currentVersionAt,createdById,createdByName,currentSize,currentSourceSha256,publishedVer,publishedSourceSha256,revokedAt,title,description,slug,supersededBy]);
 
 @override
 String toString() {
-  return 'DocumentListing(publicId: $publicId, createdAt: $createdAt, createdByKind: $createdByKind, tags: $tags, status: $status, visibility: $visibility, currentVer: $currentVer, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy)';
+  return 'DocumentListing(publicId: $publicId, createdAt: $createdAt, updatedAt: $updatedAt, createdByKind: $createdByKind, tags: $tags, status: $status, visibility: $visibility, currentVer: $currentVer, currentVersionAt: $currentVersionAt, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, currentSourceSha256: $currentSourceSha256, publishedVer: $publishedVer, publishedSourceSha256: $publishedSourceSha256, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy)';
 }
 
 
@@ -1375,7 +1666,7 @@ abstract mixin class _$DocumentListingCopyWith<$Res> implements $DocumentListing
   factory _$DocumentListingCopyWith(_DocumentListing value, $Res Function(_DocumentListing) _then) = __$DocumentListingCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'current_version_at') DateTime? currentVersionAt,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'current_source_sha256') String? currentSourceSha256,@JsonKey(name: 'published_ver') int? publishedVer,@JsonKey(name: 'published_source_sha256') String? publishedSourceSha256,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy
 });
 
 
@@ -1392,23 +1683,303 @@ class __$DocumentListingCopyWithImpl<$Res>
 
 /// Create a copy of DocumentListing
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? createdAt = null,Object? createdByKind = null,Object? tags = null,Object? status = null,Object? visibility = null,Object? currentVer = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? createdAt = null,Object? updatedAt = null,Object? createdByKind = null,Object? tags = null,Object? status = null,Object? visibility = null,Object? currentVer = freezed,Object? currentVersionAt = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? currentSourceSha256 = freezed,Object? publishedVer = freezed,Object? publishedSourceSha256 = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,}) {
   return _then(_DocumentListing(
 publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,createdByKind: null == createdByKind ? _self.createdByKind : createdByKind // ignore: cast_nullable_to_non_nullable
 as String,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
 as List<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,visibility: null == visibility ? _self.visibility : visibility // ignore: cast_nullable_to_non_nullable
 as String,currentVer: freezed == currentVer ? _self.currentVer : currentVer // ignore: cast_nullable_to_non_nullable
-as int?,createdById: freezed == createdById ? _self.createdById : createdById // ignore: cast_nullable_to_non_nullable
+as int?,currentVersionAt: freezed == currentVersionAt ? _self.currentVersionAt : currentVersionAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,createdById: freezed == createdById ? _self.createdById : createdById // ignore: cast_nullable_to_non_nullable
 as String?,createdByName: freezed == createdByName ? _self.createdByName : createdByName // ignore: cast_nullable_to_non_nullable
 as String?,currentSize: freezed == currentSize ? _self.currentSize : currentSize // ignore: cast_nullable_to_non_nullable
-as int?,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
+as int?,currentSourceSha256: freezed == currentSourceSha256 ? _self.currentSourceSha256 : currentSourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,publishedVer: freezed == publishedVer ? _self.publishedVer : publishedVer // ignore: cast_nullable_to_non_nullable
+as int?,publishedSourceSha256: freezed == publishedSourceSha256 ? _self.publishedSourceSha256 : publishedSourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,slug: freezed == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String?,supersededBy: freezed == supersededBy ? _self.supersededBy : supersededBy // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$OutboundLink {
+
+@JsonKey(name: 'kind') String get kind;@JsonKey(name: 'value') String get value;@JsonKey(name: 'state') String get state;@JsonKey(name: 'target_public_id') String? get targetPublicId;@JsonKey(name: 'title') String? get title;
+/// Create a copy of OutboundLink
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$OutboundLinkCopyWith<OutboundLink> get copyWith => _$OutboundLinkCopyWithImpl<OutboundLink>(this as OutboundLink, _$identity);
+
+  /// Serializes this OutboundLink to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OutboundLink&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.value, value) || other.value == value)&&(identical(other.state, state) || other.state == state)&&(identical(other.targetPublicId, targetPublicId) || other.targetPublicId == targetPublicId)&&(identical(other.title, title) || other.title == title));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,kind,value,state,targetPublicId,title);
+
+@override
+String toString() {
+  return 'OutboundLink(kind: $kind, value: $value, state: $state, targetPublicId: $targetPublicId, title: $title)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $OutboundLinkCopyWith<$Res>  {
+  factory $OutboundLinkCopyWith(OutboundLink value, $Res Function(OutboundLink) _then) = _$OutboundLinkCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'kind') String kind,@JsonKey(name: 'value') String value,@JsonKey(name: 'state') String state,@JsonKey(name: 'target_public_id') String? targetPublicId,@JsonKey(name: 'title') String? title
+});
+
+
+
+
+}
+/// @nodoc
+class _$OutboundLinkCopyWithImpl<$Res>
+    implements $OutboundLinkCopyWith<$Res> {
+  _$OutboundLinkCopyWithImpl(this._self, this._then);
+
+  final OutboundLink _self;
+  final $Res Function(OutboundLink) _then;
+
+/// Create a copy of OutboundLink
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? kind = null,Object? value = null,Object? state = null,Object? targetPublicId = freezed,Object? title = freezed,}) {
+  return _then(_self.copyWith(
+kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
+as String,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as String,state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
+as String,targetPublicId: freezed == targetPublicId ? _self.targetPublicId : targetPublicId // ignore: cast_nullable_to_non_nullable
+as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [OutboundLink].
+extension OutboundLinkPatterns on OutboundLink {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _OutboundLink value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _OutboundLink() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _OutboundLink value)  $default,){
+final _that = this;
+switch (_that) {
+case _OutboundLink():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _OutboundLink value)?  $default,){
+final _that = this;
+switch (_that) {
+case _OutboundLink() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'kind')  String kind, @JsonKey(name: 'value')  String value, @JsonKey(name: 'state')  String state, @JsonKey(name: 'target_public_id')  String? targetPublicId, @JsonKey(name: 'title')  String? title)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _OutboundLink() when $default != null:
+return $default(_that.kind,_that.value,_that.state,_that.targetPublicId,_that.title);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'kind')  String kind, @JsonKey(name: 'value')  String value, @JsonKey(name: 'state')  String state, @JsonKey(name: 'target_public_id')  String? targetPublicId, @JsonKey(name: 'title')  String? title)  $default,) {final _that = this;
+switch (_that) {
+case _OutboundLink():
+return $default(_that.kind,_that.value,_that.state,_that.targetPublicId,_that.title);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'kind')  String kind, @JsonKey(name: 'value')  String value, @JsonKey(name: 'state')  String state, @JsonKey(name: 'target_public_id')  String? targetPublicId, @JsonKey(name: 'title')  String? title)?  $default,) {final _that = this;
+switch (_that) {
+case _OutboundLink() when $default != null:
+return $default(_that.kind,_that.value,_that.state,_that.targetPublicId,_that.title);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _OutboundLink implements OutboundLink {
+  const _OutboundLink({@JsonKey(name: 'kind') required this.kind, @JsonKey(name: 'value') required this.value, @JsonKey(name: 'state') required this.state, @JsonKey(name: 'target_public_id') this.targetPublicId, @JsonKey(name: 'title') this.title});
+  factory _OutboundLink.fromJson(Map<String, dynamic> json) => _$OutboundLinkFromJson(json);
+
+@override@JsonKey(name: 'kind') final  String kind;
+@override@JsonKey(name: 'value') final  String value;
+@override@JsonKey(name: 'state') final  String state;
+@override@JsonKey(name: 'target_public_id') final  String? targetPublicId;
+@override@JsonKey(name: 'title') final  String? title;
+
+/// Create a copy of OutboundLink
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$OutboundLinkCopyWith<_OutboundLink> get copyWith => __$OutboundLinkCopyWithImpl<_OutboundLink>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$OutboundLinkToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OutboundLink&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.value, value) || other.value == value)&&(identical(other.state, state) || other.state == state)&&(identical(other.targetPublicId, targetPublicId) || other.targetPublicId == targetPublicId)&&(identical(other.title, title) || other.title == title));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,kind,value,state,targetPublicId,title);
+
+@override
+String toString() {
+  return 'OutboundLink(kind: $kind, value: $value, state: $state, targetPublicId: $targetPublicId, title: $title)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$OutboundLinkCopyWith<$Res> implements $OutboundLinkCopyWith<$Res> {
+  factory _$OutboundLinkCopyWith(_OutboundLink value, $Res Function(_OutboundLink) _then) = __$OutboundLinkCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'kind') String kind,@JsonKey(name: 'value') String value,@JsonKey(name: 'state') String state,@JsonKey(name: 'target_public_id') String? targetPublicId,@JsonKey(name: 'title') String? title
+});
+
+
+
+
+}
+/// @nodoc
+class __$OutboundLinkCopyWithImpl<$Res>
+    implements _$OutboundLinkCopyWith<$Res> {
+  __$OutboundLinkCopyWithImpl(this._self, this._then);
+
+  final _OutboundLink _self;
+  final $Res Function(_OutboundLink) _then;
+
+/// Create a copy of OutboundLink
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? kind = null,Object? value = null,Object? state = null,Object? targetPublicId = freezed,Object? title = freezed,}) {
+  return _then(_OutboundLink(
+kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
+as String,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as String,state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
+as String,targetPublicId: freezed == targetPublicId ? _self.targetPublicId : targetPublicId // ignore: cast_nullable_to_non_nullable
+as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -2256,6 +2827,278 @@ class __$HealthzResponseR2CopyWithImpl<$Res>
 bucketReachable: null == bucketReachable ? _self.bucketReachable : bucketReachable // ignore: cast_nullable_to_non_nullable
 as bool,sampleObjectCount: null == sampleObjectCount ? _self.sampleObjectCount : sampleObjectCount // ignore: cast_nullable_to_non_nullable
 as int,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$LinksBackfillResponse {
+
+@JsonKey(name: 'scanned') int get scanned;@JsonKey(name: 'updated') int get updated;@JsonKey(name: 'links') int get links;@JsonKey(name: 'next_cursor') String? get nextCursor;
+/// Create a copy of LinksBackfillResponse
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LinksBackfillResponseCopyWith<LinksBackfillResponse> get copyWith => _$LinksBackfillResponseCopyWithImpl<LinksBackfillResponse>(this as LinksBackfillResponse, _$identity);
+
+  /// Serializes this LinksBackfillResponse to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinksBackfillResponse&&(identical(other.scanned, scanned) || other.scanned == scanned)&&(identical(other.updated, updated) || other.updated == updated)&&(identical(other.links, links) || other.links == links)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,scanned,updated,links,nextCursor);
+
+@override
+String toString() {
+  return 'LinksBackfillResponse(scanned: $scanned, updated: $updated, links: $links, nextCursor: $nextCursor)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LinksBackfillResponseCopyWith<$Res>  {
+  factory $LinksBackfillResponseCopyWith(LinksBackfillResponse value, $Res Function(LinksBackfillResponse) _then) = _$LinksBackfillResponseCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'scanned') int scanned,@JsonKey(name: 'updated') int updated,@JsonKey(name: 'links') int links,@JsonKey(name: 'next_cursor') String? nextCursor
+});
+
+
+
+
+}
+/// @nodoc
+class _$LinksBackfillResponseCopyWithImpl<$Res>
+    implements $LinksBackfillResponseCopyWith<$Res> {
+  _$LinksBackfillResponseCopyWithImpl(this._self, this._then);
+
+  final LinksBackfillResponse _self;
+  final $Res Function(LinksBackfillResponse) _then;
+
+/// Create a copy of LinksBackfillResponse
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? scanned = null,Object? updated = null,Object? links = null,Object? nextCursor = freezed,}) {
+  return _then(_self.copyWith(
+scanned: null == scanned ? _self.scanned : scanned // ignore: cast_nullable_to_non_nullable
+as int,updated: null == updated ? _self.updated : updated // ignore: cast_nullable_to_non_nullable
+as int,links: null == links ? _self.links : links // ignore: cast_nullable_to_non_nullable
+as int,nextCursor: freezed == nextCursor ? _self.nextCursor : nextCursor // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [LinksBackfillResponse].
+extension LinksBackfillResponsePatterns on LinksBackfillResponse {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _LinksBackfillResponse value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _LinksBackfillResponse() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _LinksBackfillResponse value)  $default,){
+final _that = this;
+switch (_that) {
+case _LinksBackfillResponse():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _LinksBackfillResponse value)?  $default,){
+final _that = this;
+switch (_that) {
+case _LinksBackfillResponse() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'scanned')  int scanned, @JsonKey(name: 'updated')  int updated, @JsonKey(name: 'links')  int links, @JsonKey(name: 'next_cursor')  String? nextCursor)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _LinksBackfillResponse() when $default != null:
+return $default(_that.scanned,_that.updated,_that.links,_that.nextCursor);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'scanned')  int scanned, @JsonKey(name: 'updated')  int updated, @JsonKey(name: 'links')  int links, @JsonKey(name: 'next_cursor')  String? nextCursor)  $default,) {final _that = this;
+switch (_that) {
+case _LinksBackfillResponse():
+return $default(_that.scanned,_that.updated,_that.links,_that.nextCursor);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'scanned')  int scanned, @JsonKey(name: 'updated')  int updated, @JsonKey(name: 'links')  int links, @JsonKey(name: 'next_cursor')  String? nextCursor)?  $default,) {final _that = this;
+switch (_that) {
+case _LinksBackfillResponse() when $default != null:
+return $default(_that.scanned,_that.updated,_that.links,_that.nextCursor);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _LinksBackfillResponse implements LinksBackfillResponse {
+  const _LinksBackfillResponse({@JsonKey(name: 'scanned') required this.scanned, @JsonKey(name: 'updated') required this.updated, @JsonKey(name: 'links') required this.links, @JsonKey(name: 'next_cursor') this.nextCursor});
+  factory _LinksBackfillResponse.fromJson(Map<String, dynamic> json) => _$LinksBackfillResponseFromJson(json);
+
+@override@JsonKey(name: 'scanned') final  int scanned;
+@override@JsonKey(name: 'updated') final  int updated;
+@override@JsonKey(name: 'links') final  int links;
+@override@JsonKey(name: 'next_cursor') final  String? nextCursor;
+
+/// Create a copy of LinksBackfillResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$LinksBackfillResponseCopyWith<_LinksBackfillResponse> get copyWith => __$LinksBackfillResponseCopyWithImpl<_LinksBackfillResponse>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$LinksBackfillResponseToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LinksBackfillResponse&&(identical(other.scanned, scanned) || other.scanned == scanned)&&(identical(other.updated, updated) || other.updated == updated)&&(identical(other.links, links) || other.links == links)&&(identical(other.nextCursor, nextCursor) || other.nextCursor == nextCursor));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,scanned,updated,links,nextCursor);
+
+@override
+String toString() {
+  return 'LinksBackfillResponse(scanned: $scanned, updated: $updated, links: $links, nextCursor: $nextCursor)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$LinksBackfillResponseCopyWith<$Res> implements $LinksBackfillResponseCopyWith<$Res> {
+  factory _$LinksBackfillResponseCopyWith(_LinksBackfillResponse value, $Res Function(_LinksBackfillResponse) _then) = __$LinksBackfillResponseCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'scanned') int scanned,@JsonKey(name: 'updated') int updated,@JsonKey(name: 'links') int links,@JsonKey(name: 'next_cursor') String? nextCursor
+});
+
+
+
+
+}
+/// @nodoc
+class __$LinksBackfillResponseCopyWithImpl<$Res>
+    implements _$LinksBackfillResponseCopyWith<$Res> {
+  __$LinksBackfillResponseCopyWithImpl(this._self, this._then);
+
+  final _LinksBackfillResponse _self;
+  final $Res Function(_LinksBackfillResponse) _then;
+
+/// Create a copy of LinksBackfillResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? scanned = null,Object? updated = null,Object? links = null,Object? nextCursor = freezed,}) {
+  return _then(_LinksBackfillResponse(
+scanned: null == scanned ? _self.scanned : scanned // ignore: cast_nullable_to_non_nullable
+as int,updated: null == updated ? _self.updated : updated // ignore: cast_nullable_to_non_nullable
+as int,links: null == links ? _self.links : links // ignore: cast_nullable_to_non_nullable
+as int,nextCursor: freezed == nextCursor ? _self.nextCursor : nextCursor // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -3642,6 +4485,583 @@ as String?,
 
 
 /// @nodoc
+mixin _$ListVersionsResponse {
+
+@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'current_ver') int get currentVer;@JsonKey(name: 'versions') List<VersionListing> get versions;
+/// Create a copy of ListVersionsResponse
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ListVersionsResponseCopyWith<ListVersionsResponse> get copyWith => _$ListVersionsResponseCopyWithImpl<ListVersionsResponse>(this as ListVersionsResponse, _$identity);
+
+  /// Serializes this ListVersionsResponse to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ListVersionsResponse&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&const DeepCollectionEquality().equals(other.versions, versions));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,publicId,currentVer,const DeepCollectionEquality().hash(versions));
+
+@override
+String toString() {
+  return 'ListVersionsResponse(publicId: $publicId, currentVer: $currentVer, versions: $versions)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ListVersionsResponseCopyWith<$Res>  {
+  factory $ListVersionsResponseCopyWith(ListVersionsResponse value, $Res Function(ListVersionsResponse) _then) = _$ListVersionsResponseCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'current_ver') int currentVer,@JsonKey(name: 'versions') List<VersionListing> versions
+});
+
+
+
+
+}
+/// @nodoc
+class _$ListVersionsResponseCopyWithImpl<$Res>
+    implements $ListVersionsResponseCopyWith<$Res> {
+  _$ListVersionsResponseCopyWithImpl(this._self, this._then);
+
+  final ListVersionsResponse _self;
+  final $Res Function(ListVersionsResponse) _then;
+
+/// Create a copy of ListVersionsResponse
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? currentVer = null,Object? versions = null,}) {
+  return _then(_self.copyWith(
+publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
+as String,currentVer: null == currentVer ? _self.currentVer : currentVer // ignore: cast_nullable_to_non_nullable
+as int,versions: null == versions ? _self.versions : versions // ignore: cast_nullable_to_non_nullable
+as List<VersionListing>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ListVersionsResponse].
+extension ListVersionsResponsePatterns on ListVersionsResponse {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ListVersionsResponse value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ListVersionsResponse() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ListVersionsResponse value)  $default,){
+final _that = this;
+switch (_that) {
+case _ListVersionsResponse():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ListVersionsResponse value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ListVersionsResponse() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'current_ver')  int currentVer, @JsonKey(name: 'versions')  List<VersionListing> versions)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ListVersionsResponse() when $default != null:
+return $default(_that.publicId,_that.currentVer,_that.versions);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'current_ver')  int currentVer, @JsonKey(name: 'versions')  List<VersionListing> versions)  $default,) {final _that = this;
+switch (_that) {
+case _ListVersionsResponse():
+return $default(_that.publicId,_that.currentVer,_that.versions);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'current_ver')  int currentVer, @JsonKey(name: 'versions')  List<VersionListing> versions)?  $default,) {final _that = this;
+switch (_that) {
+case _ListVersionsResponse() when $default != null:
+return $default(_that.publicId,_that.currentVer,_that.versions);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ListVersionsResponse implements ListVersionsResponse {
+  const _ListVersionsResponse({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'current_ver') required this.currentVer, @JsonKey(name: 'versions') required final  List<VersionListing> versions}): _versions = versions;
+  factory _ListVersionsResponse.fromJson(Map<String, dynamic> json) => _$ListVersionsResponseFromJson(json);
+
+@override@JsonKey(name: 'public_id') final  String publicId;
+@override@JsonKey(name: 'current_ver') final  int currentVer;
+ final  List<VersionListing> _versions;
+@override@JsonKey(name: 'versions') List<VersionListing> get versions {
+  if (_versions is EqualUnmodifiableListView) return _versions;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_versions);
+}
+
+
+/// Create a copy of ListVersionsResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ListVersionsResponseCopyWith<_ListVersionsResponse> get copyWith => __$ListVersionsResponseCopyWithImpl<_ListVersionsResponse>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ListVersionsResponseToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ListVersionsResponse&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&const DeepCollectionEquality().equals(other._versions, _versions));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,publicId,currentVer,const DeepCollectionEquality().hash(_versions));
+
+@override
+String toString() {
+  return 'ListVersionsResponse(publicId: $publicId, currentVer: $currentVer, versions: $versions)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ListVersionsResponseCopyWith<$Res> implements $ListVersionsResponseCopyWith<$Res> {
+  factory _$ListVersionsResponseCopyWith(_ListVersionsResponse value, $Res Function(_ListVersionsResponse) _then) = __$ListVersionsResponseCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'current_ver') int currentVer,@JsonKey(name: 'versions') List<VersionListing> versions
+});
+
+
+
+
+}
+/// @nodoc
+class __$ListVersionsResponseCopyWithImpl<$Res>
+    implements _$ListVersionsResponseCopyWith<$Res> {
+  __$ListVersionsResponseCopyWithImpl(this._self, this._then);
+
+  final _ListVersionsResponse _self;
+  final $Res Function(_ListVersionsResponse) _then;
+
+/// Create a copy of ListVersionsResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? currentVer = null,Object? versions = null,}) {
+  return _then(_ListVersionsResponse(
+publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
+as String,currentVer: null == currentVer ? _self.currentVer : currentVer // ignore: cast_nullable_to_non_nullable
+as int,versions: null == versions ? _self._versions : versions // ignore: cast_nullable_to_non_nullable
+as List<VersionListing>,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$VersionListing {
+
+@JsonKey(name: 'version_no') int get versionNo;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'size_bytes') int get sizeBytes;@JsonKey(name: 'sanitizer_v') String get sanitizerV;@JsonKey(name: 'source_format') String get sourceFormat;@JsonKey(name: 'is_current') bool get isCurrent;@JsonKey(name: 'is_published') bool get isPublished;@JsonKey(name: 'source_present') bool get sourcePresent;@JsonKey(name: 'author_kind') String get authorKind;@JsonKey(name: 'source_size_bytes') int? get sourceSizeBytes;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'source_sha256') String? get sourceSha256;@JsonKey(name: 'author_id') String? get authorId;@JsonKey(name: 'author_name') String? get authorName;
+/// Create a copy of VersionListing
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$VersionListingCopyWith<VersionListing> get copyWith => _$VersionListingCopyWithImpl<VersionListing>(this as VersionListing, _$identity);
+
+  /// Serializes this VersionListing to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VersionListing&&(identical(other.versionNo, versionNo) || other.versionNo == versionNo)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.sizeBytes, sizeBytes) || other.sizeBytes == sizeBytes)&&(identical(other.sanitizerV, sanitizerV) || other.sanitizerV == sanitizerV)&&(identical(other.sourceFormat, sourceFormat) || other.sourceFormat == sourceFormat)&&(identical(other.isCurrent, isCurrent) || other.isCurrent == isCurrent)&&(identical(other.isPublished, isPublished) || other.isPublished == isPublished)&&(identical(other.sourcePresent, sourcePresent) || other.sourcePresent == sourcePresent)&&(identical(other.authorKind, authorKind) || other.authorKind == authorKind)&&(identical(other.sourceSizeBytes, sourceSizeBytes) || other.sourceSizeBytes == sourceSizeBytes)&&(identical(other.title, title) || other.title == title)&&(identical(other.sourceSha256, sourceSha256) || other.sourceSha256 == sourceSha256)&&(identical(other.authorId, authorId) || other.authorId == authorId)&&(identical(other.authorName, authorName) || other.authorName == authorName));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,versionNo,createdAt,sizeBytes,sanitizerV,sourceFormat,isCurrent,isPublished,sourcePresent,authorKind,sourceSizeBytes,title,sourceSha256,authorId,authorName);
+
+@override
+String toString() {
+  return 'VersionListing(versionNo: $versionNo, createdAt: $createdAt, sizeBytes: $sizeBytes, sanitizerV: $sanitizerV, sourceFormat: $sourceFormat, isCurrent: $isCurrent, isPublished: $isPublished, sourcePresent: $sourcePresent, authorKind: $authorKind, sourceSizeBytes: $sourceSizeBytes, title: $title, sourceSha256: $sourceSha256, authorId: $authorId, authorName: $authorName)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $VersionListingCopyWith<$Res>  {
+  factory $VersionListingCopyWith(VersionListing value, $Res Function(VersionListing) _then) = _$VersionListingCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'version_no') int versionNo,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'size_bytes') int sizeBytes,@JsonKey(name: 'sanitizer_v') String sanitizerV,@JsonKey(name: 'source_format') String sourceFormat,@JsonKey(name: 'is_current') bool isCurrent,@JsonKey(name: 'is_published') bool isPublished,@JsonKey(name: 'source_present') bool sourcePresent,@JsonKey(name: 'author_kind') String authorKind,@JsonKey(name: 'source_size_bytes') int? sourceSizeBytes,@JsonKey(name: 'title') String? title,@JsonKey(name: 'source_sha256') String? sourceSha256,@JsonKey(name: 'author_id') String? authorId,@JsonKey(name: 'author_name') String? authorName
+});
+
+
+
+
+}
+/// @nodoc
+class _$VersionListingCopyWithImpl<$Res>
+    implements $VersionListingCopyWith<$Res> {
+  _$VersionListingCopyWithImpl(this._self, this._then);
+
+  final VersionListing _self;
+  final $Res Function(VersionListing) _then;
+
+/// Create a copy of VersionListing
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? versionNo = null,Object? createdAt = null,Object? sizeBytes = null,Object? sanitizerV = null,Object? sourceFormat = null,Object? isCurrent = null,Object? isPublished = null,Object? sourcePresent = null,Object? authorKind = null,Object? sourceSizeBytes = freezed,Object? title = freezed,Object? sourceSha256 = freezed,Object? authorId = freezed,Object? authorName = freezed,}) {
+  return _then(_self.copyWith(
+versionNo: null == versionNo ? _self.versionNo : versionNo // ignore: cast_nullable_to_non_nullable
+as int,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,sizeBytes: null == sizeBytes ? _self.sizeBytes : sizeBytes // ignore: cast_nullable_to_non_nullable
+as int,sanitizerV: null == sanitizerV ? _self.sanitizerV : sanitizerV // ignore: cast_nullable_to_non_nullable
+as String,sourceFormat: null == sourceFormat ? _self.sourceFormat : sourceFormat // ignore: cast_nullable_to_non_nullable
+as String,isCurrent: null == isCurrent ? _self.isCurrent : isCurrent // ignore: cast_nullable_to_non_nullable
+as bool,isPublished: null == isPublished ? _self.isPublished : isPublished // ignore: cast_nullable_to_non_nullable
+as bool,sourcePresent: null == sourcePresent ? _self.sourcePresent : sourcePresent // ignore: cast_nullable_to_non_nullable
+as bool,authorKind: null == authorKind ? _self.authorKind : authorKind // ignore: cast_nullable_to_non_nullable
+as String,sourceSizeBytes: freezed == sourceSizeBytes ? _self.sourceSizeBytes : sourceSizeBytes // ignore: cast_nullable_to_non_nullable
+as int?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,sourceSha256: freezed == sourceSha256 ? _self.sourceSha256 : sourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,authorId: freezed == authorId ? _self.authorId : authorId // ignore: cast_nullable_to_non_nullable
+as String?,authorName: freezed == authorName ? _self.authorName : authorName // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [VersionListing].
+extension VersionListingPatterns on VersionListing {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _VersionListing value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _VersionListing() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _VersionListing value)  $default,){
+final _that = this;
+switch (_that) {
+case _VersionListing():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _VersionListing value)?  $default,){
+final _that = this;
+switch (_that) {
+case _VersionListing() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'version_no')  int versionNo, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'size_bytes')  int sizeBytes, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'source_format')  String sourceFormat, @JsonKey(name: 'is_current')  bool isCurrent, @JsonKey(name: 'is_published')  bool isPublished, @JsonKey(name: 'source_present')  bool sourcePresent, @JsonKey(name: 'author_kind')  String authorKind, @JsonKey(name: 'source_size_bytes')  int? sourceSizeBytes, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'source_sha256')  String? sourceSha256, @JsonKey(name: 'author_id')  String? authorId, @JsonKey(name: 'author_name')  String? authorName)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _VersionListing() when $default != null:
+return $default(_that.versionNo,_that.createdAt,_that.sizeBytes,_that.sanitizerV,_that.sourceFormat,_that.isCurrent,_that.isPublished,_that.sourcePresent,_that.authorKind,_that.sourceSizeBytes,_that.title,_that.sourceSha256,_that.authorId,_that.authorName);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'version_no')  int versionNo, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'size_bytes')  int sizeBytes, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'source_format')  String sourceFormat, @JsonKey(name: 'is_current')  bool isCurrent, @JsonKey(name: 'is_published')  bool isPublished, @JsonKey(name: 'source_present')  bool sourcePresent, @JsonKey(name: 'author_kind')  String authorKind, @JsonKey(name: 'source_size_bytes')  int? sourceSizeBytes, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'source_sha256')  String? sourceSha256, @JsonKey(name: 'author_id')  String? authorId, @JsonKey(name: 'author_name')  String? authorName)  $default,) {final _that = this;
+switch (_that) {
+case _VersionListing():
+return $default(_that.versionNo,_that.createdAt,_that.sizeBytes,_that.sanitizerV,_that.sourceFormat,_that.isCurrent,_that.isPublished,_that.sourcePresent,_that.authorKind,_that.sourceSizeBytes,_that.title,_that.sourceSha256,_that.authorId,_that.authorName);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'version_no')  int versionNo, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'size_bytes')  int sizeBytes, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'source_format')  String sourceFormat, @JsonKey(name: 'is_current')  bool isCurrent, @JsonKey(name: 'is_published')  bool isPublished, @JsonKey(name: 'source_present')  bool sourcePresent, @JsonKey(name: 'author_kind')  String authorKind, @JsonKey(name: 'source_size_bytes')  int? sourceSizeBytes, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'source_sha256')  String? sourceSha256, @JsonKey(name: 'author_id')  String? authorId, @JsonKey(name: 'author_name')  String? authorName)?  $default,) {final _that = this;
+switch (_that) {
+case _VersionListing() when $default != null:
+return $default(_that.versionNo,_that.createdAt,_that.sizeBytes,_that.sanitizerV,_that.sourceFormat,_that.isCurrent,_that.isPublished,_that.sourcePresent,_that.authorKind,_that.sourceSizeBytes,_that.title,_that.sourceSha256,_that.authorId,_that.authorName);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _VersionListing implements VersionListing {
+  const _VersionListing({@JsonKey(name: 'version_no') required this.versionNo, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'size_bytes') required this.sizeBytes, @JsonKey(name: 'sanitizer_v') required this.sanitizerV, @JsonKey(name: 'source_format') required this.sourceFormat, @JsonKey(name: 'is_current') required this.isCurrent, @JsonKey(name: 'is_published') required this.isPublished, @JsonKey(name: 'source_present') required this.sourcePresent, @JsonKey(name: 'author_kind') required this.authorKind, @JsonKey(name: 'source_size_bytes') this.sourceSizeBytes, @JsonKey(name: 'title') this.title, @JsonKey(name: 'source_sha256') this.sourceSha256, @JsonKey(name: 'author_id') this.authorId, @JsonKey(name: 'author_name') this.authorName});
+  factory _VersionListing.fromJson(Map<String, dynamic> json) => _$VersionListingFromJson(json);
+
+@override@JsonKey(name: 'version_no') final  int versionNo;
+@override@JsonKey(name: 'created_at') final  DateTime createdAt;
+@override@JsonKey(name: 'size_bytes') final  int sizeBytes;
+@override@JsonKey(name: 'sanitizer_v') final  String sanitizerV;
+@override@JsonKey(name: 'source_format') final  String sourceFormat;
+@override@JsonKey(name: 'is_current') final  bool isCurrent;
+@override@JsonKey(name: 'is_published') final  bool isPublished;
+@override@JsonKey(name: 'source_present') final  bool sourcePresent;
+@override@JsonKey(name: 'author_kind') final  String authorKind;
+@override@JsonKey(name: 'source_size_bytes') final  int? sourceSizeBytes;
+@override@JsonKey(name: 'title') final  String? title;
+@override@JsonKey(name: 'source_sha256') final  String? sourceSha256;
+@override@JsonKey(name: 'author_id') final  String? authorId;
+@override@JsonKey(name: 'author_name') final  String? authorName;
+
+/// Create a copy of VersionListing
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$VersionListingCopyWith<_VersionListing> get copyWith => __$VersionListingCopyWithImpl<_VersionListing>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$VersionListingToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _VersionListing&&(identical(other.versionNo, versionNo) || other.versionNo == versionNo)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.sizeBytes, sizeBytes) || other.sizeBytes == sizeBytes)&&(identical(other.sanitizerV, sanitizerV) || other.sanitizerV == sanitizerV)&&(identical(other.sourceFormat, sourceFormat) || other.sourceFormat == sourceFormat)&&(identical(other.isCurrent, isCurrent) || other.isCurrent == isCurrent)&&(identical(other.isPublished, isPublished) || other.isPublished == isPublished)&&(identical(other.sourcePresent, sourcePresent) || other.sourcePresent == sourcePresent)&&(identical(other.authorKind, authorKind) || other.authorKind == authorKind)&&(identical(other.sourceSizeBytes, sourceSizeBytes) || other.sourceSizeBytes == sourceSizeBytes)&&(identical(other.title, title) || other.title == title)&&(identical(other.sourceSha256, sourceSha256) || other.sourceSha256 == sourceSha256)&&(identical(other.authorId, authorId) || other.authorId == authorId)&&(identical(other.authorName, authorName) || other.authorName == authorName));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,versionNo,createdAt,sizeBytes,sanitizerV,sourceFormat,isCurrent,isPublished,sourcePresent,authorKind,sourceSizeBytes,title,sourceSha256,authorId,authorName);
+
+@override
+String toString() {
+  return 'VersionListing(versionNo: $versionNo, createdAt: $createdAt, sizeBytes: $sizeBytes, sanitizerV: $sanitizerV, sourceFormat: $sourceFormat, isCurrent: $isCurrent, isPublished: $isPublished, sourcePresent: $sourcePresent, authorKind: $authorKind, sourceSizeBytes: $sourceSizeBytes, title: $title, sourceSha256: $sourceSha256, authorId: $authorId, authorName: $authorName)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$VersionListingCopyWith<$Res> implements $VersionListingCopyWith<$Res> {
+  factory _$VersionListingCopyWith(_VersionListing value, $Res Function(_VersionListing) _then) = __$VersionListingCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'version_no') int versionNo,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'size_bytes') int sizeBytes,@JsonKey(name: 'sanitizer_v') String sanitizerV,@JsonKey(name: 'source_format') String sourceFormat,@JsonKey(name: 'is_current') bool isCurrent,@JsonKey(name: 'is_published') bool isPublished,@JsonKey(name: 'source_present') bool sourcePresent,@JsonKey(name: 'author_kind') String authorKind,@JsonKey(name: 'source_size_bytes') int? sourceSizeBytes,@JsonKey(name: 'title') String? title,@JsonKey(name: 'source_sha256') String? sourceSha256,@JsonKey(name: 'author_id') String? authorId,@JsonKey(name: 'author_name') String? authorName
+});
+
+
+
+
+}
+/// @nodoc
+class __$VersionListingCopyWithImpl<$Res>
+    implements _$VersionListingCopyWith<$Res> {
+  __$VersionListingCopyWithImpl(this._self, this._then);
+
+  final _VersionListing _self;
+  final $Res Function(_VersionListing) _then;
+
+/// Create a copy of VersionListing
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? versionNo = null,Object? createdAt = null,Object? sizeBytes = null,Object? sanitizerV = null,Object? sourceFormat = null,Object? isCurrent = null,Object? isPublished = null,Object? sourcePresent = null,Object? authorKind = null,Object? sourceSizeBytes = freezed,Object? title = freezed,Object? sourceSha256 = freezed,Object? authorId = freezed,Object? authorName = freezed,}) {
+  return _then(_VersionListing(
+versionNo: null == versionNo ? _self.versionNo : versionNo // ignore: cast_nullable_to_non_nullable
+as int,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,sizeBytes: null == sizeBytes ? _self.sizeBytes : sizeBytes // ignore: cast_nullable_to_non_nullable
+as int,sanitizerV: null == sanitizerV ? _self.sanitizerV : sanitizerV // ignore: cast_nullable_to_non_nullable
+as String,sourceFormat: null == sourceFormat ? _self.sourceFormat : sourceFormat // ignore: cast_nullable_to_non_nullable
+as String,isCurrent: null == isCurrent ? _self.isCurrent : isCurrent // ignore: cast_nullable_to_non_nullable
+as bool,isPublished: null == isPublished ? _self.isPublished : isPublished // ignore: cast_nullable_to_non_nullable
+as bool,sourcePresent: null == sourcePresent ? _self.sourcePresent : sourcePresent // ignore: cast_nullable_to_non_nullable
+as bool,authorKind: null == authorKind ? _self.authorKind : authorKind // ignore: cast_nullable_to_non_nullable
+as String,sourceSizeBytes: freezed == sourceSizeBytes ? _self.sourceSizeBytes : sourceSizeBytes // ignore: cast_nullable_to_non_nullable
+as int?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,sourceSha256: freezed == sourceSha256 ? _self.sourceSha256 : sourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,authorId: freezed == authorId ? _self.authorId : authorId // ignore: cast_nullable_to_non_nullable
+as String?,authorName: freezed == authorName ? _self.authorName : authorName // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$MintAgentKeyResponse {
 
 @JsonKey(name: 'agent_id') String get agentId;@JsonKey(name: 'key_id') String get keyId;@JsonKey(name: 'key') String get key;@JsonKey(name: 'note') String get note;
@@ -3914,9 +5334,278 @@ as String,
 
 
 /// @nodoc
+mixin _$OrphanDocumentsResponse {
+
+@JsonKey(name: 'documents') List<DocumentListing> get documents;
+/// Create a copy of OrphanDocumentsResponse
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$OrphanDocumentsResponseCopyWith<OrphanDocumentsResponse> get copyWith => _$OrphanDocumentsResponseCopyWithImpl<OrphanDocumentsResponse>(this as OrphanDocumentsResponse, _$identity);
+
+  /// Serializes this OrphanDocumentsResponse to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OrphanDocumentsResponse&&const DeepCollectionEquality().equals(other.documents, documents));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(documents));
+
+@override
+String toString() {
+  return 'OrphanDocumentsResponse(documents: $documents)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $OrphanDocumentsResponseCopyWith<$Res>  {
+  factory $OrphanDocumentsResponseCopyWith(OrphanDocumentsResponse value, $Res Function(OrphanDocumentsResponse) _then) = _$OrphanDocumentsResponseCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'documents') List<DocumentListing> documents
+});
+
+
+
+
+}
+/// @nodoc
+class _$OrphanDocumentsResponseCopyWithImpl<$Res>
+    implements $OrphanDocumentsResponseCopyWith<$Res> {
+  _$OrphanDocumentsResponseCopyWithImpl(this._self, this._then);
+
+  final OrphanDocumentsResponse _self;
+  final $Res Function(OrphanDocumentsResponse) _then;
+
+/// Create a copy of OrphanDocumentsResponse
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? documents = null,}) {
+  return _then(_self.copyWith(
+documents: null == documents ? _self.documents : documents // ignore: cast_nullable_to_non_nullable
+as List<DocumentListing>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [OrphanDocumentsResponse].
+extension OrphanDocumentsResponsePatterns on OrphanDocumentsResponse {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _OrphanDocumentsResponse value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _OrphanDocumentsResponse() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _OrphanDocumentsResponse value)  $default,){
+final _that = this;
+switch (_that) {
+case _OrphanDocumentsResponse():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _OrphanDocumentsResponse value)?  $default,){
+final _that = this;
+switch (_that) {
+case _OrphanDocumentsResponse() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'documents')  List<DocumentListing> documents)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _OrphanDocumentsResponse() when $default != null:
+return $default(_that.documents);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'documents')  List<DocumentListing> documents)  $default,) {final _that = this;
+switch (_that) {
+case _OrphanDocumentsResponse():
+return $default(_that.documents);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'documents')  List<DocumentListing> documents)?  $default,) {final _that = this;
+switch (_that) {
+case _OrphanDocumentsResponse() when $default != null:
+return $default(_that.documents);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _OrphanDocumentsResponse implements OrphanDocumentsResponse {
+  const _OrphanDocumentsResponse({@JsonKey(name: 'documents') required final  List<DocumentListing> documents}): _documents = documents;
+  factory _OrphanDocumentsResponse.fromJson(Map<String, dynamic> json) => _$OrphanDocumentsResponseFromJson(json);
+
+ final  List<DocumentListing> _documents;
+@override@JsonKey(name: 'documents') List<DocumentListing> get documents {
+  if (_documents is EqualUnmodifiableListView) return _documents;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_documents);
+}
+
+
+/// Create a copy of OrphanDocumentsResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$OrphanDocumentsResponseCopyWith<_OrphanDocumentsResponse> get copyWith => __$OrphanDocumentsResponseCopyWithImpl<_OrphanDocumentsResponse>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$OrphanDocumentsResponseToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OrphanDocumentsResponse&&const DeepCollectionEquality().equals(other._documents, _documents));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_documents));
+
+@override
+String toString() {
+  return 'OrphanDocumentsResponse(documents: $documents)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$OrphanDocumentsResponseCopyWith<$Res> implements $OrphanDocumentsResponseCopyWith<$Res> {
+  factory _$OrphanDocumentsResponseCopyWith(_OrphanDocumentsResponse value, $Res Function(_OrphanDocumentsResponse) _then) = __$OrphanDocumentsResponseCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'documents') List<DocumentListing> documents
+});
+
+
+
+
+}
+/// @nodoc
+class __$OrphanDocumentsResponseCopyWithImpl<$Res>
+    implements _$OrphanDocumentsResponseCopyWith<$Res> {
+  __$OrphanDocumentsResponseCopyWithImpl(this._self, this._then);
+
+  final _OrphanDocumentsResponse _self;
+  final $Res Function(_OrphanDocumentsResponse) _then;
+
+/// Create a copy of OrphanDocumentsResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? documents = null,}) {
+  return _then(_OrphanDocumentsResponse(
+documents: null == documents ? _self._documents : documents // ignore: cast_nullable_to_non_nullable
+as List<DocumentListing>,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$PackDocument {
 
-@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'created_by_kind') String get createdByKind;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'status') String get status;@JsonKey(name: 'visibility') String get visibility;@JsonKey(name: 'content') String get content;@JsonKey(name: 'format') String get format;@JsonKey(name: 'converter_v') String get converterV;@JsonKey(name: 'version') int get version;@JsonKey(name: 'current_ver') int? get currentVer;@JsonKey(name: 'created_by_id') String? get createdById;@JsonKey(name: 'created_by_name') String? get createdByName;@JsonKey(name: 'current_size') int? get currentSize;@JsonKey(name: 'revoked_at') DateTime? get revokedAt;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;@JsonKey(name: 'superseded_by') String? get supersededBy;@JsonKey(name: 'score') double? get score;@JsonKey(name: 'matched_field') String? get matchedField;@JsonKey(name: 'snippet') String? get snippet;@JsonKey(name: 'tier') String? get tier;@JsonKey(name: 'hint') String? get hint;
+@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'created_by_kind') String get createdByKind;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'status') String get status;@JsonKey(name: 'visibility') String get visibility;@JsonKey(name: 'content') String get content;@JsonKey(name: 'format') String get format;@JsonKey(name: 'converter_v') String get converterV;@JsonKey(name: 'version') int get version;@JsonKey(name: 'current_ver') int? get currentVer;@JsonKey(name: 'current_version_at') DateTime? get currentVersionAt;@JsonKey(name: 'created_by_id') String? get createdById;@JsonKey(name: 'created_by_name') String? get createdByName;@JsonKey(name: 'current_size') int? get currentSize;@JsonKey(name: 'current_source_sha256') String? get currentSourceSha256;@JsonKey(name: 'published_ver') int? get publishedVer;@JsonKey(name: 'published_source_sha256') String? get publishedSourceSha256;@JsonKey(name: 'revoked_at') DateTime? get revokedAt;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;@JsonKey(name: 'superseded_by') String? get supersededBy;@JsonKey(name: 'score') double? get score;@JsonKey(name: 'matched_field') String? get matchedField;@JsonKey(name: 'snippet') String? get snippet;@JsonKey(name: 'tier') String? get tier;@JsonKey(name: 'hint') String? get hint;
 /// Create a copy of PackDocument
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3929,16 +5618,16 @@ $PackDocumentCopyWith<PackDocument> get copyWith => _$PackDocumentCopyWithImpl<P
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PackDocument&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.content, content) || other.content == content)&&(identical(other.format, format) || other.format == format)&&(identical(other.converterV, converterV) || other.converterV == converterV)&&(identical(other.version, version) || other.version == version)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy)&&(identical(other.score, score) || other.score == score)&&(identical(other.matchedField, matchedField) || other.matchedField == matchedField)&&(identical(other.snippet, snippet) || other.snippet == snippet)&&(identical(other.tier, tier) || other.tier == tier)&&(identical(other.hint, hint) || other.hint == hint));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PackDocument&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.content, content) || other.content == content)&&(identical(other.format, format) || other.format == format)&&(identical(other.converterV, converterV) || other.converterV == converterV)&&(identical(other.version, version) || other.version == version)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.currentVersionAt, currentVersionAt) || other.currentVersionAt == currentVersionAt)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.currentSourceSha256, currentSourceSha256) || other.currentSourceSha256 == currentSourceSha256)&&(identical(other.publishedVer, publishedVer) || other.publishedVer == publishedVer)&&(identical(other.publishedSourceSha256, publishedSourceSha256) || other.publishedSourceSha256 == publishedSourceSha256)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy)&&(identical(other.score, score) || other.score == score)&&(identical(other.matchedField, matchedField) || other.matchedField == matchedField)&&(identical(other.snippet, snippet) || other.snippet == snippet)&&(identical(other.tier, tier) || other.tier == tier)&&(identical(other.hint, hint) || other.hint == hint));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,publicId,createdAt,createdByKind,const DeepCollectionEquality().hash(tags),status,visibility,content,format,converterV,version,currentVer,createdById,createdByName,currentSize,revokedAt,title,description,slug,supersededBy,score,matchedField,snippet,tier,hint]);
+int get hashCode => Object.hashAll([runtimeType,publicId,createdAt,updatedAt,createdByKind,const DeepCollectionEquality().hash(tags),status,visibility,content,format,converterV,version,currentVer,currentVersionAt,createdById,createdByName,currentSize,currentSourceSha256,publishedVer,publishedSourceSha256,revokedAt,title,description,slug,supersededBy,score,matchedField,snippet,tier,hint]);
 
 @override
 String toString() {
-  return 'PackDocument(publicId: $publicId, createdAt: $createdAt, createdByKind: $createdByKind, tags: $tags, status: $status, visibility: $visibility, content: $content, format: $format, converterV: $converterV, version: $version, currentVer: $currentVer, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy, score: $score, matchedField: $matchedField, snippet: $snippet, tier: $tier, hint: $hint)';
+  return 'PackDocument(publicId: $publicId, createdAt: $createdAt, updatedAt: $updatedAt, createdByKind: $createdByKind, tags: $tags, status: $status, visibility: $visibility, content: $content, format: $format, converterV: $converterV, version: $version, currentVer: $currentVer, currentVersionAt: $currentVersionAt, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, currentSourceSha256: $currentSourceSha256, publishedVer: $publishedVer, publishedSourceSha256: $publishedSourceSha256, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy, score: $score, matchedField: $matchedField, snippet: $snippet, tier: $tier, hint: $hint)';
 }
 
 
@@ -3949,7 +5638,7 @@ abstract mixin class $PackDocumentCopyWith<$Res>  {
   factory $PackDocumentCopyWith(PackDocument value, $Res Function(PackDocument) _then) = _$PackDocumentCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'content') String content,@JsonKey(name: 'format') String format,@JsonKey(name: 'converter_v') String converterV,@JsonKey(name: 'version') int version,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy,@JsonKey(name: 'score') double? score,@JsonKey(name: 'matched_field') String? matchedField,@JsonKey(name: 'snippet') String? snippet,@JsonKey(name: 'tier') String? tier,@JsonKey(name: 'hint') String? hint
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'content') String content,@JsonKey(name: 'format') String format,@JsonKey(name: 'converter_v') String converterV,@JsonKey(name: 'version') int version,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'current_version_at') DateTime? currentVersionAt,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'current_source_sha256') String? currentSourceSha256,@JsonKey(name: 'published_ver') int? publishedVer,@JsonKey(name: 'published_source_sha256') String? publishedSourceSha256,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy,@JsonKey(name: 'score') double? score,@JsonKey(name: 'matched_field') String? matchedField,@JsonKey(name: 'snippet') String? snippet,@JsonKey(name: 'tier') String? tier,@JsonKey(name: 'hint') String? hint
 });
 
 
@@ -3966,10 +5655,11 @@ class _$PackDocumentCopyWithImpl<$Res>
 
 /// Create a copy of PackDocument
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? createdAt = null,Object? createdByKind = null,Object? tags = null,Object? status = null,Object? visibility = null,Object? content = null,Object? format = null,Object? converterV = null,Object? version = null,Object? currentVer = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,Object? score = freezed,Object? matchedField = freezed,Object? snippet = freezed,Object? tier = freezed,Object? hint = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? createdAt = null,Object? updatedAt = null,Object? createdByKind = null,Object? tags = null,Object? status = null,Object? visibility = null,Object? content = null,Object? format = null,Object? converterV = null,Object? version = null,Object? currentVer = freezed,Object? currentVersionAt = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? currentSourceSha256 = freezed,Object? publishedVer = freezed,Object? publishedSourceSha256 = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,Object? score = freezed,Object? matchedField = freezed,Object? snippet = freezed,Object? tier = freezed,Object? hint = freezed,}) {
   return _then(_self.copyWith(
 publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,createdByKind: null == createdByKind ? _self.createdByKind : createdByKind // ignore: cast_nullable_to_non_nullable
 as String,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
 as List<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -3979,10 +5669,14 @@ as String,format: null == format ? _self.format : format // ignore: cast_nullabl
 as String,converterV: null == converterV ? _self.converterV : converterV // ignore: cast_nullable_to_non_nullable
 as String,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as int,currentVer: freezed == currentVer ? _self.currentVer : currentVer // ignore: cast_nullable_to_non_nullable
-as int?,createdById: freezed == createdById ? _self.createdById : createdById // ignore: cast_nullable_to_non_nullable
+as int?,currentVersionAt: freezed == currentVersionAt ? _self.currentVersionAt : currentVersionAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,createdById: freezed == createdById ? _self.createdById : createdById // ignore: cast_nullable_to_non_nullable
 as String?,createdByName: freezed == createdByName ? _self.createdByName : createdByName // ignore: cast_nullable_to_non_nullable
 as String?,currentSize: freezed == currentSize ? _self.currentSize : currentSize // ignore: cast_nullable_to_non_nullable
-as int?,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
+as int?,currentSourceSha256: freezed == currentSourceSha256 ? _self.currentSourceSha256 : currentSourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,publishedVer: freezed == publishedVer ? _self.publishedVer : publishedVer // ignore: cast_nullable_to_non_nullable
+as int?,publishedSourceSha256: freezed == publishedSourceSha256 ? _self.publishedSourceSha256 : publishedSourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,slug: freezed == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -4077,10 +5771,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'content')  String content, @JsonKey(name: 'format')  String format, @JsonKey(name: 'converter_v')  String converterV, @JsonKey(name: 'version')  int version, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy, @JsonKey(name: 'score')  double? score, @JsonKey(name: 'matched_field')  String? matchedField, @JsonKey(name: 'snippet')  String? snippet, @JsonKey(name: 'tier')  String? tier, @JsonKey(name: 'hint')  String? hint)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'content')  String content, @JsonKey(name: 'format')  String format, @JsonKey(name: 'converter_v')  String converterV, @JsonKey(name: 'version')  int version, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'current_version_at')  DateTime? currentVersionAt, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'current_source_sha256')  String? currentSourceSha256, @JsonKey(name: 'published_ver')  int? publishedVer, @JsonKey(name: 'published_source_sha256')  String? publishedSourceSha256, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy, @JsonKey(name: 'score')  double? score, @JsonKey(name: 'matched_field')  String? matchedField, @JsonKey(name: 'snippet')  String? snippet, @JsonKey(name: 'tier')  String? tier, @JsonKey(name: 'hint')  String? hint)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PackDocument() when $default != null:
-return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.content,_that.format,_that.converterV,_that.version,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy,_that.score,_that.matchedField,_that.snippet,_that.tier,_that.hint);case _:
+return $default(_that.publicId,_that.createdAt,_that.updatedAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.content,_that.format,_that.converterV,_that.version,_that.currentVer,_that.currentVersionAt,_that.createdById,_that.createdByName,_that.currentSize,_that.currentSourceSha256,_that.publishedVer,_that.publishedSourceSha256,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy,_that.score,_that.matchedField,_that.snippet,_that.tier,_that.hint);case _:
   return orElse();
 
 }
@@ -4098,10 +5792,10 @@ return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'content')  String content, @JsonKey(name: 'format')  String format, @JsonKey(name: 'converter_v')  String converterV, @JsonKey(name: 'version')  int version, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy, @JsonKey(name: 'score')  double? score, @JsonKey(name: 'matched_field')  String? matchedField, @JsonKey(name: 'snippet')  String? snippet, @JsonKey(name: 'tier')  String? tier, @JsonKey(name: 'hint')  String? hint)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'content')  String content, @JsonKey(name: 'format')  String format, @JsonKey(name: 'converter_v')  String converterV, @JsonKey(name: 'version')  int version, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'current_version_at')  DateTime? currentVersionAt, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'current_source_sha256')  String? currentSourceSha256, @JsonKey(name: 'published_ver')  int? publishedVer, @JsonKey(name: 'published_source_sha256')  String? publishedSourceSha256, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy, @JsonKey(name: 'score')  double? score, @JsonKey(name: 'matched_field')  String? matchedField, @JsonKey(name: 'snippet')  String? snippet, @JsonKey(name: 'tier')  String? tier, @JsonKey(name: 'hint')  String? hint)  $default,) {final _that = this;
 switch (_that) {
 case _PackDocument():
-return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.content,_that.format,_that.converterV,_that.version,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy,_that.score,_that.matchedField,_that.snippet,_that.tier,_that.hint);case _:
+return $default(_that.publicId,_that.createdAt,_that.updatedAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.content,_that.format,_that.converterV,_that.version,_that.currentVer,_that.currentVersionAt,_that.createdById,_that.createdByName,_that.currentSize,_that.currentSourceSha256,_that.publishedVer,_that.publishedSourceSha256,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy,_that.score,_that.matchedField,_that.snippet,_that.tier,_that.hint);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -4118,10 +5812,10 @@ return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'content')  String content, @JsonKey(name: 'format')  String format, @JsonKey(name: 'converter_v')  String converterV, @JsonKey(name: 'version')  int version, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy, @JsonKey(name: 'score')  double? score, @JsonKey(name: 'matched_field')  String? matchedField, @JsonKey(name: 'snippet')  String? snippet, @JsonKey(name: 'tier')  String? tier, @JsonKey(name: 'hint')  String? hint)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'content')  String content, @JsonKey(name: 'format')  String format, @JsonKey(name: 'converter_v')  String converterV, @JsonKey(name: 'version')  int version, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'current_version_at')  DateTime? currentVersionAt, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'current_source_sha256')  String? currentSourceSha256, @JsonKey(name: 'published_ver')  int? publishedVer, @JsonKey(name: 'published_source_sha256')  String? publishedSourceSha256, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy, @JsonKey(name: 'score')  double? score, @JsonKey(name: 'matched_field')  String? matchedField, @JsonKey(name: 'snippet')  String? snippet, @JsonKey(name: 'tier')  String? tier, @JsonKey(name: 'hint')  String? hint)?  $default,) {final _that = this;
 switch (_that) {
 case _PackDocument() when $default != null:
-return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.content,_that.format,_that.converterV,_that.version,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy,_that.score,_that.matchedField,_that.snippet,_that.tier,_that.hint);case _:
+return $default(_that.publicId,_that.createdAt,_that.updatedAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.content,_that.format,_that.converterV,_that.version,_that.currentVer,_that.currentVersionAt,_that.createdById,_that.createdByName,_that.currentSize,_that.currentSourceSha256,_that.publishedVer,_that.publishedSourceSha256,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy,_that.score,_that.matchedField,_that.snippet,_that.tier,_that.hint);case _:
   return null;
 
 }
@@ -4133,11 +5827,12 @@ return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_t
 @JsonSerializable()
 
 class _PackDocument implements PackDocument {
-  const _PackDocument({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'created_by_kind') required this.createdByKind, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'status') required this.status, @JsonKey(name: 'visibility') required this.visibility, @JsonKey(name: 'content') required this.content, @JsonKey(name: 'format') required this.format, @JsonKey(name: 'converter_v') required this.converterV, @JsonKey(name: 'version') required this.version, @JsonKey(name: 'current_ver') this.currentVer, @JsonKey(name: 'created_by_id') this.createdById, @JsonKey(name: 'created_by_name') this.createdByName, @JsonKey(name: 'current_size') this.currentSize, @JsonKey(name: 'revoked_at') this.revokedAt, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug, @JsonKey(name: 'superseded_by') this.supersededBy, @JsonKey(name: 'score') this.score, @JsonKey(name: 'matched_field') this.matchedField, @JsonKey(name: 'snippet') this.snippet, @JsonKey(name: 'tier') this.tier, @JsonKey(name: 'hint') this.hint}): _tags = tags;
+  const _PackDocument({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'created_by_kind') required this.createdByKind, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'status') required this.status, @JsonKey(name: 'visibility') required this.visibility, @JsonKey(name: 'content') required this.content, @JsonKey(name: 'format') required this.format, @JsonKey(name: 'converter_v') required this.converterV, @JsonKey(name: 'version') required this.version, @JsonKey(name: 'current_ver') this.currentVer, @JsonKey(name: 'current_version_at') this.currentVersionAt, @JsonKey(name: 'created_by_id') this.createdById, @JsonKey(name: 'created_by_name') this.createdByName, @JsonKey(name: 'current_size') this.currentSize, @JsonKey(name: 'current_source_sha256') this.currentSourceSha256, @JsonKey(name: 'published_ver') this.publishedVer, @JsonKey(name: 'published_source_sha256') this.publishedSourceSha256, @JsonKey(name: 'revoked_at') this.revokedAt, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug, @JsonKey(name: 'superseded_by') this.supersededBy, @JsonKey(name: 'score') this.score, @JsonKey(name: 'matched_field') this.matchedField, @JsonKey(name: 'snippet') this.snippet, @JsonKey(name: 'tier') this.tier, @JsonKey(name: 'hint') this.hint}): _tags = tags;
   factory _PackDocument.fromJson(Map<String, dynamic> json) => _$PackDocumentFromJson(json);
 
 @override@JsonKey(name: 'public_id') final  String publicId;
 @override@JsonKey(name: 'created_at') final  DateTime createdAt;
+@override@JsonKey(name: 'updated_at') final  DateTime updatedAt;
 @override@JsonKey(name: 'created_by_kind') final  String createdByKind;
  final  List<String> _tags;
 @override@JsonKey(name: 'tags') List<String> get tags {
@@ -4153,9 +5848,13 @@ class _PackDocument implements PackDocument {
 @override@JsonKey(name: 'converter_v') final  String converterV;
 @override@JsonKey(name: 'version') final  int version;
 @override@JsonKey(name: 'current_ver') final  int? currentVer;
+@override@JsonKey(name: 'current_version_at') final  DateTime? currentVersionAt;
 @override@JsonKey(name: 'created_by_id') final  String? createdById;
 @override@JsonKey(name: 'created_by_name') final  String? createdByName;
 @override@JsonKey(name: 'current_size') final  int? currentSize;
+@override@JsonKey(name: 'current_source_sha256') final  String? currentSourceSha256;
+@override@JsonKey(name: 'published_ver') final  int? publishedVer;
+@override@JsonKey(name: 'published_source_sha256') final  String? publishedSourceSha256;
 @override@JsonKey(name: 'revoked_at') final  DateTime? revokedAt;
 @override@JsonKey(name: 'title') final  String? title;
 @override@JsonKey(name: 'description') final  String? description;
@@ -4180,16 +5879,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PackDocument&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.content, content) || other.content == content)&&(identical(other.format, format) || other.format == format)&&(identical(other.converterV, converterV) || other.converterV == converterV)&&(identical(other.version, version) || other.version == version)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy)&&(identical(other.score, score) || other.score == score)&&(identical(other.matchedField, matchedField) || other.matchedField == matchedField)&&(identical(other.snippet, snippet) || other.snippet == snippet)&&(identical(other.tier, tier) || other.tier == tier)&&(identical(other.hint, hint) || other.hint == hint));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PackDocument&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.content, content) || other.content == content)&&(identical(other.format, format) || other.format == format)&&(identical(other.converterV, converterV) || other.converterV == converterV)&&(identical(other.version, version) || other.version == version)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.currentVersionAt, currentVersionAt) || other.currentVersionAt == currentVersionAt)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.currentSourceSha256, currentSourceSha256) || other.currentSourceSha256 == currentSourceSha256)&&(identical(other.publishedVer, publishedVer) || other.publishedVer == publishedVer)&&(identical(other.publishedSourceSha256, publishedSourceSha256) || other.publishedSourceSha256 == publishedSourceSha256)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy)&&(identical(other.score, score) || other.score == score)&&(identical(other.matchedField, matchedField) || other.matchedField == matchedField)&&(identical(other.snippet, snippet) || other.snippet == snippet)&&(identical(other.tier, tier) || other.tier == tier)&&(identical(other.hint, hint) || other.hint == hint));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,publicId,createdAt,createdByKind,const DeepCollectionEquality().hash(_tags),status,visibility,content,format,converterV,version,currentVer,createdById,createdByName,currentSize,revokedAt,title,description,slug,supersededBy,score,matchedField,snippet,tier,hint]);
+int get hashCode => Object.hashAll([runtimeType,publicId,createdAt,updatedAt,createdByKind,const DeepCollectionEquality().hash(_tags),status,visibility,content,format,converterV,version,currentVer,currentVersionAt,createdById,createdByName,currentSize,currentSourceSha256,publishedVer,publishedSourceSha256,revokedAt,title,description,slug,supersededBy,score,matchedField,snippet,tier,hint]);
 
 @override
 String toString() {
-  return 'PackDocument(publicId: $publicId, createdAt: $createdAt, createdByKind: $createdByKind, tags: $tags, status: $status, visibility: $visibility, content: $content, format: $format, converterV: $converterV, version: $version, currentVer: $currentVer, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy, score: $score, matchedField: $matchedField, snippet: $snippet, tier: $tier, hint: $hint)';
+  return 'PackDocument(publicId: $publicId, createdAt: $createdAt, updatedAt: $updatedAt, createdByKind: $createdByKind, tags: $tags, status: $status, visibility: $visibility, content: $content, format: $format, converterV: $converterV, version: $version, currentVer: $currentVer, currentVersionAt: $currentVersionAt, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, currentSourceSha256: $currentSourceSha256, publishedVer: $publishedVer, publishedSourceSha256: $publishedSourceSha256, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy, score: $score, matchedField: $matchedField, snippet: $snippet, tier: $tier, hint: $hint)';
 }
 
 
@@ -4200,7 +5899,7 @@ abstract mixin class _$PackDocumentCopyWith<$Res> implements $PackDocumentCopyWi
   factory _$PackDocumentCopyWith(_PackDocument value, $Res Function(_PackDocument) _then) = __$PackDocumentCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'content') String content,@JsonKey(name: 'format') String format,@JsonKey(name: 'converter_v') String converterV,@JsonKey(name: 'version') int version,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy,@JsonKey(name: 'score') double? score,@JsonKey(name: 'matched_field') String? matchedField,@JsonKey(name: 'snippet') String? snippet,@JsonKey(name: 'tier') String? tier,@JsonKey(name: 'hint') String? hint
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'content') String content,@JsonKey(name: 'format') String format,@JsonKey(name: 'converter_v') String converterV,@JsonKey(name: 'version') int version,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'current_version_at') DateTime? currentVersionAt,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'current_source_sha256') String? currentSourceSha256,@JsonKey(name: 'published_ver') int? publishedVer,@JsonKey(name: 'published_source_sha256') String? publishedSourceSha256,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy,@JsonKey(name: 'score') double? score,@JsonKey(name: 'matched_field') String? matchedField,@JsonKey(name: 'snippet') String? snippet,@JsonKey(name: 'tier') String? tier,@JsonKey(name: 'hint') String? hint
 });
 
 
@@ -4217,10 +5916,11 @@ class __$PackDocumentCopyWithImpl<$Res>
 
 /// Create a copy of PackDocument
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? createdAt = null,Object? createdByKind = null,Object? tags = null,Object? status = null,Object? visibility = null,Object? content = null,Object? format = null,Object? converterV = null,Object? version = null,Object? currentVer = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,Object? score = freezed,Object? matchedField = freezed,Object? snippet = freezed,Object? tier = freezed,Object? hint = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? createdAt = null,Object? updatedAt = null,Object? createdByKind = null,Object? tags = null,Object? status = null,Object? visibility = null,Object? content = null,Object? format = null,Object? converterV = null,Object? version = null,Object? currentVer = freezed,Object? currentVersionAt = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? currentSourceSha256 = freezed,Object? publishedVer = freezed,Object? publishedSourceSha256 = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,Object? score = freezed,Object? matchedField = freezed,Object? snippet = freezed,Object? tier = freezed,Object? hint = freezed,}) {
   return _then(_PackDocument(
 publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,createdByKind: null == createdByKind ? _self.createdByKind : createdByKind // ignore: cast_nullable_to_non_nullable
 as String,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
 as List<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -4230,10 +5930,14 @@ as String,format: null == format ? _self.format : format // ignore: cast_nullabl
 as String,converterV: null == converterV ? _self.converterV : converterV // ignore: cast_nullable_to_non_nullable
 as String,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as int,currentVer: freezed == currentVer ? _self.currentVer : currentVer // ignore: cast_nullable_to_non_nullable
-as int?,createdById: freezed == createdById ? _self.createdById : createdById // ignore: cast_nullable_to_non_nullable
+as int?,currentVersionAt: freezed == currentVersionAt ? _self.currentVersionAt : currentVersionAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,createdById: freezed == createdById ? _self.createdById : createdById // ignore: cast_nullable_to_non_nullable
 as String?,createdByName: freezed == createdByName ? _self.createdByName : createdByName // ignore: cast_nullable_to_non_nullable
 as String?,currentSize: freezed == currentSize ? _self.currentSize : currentSize // ignore: cast_nullable_to_non_nullable
-as int?,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
+as int?,currentSourceSha256: freezed == currentSourceSha256 ? _self.currentSourceSha256 : currentSourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,publishedVer: freezed == publishedVer ? _self.publishedVer : publishedVer // ignore: cast_nullable_to_non_nullable
+as int?,publishedSourceSha256: freezed == publishedSourceSha256 ? _self.publishedSourceSha256 : publishedSourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,slug: freezed == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -5409,9 +7113,275 @@ $PackInfoCopyWith<$Res> get pack {
 
 
 /// @nodoc
+mixin _$PromoteResponse {
+
+@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'published_ver') int get publishedVer;
+/// Create a copy of PromoteResponse
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PromoteResponseCopyWith<PromoteResponse> get copyWith => _$PromoteResponseCopyWithImpl<PromoteResponse>(this as PromoteResponse, _$identity);
+
+  /// Serializes this PromoteResponse to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PromoteResponse&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.publishedVer, publishedVer) || other.publishedVer == publishedVer));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,publicId,publishedVer);
+
+@override
+String toString() {
+  return 'PromoteResponse(publicId: $publicId, publishedVer: $publishedVer)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PromoteResponseCopyWith<$Res>  {
+  factory $PromoteResponseCopyWith(PromoteResponse value, $Res Function(PromoteResponse) _then) = _$PromoteResponseCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'published_ver') int publishedVer
+});
+
+
+
+
+}
+/// @nodoc
+class _$PromoteResponseCopyWithImpl<$Res>
+    implements $PromoteResponseCopyWith<$Res> {
+  _$PromoteResponseCopyWithImpl(this._self, this._then);
+
+  final PromoteResponse _self;
+  final $Res Function(PromoteResponse) _then;
+
+/// Create a copy of PromoteResponse
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? publishedVer = null,}) {
+  return _then(_self.copyWith(
+publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
+as String,publishedVer: null == publishedVer ? _self.publishedVer : publishedVer // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [PromoteResponse].
+extension PromoteResponsePatterns on PromoteResponse {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _PromoteResponse value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _PromoteResponse() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _PromoteResponse value)  $default,){
+final _that = this;
+switch (_that) {
+case _PromoteResponse():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _PromoteResponse value)?  $default,){
+final _that = this;
+switch (_that) {
+case _PromoteResponse() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'published_ver')  int publishedVer)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _PromoteResponse() when $default != null:
+return $default(_that.publicId,_that.publishedVer);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'published_ver')  int publishedVer)  $default,) {final _that = this;
+switch (_that) {
+case _PromoteResponse():
+return $default(_that.publicId,_that.publishedVer);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'published_ver')  int publishedVer)?  $default,) {final _that = this;
+switch (_that) {
+case _PromoteResponse() when $default != null:
+return $default(_that.publicId,_that.publishedVer);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _PromoteResponse implements PromoteResponse {
+  const _PromoteResponse({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'published_ver') required this.publishedVer});
+  factory _PromoteResponse.fromJson(Map<String, dynamic> json) => _$PromoteResponseFromJson(json);
+
+@override@JsonKey(name: 'public_id') final  String publicId;
+@override@JsonKey(name: 'published_ver') final  int publishedVer;
+
+/// Create a copy of PromoteResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$PromoteResponseCopyWith<_PromoteResponse> get copyWith => __$PromoteResponseCopyWithImpl<_PromoteResponse>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$PromoteResponseToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PromoteResponse&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.publishedVer, publishedVer) || other.publishedVer == publishedVer));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,publicId,publishedVer);
+
+@override
+String toString() {
+  return 'PromoteResponse(publicId: $publicId, publishedVer: $publishedVer)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$PromoteResponseCopyWith<$Res> implements $PromoteResponseCopyWith<$Res> {
+  factory _$PromoteResponseCopyWith(_PromoteResponse value, $Res Function(_PromoteResponse) _then) = __$PromoteResponseCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'published_ver') int publishedVer
+});
+
+
+
+
+}
+/// @nodoc
+class __$PromoteResponseCopyWithImpl<$Res>
+    implements _$PromoteResponseCopyWith<$Res> {
+  __$PromoteResponseCopyWithImpl(this._self, this._then);
+
+  final _PromoteResponse _self;
+  final $Res Function(_PromoteResponse) _then;
+
+/// Create a copy of PromoteResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? publishedVer = null,}) {
+  return _then(_PromoteResponse(
+publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
+as String,publishedVer: null == publishedVer ? _self.publishedVer : publishedVer // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$ReadSourceResponse {
 
-@JsonKey(name: 'source') String get source;@JsonKey(name: 'source_format') String get sourceFormat;@JsonKey(name: 'version_no') int get versionNo;@JsonKey(name: 'sanitizer_v') String get sanitizerV;@JsonKey(name: 'stripped') List<String> get stripped;@JsonKey(name: 'will_not_render') List<String> get willNotRender;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'status') String get status;@JsonKey(name: 'unsanitized') bool get unsanitized;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;@JsonKey(name: 'superseded_by') String? get supersededBy;
+@JsonKey(name: 'source') String get source;@JsonKey(name: 'source_format') String get sourceFormat;@JsonKey(name: 'version_no') int get versionNo;@JsonKey(name: 'sanitizer_v') String get sanitizerV;@JsonKey(name: 'stripped') List<String> get stripped;@JsonKey(name: 'will_not_render') List<String> get willNotRender;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'status') String get status;@JsonKey(name: 'unsanitized') bool get unsanitized;@JsonKey(name: 'source_sha256') String? get sourceSha256;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;@JsonKey(name: 'superseded_by') String? get supersededBy;
 /// Create a copy of ReadSourceResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -5424,16 +7394,16 @@ $ReadSourceResponseCopyWith<ReadSourceResponse> get copyWith => _$ReadSourceResp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReadSourceResponse&&(identical(other.source, source) || other.source == source)&&(identical(other.sourceFormat, sourceFormat) || other.sourceFormat == sourceFormat)&&(identical(other.versionNo, versionNo) || other.versionNo == versionNo)&&(identical(other.sanitizerV, sanitizerV) || other.sanitizerV == sanitizerV)&&const DeepCollectionEquality().equals(other.stripped, stripped)&&const DeepCollectionEquality().equals(other.willNotRender, willNotRender)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.unsanitized, unsanitized) || other.unsanitized == unsanitized)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReadSourceResponse&&(identical(other.source, source) || other.source == source)&&(identical(other.sourceFormat, sourceFormat) || other.sourceFormat == sourceFormat)&&(identical(other.versionNo, versionNo) || other.versionNo == versionNo)&&(identical(other.sanitizerV, sanitizerV) || other.sanitizerV == sanitizerV)&&const DeepCollectionEquality().equals(other.stripped, stripped)&&const DeepCollectionEquality().equals(other.willNotRender, willNotRender)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.unsanitized, unsanitized) || other.unsanitized == unsanitized)&&(identical(other.sourceSha256, sourceSha256) || other.sourceSha256 == sourceSha256)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,source,sourceFormat,versionNo,sanitizerV,const DeepCollectionEquality().hash(stripped),const DeepCollectionEquality().hash(willNotRender),const DeepCollectionEquality().hash(tags),status,unsanitized,title,description,slug,supersededBy);
+int get hashCode => Object.hash(runtimeType,source,sourceFormat,versionNo,sanitizerV,const DeepCollectionEquality().hash(stripped),const DeepCollectionEquality().hash(willNotRender),const DeepCollectionEquality().hash(tags),status,unsanitized,sourceSha256,title,description,slug,supersededBy);
 
 @override
 String toString() {
-  return 'ReadSourceResponse(source: $source, sourceFormat: $sourceFormat, versionNo: $versionNo, sanitizerV: $sanitizerV, stripped: $stripped, willNotRender: $willNotRender, tags: $tags, status: $status, unsanitized: $unsanitized, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy)';
+  return 'ReadSourceResponse(source: $source, sourceFormat: $sourceFormat, versionNo: $versionNo, sanitizerV: $sanitizerV, stripped: $stripped, willNotRender: $willNotRender, tags: $tags, status: $status, unsanitized: $unsanitized, sourceSha256: $sourceSha256, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy)';
 }
 
 
@@ -5444,7 +7414,7 @@ abstract mixin class $ReadSourceResponseCopyWith<$Res>  {
   factory $ReadSourceResponseCopyWith(ReadSourceResponse value, $Res Function(ReadSourceResponse) _then) = _$ReadSourceResponseCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'source') String source,@JsonKey(name: 'source_format') String sourceFormat,@JsonKey(name: 'version_no') int versionNo,@JsonKey(name: 'sanitizer_v') String sanitizerV,@JsonKey(name: 'stripped') List<String> stripped,@JsonKey(name: 'will_not_render') List<String> willNotRender,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'unsanitized') bool unsanitized,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy
+@JsonKey(name: 'source') String source,@JsonKey(name: 'source_format') String sourceFormat,@JsonKey(name: 'version_no') int versionNo,@JsonKey(name: 'sanitizer_v') String sanitizerV,@JsonKey(name: 'stripped') List<String> stripped,@JsonKey(name: 'will_not_render') List<String> willNotRender,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'unsanitized') bool unsanitized,@JsonKey(name: 'source_sha256') String? sourceSha256,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy
 });
 
 
@@ -5461,7 +7431,7 @@ class _$ReadSourceResponseCopyWithImpl<$Res>
 
 /// Create a copy of ReadSourceResponse
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? source = null,Object? sourceFormat = null,Object? versionNo = null,Object? sanitizerV = null,Object? stripped = null,Object? willNotRender = null,Object? tags = null,Object? status = null,Object? unsanitized = null,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? source = null,Object? sourceFormat = null,Object? versionNo = null,Object? sanitizerV = null,Object? stripped = null,Object? willNotRender = null,Object? tags = null,Object? status = null,Object? unsanitized = null,Object? sourceSha256 = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,}) {
   return _then(_self.copyWith(
 source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
 as String,sourceFormat: null == sourceFormat ? _self.sourceFormat : sourceFormat // ignore: cast_nullable_to_non_nullable
@@ -5472,7 +7442,8 @@ as List<String>,willNotRender: null == willNotRender ? _self.willNotRender : wil
 as List<String>,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
 as List<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,unsanitized: null == unsanitized ? _self.unsanitized : unsanitized // ignore: cast_nullable_to_non_nullable
-as bool,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as bool,sourceSha256: freezed == sourceSha256 ? _self.sourceSha256 : sourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,slug: freezed == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String?,supersededBy: freezed == supersededBy ? _self.supersededBy : supersededBy // ignore: cast_nullable_to_non_nullable
@@ -5561,10 +7532,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'source')  String source, @JsonKey(name: 'source_format')  String sourceFormat, @JsonKey(name: 'version_no')  int versionNo, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'stripped')  List<String> stripped, @JsonKey(name: 'will_not_render')  List<String> willNotRender, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'unsanitized')  bool unsanitized, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'source')  String source, @JsonKey(name: 'source_format')  String sourceFormat, @JsonKey(name: 'version_no')  int versionNo, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'stripped')  List<String> stripped, @JsonKey(name: 'will_not_render')  List<String> willNotRender, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'unsanitized')  bool unsanitized, @JsonKey(name: 'source_sha256')  String? sourceSha256, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ReadSourceResponse() when $default != null:
-return $default(_that.source,_that.sourceFormat,_that.versionNo,_that.sanitizerV,_that.stripped,_that.willNotRender,_that.tags,_that.status,_that.unsanitized,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
+return $default(_that.source,_that.sourceFormat,_that.versionNo,_that.sanitizerV,_that.stripped,_that.willNotRender,_that.tags,_that.status,_that.unsanitized,_that.sourceSha256,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
   return orElse();
 
 }
@@ -5582,10 +7553,10 @@ return $default(_that.source,_that.sourceFormat,_that.versionNo,_that.sanitizerV
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'source')  String source, @JsonKey(name: 'source_format')  String sourceFormat, @JsonKey(name: 'version_no')  int versionNo, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'stripped')  List<String> stripped, @JsonKey(name: 'will_not_render')  List<String> willNotRender, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'unsanitized')  bool unsanitized, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'source')  String source, @JsonKey(name: 'source_format')  String sourceFormat, @JsonKey(name: 'version_no')  int versionNo, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'stripped')  List<String> stripped, @JsonKey(name: 'will_not_render')  List<String> willNotRender, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'unsanitized')  bool unsanitized, @JsonKey(name: 'source_sha256')  String? sourceSha256, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)  $default,) {final _that = this;
 switch (_that) {
 case _ReadSourceResponse():
-return $default(_that.source,_that.sourceFormat,_that.versionNo,_that.sanitizerV,_that.stripped,_that.willNotRender,_that.tags,_that.status,_that.unsanitized,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
+return $default(_that.source,_that.sourceFormat,_that.versionNo,_that.sanitizerV,_that.stripped,_that.willNotRender,_that.tags,_that.status,_that.unsanitized,_that.sourceSha256,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -5602,10 +7573,10 @@ return $default(_that.source,_that.sourceFormat,_that.versionNo,_that.sanitizerV
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'source')  String source, @JsonKey(name: 'source_format')  String sourceFormat, @JsonKey(name: 'version_no')  int versionNo, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'stripped')  List<String> stripped, @JsonKey(name: 'will_not_render')  List<String> willNotRender, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'unsanitized')  bool unsanitized, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'source')  String source, @JsonKey(name: 'source_format')  String sourceFormat, @JsonKey(name: 'version_no')  int versionNo, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'stripped')  List<String> stripped, @JsonKey(name: 'will_not_render')  List<String> willNotRender, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'unsanitized')  bool unsanitized, @JsonKey(name: 'source_sha256')  String? sourceSha256, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)?  $default,) {final _that = this;
 switch (_that) {
 case _ReadSourceResponse() when $default != null:
-return $default(_that.source,_that.sourceFormat,_that.versionNo,_that.sanitizerV,_that.stripped,_that.willNotRender,_that.tags,_that.status,_that.unsanitized,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
+return $default(_that.source,_that.sourceFormat,_that.versionNo,_that.sanitizerV,_that.stripped,_that.willNotRender,_that.tags,_that.status,_that.unsanitized,_that.sourceSha256,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
   return null;
 
 }
@@ -5617,7 +7588,7 @@ return $default(_that.source,_that.sourceFormat,_that.versionNo,_that.sanitizerV
 @JsonSerializable()
 
 class _ReadSourceResponse implements ReadSourceResponse {
-  const _ReadSourceResponse({@JsonKey(name: 'source') required this.source, @JsonKey(name: 'source_format') required this.sourceFormat, @JsonKey(name: 'version_no') required this.versionNo, @JsonKey(name: 'sanitizer_v') required this.sanitizerV, @JsonKey(name: 'stripped') required final  List<String> stripped, @JsonKey(name: 'will_not_render') required final  List<String> willNotRender, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'status') required this.status, @JsonKey(name: 'unsanitized') required this.unsanitized, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug, @JsonKey(name: 'superseded_by') this.supersededBy}): _stripped = stripped,_willNotRender = willNotRender,_tags = tags;
+  const _ReadSourceResponse({@JsonKey(name: 'source') required this.source, @JsonKey(name: 'source_format') required this.sourceFormat, @JsonKey(name: 'version_no') required this.versionNo, @JsonKey(name: 'sanitizer_v') required this.sanitizerV, @JsonKey(name: 'stripped') required final  List<String> stripped, @JsonKey(name: 'will_not_render') required final  List<String> willNotRender, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'status') required this.status, @JsonKey(name: 'unsanitized') required this.unsanitized, @JsonKey(name: 'source_sha256') this.sourceSha256, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug, @JsonKey(name: 'superseded_by') this.supersededBy}): _stripped = stripped,_willNotRender = willNotRender,_tags = tags;
   factory _ReadSourceResponse.fromJson(Map<String, dynamic> json) => _$ReadSourceResponseFromJson(json);
 
 @override@JsonKey(name: 'source') final  String source;
@@ -5647,6 +7618,7 @@ class _ReadSourceResponse implements ReadSourceResponse {
 
 @override@JsonKey(name: 'status') final  String status;
 @override@JsonKey(name: 'unsanitized') final  bool unsanitized;
+@override@JsonKey(name: 'source_sha256') final  String? sourceSha256;
 @override@JsonKey(name: 'title') final  String? title;
 @override@JsonKey(name: 'description') final  String? description;
 @override@JsonKey(name: 'slug') final  String? slug;
@@ -5665,16 +7637,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReadSourceResponse&&(identical(other.source, source) || other.source == source)&&(identical(other.sourceFormat, sourceFormat) || other.sourceFormat == sourceFormat)&&(identical(other.versionNo, versionNo) || other.versionNo == versionNo)&&(identical(other.sanitizerV, sanitizerV) || other.sanitizerV == sanitizerV)&&const DeepCollectionEquality().equals(other._stripped, _stripped)&&const DeepCollectionEquality().equals(other._willNotRender, _willNotRender)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.unsanitized, unsanitized) || other.unsanitized == unsanitized)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReadSourceResponse&&(identical(other.source, source) || other.source == source)&&(identical(other.sourceFormat, sourceFormat) || other.sourceFormat == sourceFormat)&&(identical(other.versionNo, versionNo) || other.versionNo == versionNo)&&(identical(other.sanitizerV, sanitizerV) || other.sanitizerV == sanitizerV)&&const DeepCollectionEquality().equals(other._stripped, _stripped)&&const DeepCollectionEquality().equals(other._willNotRender, _willNotRender)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.unsanitized, unsanitized) || other.unsanitized == unsanitized)&&(identical(other.sourceSha256, sourceSha256) || other.sourceSha256 == sourceSha256)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,source,sourceFormat,versionNo,sanitizerV,const DeepCollectionEquality().hash(_stripped),const DeepCollectionEquality().hash(_willNotRender),const DeepCollectionEquality().hash(_tags),status,unsanitized,title,description,slug,supersededBy);
+int get hashCode => Object.hash(runtimeType,source,sourceFormat,versionNo,sanitizerV,const DeepCollectionEquality().hash(_stripped),const DeepCollectionEquality().hash(_willNotRender),const DeepCollectionEquality().hash(_tags),status,unsanitized,sourceSha256,title,description,slug,supersededBy);
 
 @override
 String toString() {
-  return 'ReadSourceResponse(source: $source, sourceFormat: $sourceFormat, versionNo: $versionNo, sanitizerV: $sanitizerV, stripped: $stripped, willNotRender: $willNotRender, tags: $tags, status: $status, unsanitized: $unsanitized, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy)';
+  return 'ReadSourceResponse(source: $source, sourceFormat: $sourceFormat, versionNo: $versionNo, sanitizerV: $sanitizerV, stripped: $stripped, willNotRender: $willNotRender, tags: $tags, status: $status, unsanitized: $unsanitized, sourceSha256: $sourceSha256, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy)';
 }
 
 
@@ -5685,7 +7657,7 @@ abstract mixin class _$ReadSourceResponseCopyWith<$Res> implements $ReadSourceRe
   factory _$ReadSourceResponseCopyWith(_ReadSourceResponse value, $Res Function(_ReadSourceResponse) _then) = __$ReadSourceResponseCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'source') String source,@JsonKey(name: 'source_format') String sourceFormat,@JsonKey(name: 'version_no') int versionNo,@JsonKey(name: 'sanitizer_v') String sanitizerV,@JsonKey(name: 'stripped') List<String> stripped,@JsonKey(name: 'will_not_render') List<String> willNotRender,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'unsanitized') bool unsanitized,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy
+@JsonKey(name: 'source') String source,@JsonKey(name: 'source_format') String sourceFormat,@JsonKey(name: 'version_no') int versionNo,@JsonKey(name: 'sanitizer_v') String sanitizerV,@JsonKey(name: 'stripped') List<String> stripped,@JsonKey(name: 'will_not_render') List<String> willNotRender,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'unsanitized') bool unsanitized,@JsonKey(name: 'source_sha256') String? sourceSha256,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy
 });
 
 
@@ -5702,7 +7674,7 @@ class __$ReadSourceResponseCopyWithImpl<$Res>
 
 /// Create a copy of ReadSourceResponse
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? source = null,Object? sourceFormat = null,Object? versionNo = null,Object? sanitizerV = null,Object? stripped = null,Object? willNotRender = null,Object? tags = null,Object? status = null,Object? unsanitized = null,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? source = null,Object? sourceFormat = null,Object? versionNo = null,Object? sanitizerV = null,Object? stripped = null,Object? willNotRender = null,Object? tags = null,Object? status = null,Object? unsanitized = null,Object? sourceSha256 = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,}) {
   return _then(_ReadSourceResponse(
 source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
 as String,sourceFormat: null == sourceFormat ? _self.sourceFormat : sourceFormat // ignore: cast_nullable_to_non_nullable
@@ -5713,7 +7685,304 @@ as List<String>,willNotRender: null == willNotRender ? _self._willNotRender : wi
 as List<String>,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
 as List<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,unsanitized: null == unsanitized ? _self.unsanitized : unsanitized // ignore: cast_nullable_to_non_nullable
-as bool,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as bool,sourceSha256: freezed == sourceSha256 ? _self.sourceSha256 : sourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,slug: freezed == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
+as String?,supersededBy: freezed == supersededBy ? _self.supersededBy : supersededBy // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$ReadTextResponse {
+
+@JsonKey(name: 'text') String get text;@JsonKey(name: 'version_no') int get versionNo;@JsonKey(name: 'sanitizer_v') String get sanitizerV;@JsonKey(name: 'converter_v') String get converterV;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'status') String get status;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;@JsonKey(name: 'superseded_by') String? get supersededBy;
+/// Create a copy of ReadTextResponse
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ReadTextResponseCopyWith<ReadTextResponse> get copyWith => _$ReadTextResponseCopyWithImpl<ReadTextResponse>(this as ReadTextResponse, _$identity);
+
+  /// Serializes this ReadTextResponse to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReadTextResponse&&(identical(other.text, text) || other.text == text)&&(identical(other.versionNo, versionNo) || other.versionNo == versionNo)&&(identical(other.sanitizerV, sanitizerV) || other.sanitizerV == sanitizerV)&&(identical(other.converterV, converterV) || other.converterV == converterV)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,text,versionNo,sanitizerV,converterV,const DeepCollectionEquality().hash(tags),status,title,description,slug,supersededBy);
+
+@override
+String toString() {
+  return 'ReadTextResponse(text: $text, versionNo: $versionNo, sanitizerV: $sanitizerV, converterV: $converterV, tags: $tags, status: $status, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ReadTextResponseCopyWith<$Res>  {
+  factory $ReadTextResponseCopyWith(ReadTextResponse value, $Res Function(ReadTextResponse) _then) = _$ReadTextResponseCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'text') String text,@JsonKey(name: 'version_no') int versionNo,@JsonKey(name: 'sanitizer_v') String sanitizerV,@JsonKey(name: 'converter_v') String converterV,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy
+});
+
+
+
+
+}
+/// @nodoc
+class _$ReadTextResponseCopyWithImpl<$Res>
+    implements $ReadTextResponseCopyWith<$Res> {
+  _$ReadTextResponseCopyWithImpl(this._self, this._then);
+
+  final ReadTextResponse _self;
+  final $Res Function(ReadTextResponse) _then;
+
+/// Create a copy of ReadTextResponse
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? text = null,Object? versionNo = null,Object? sanitizerV = null,Object? converterV = null,Object? tags = null,Object? status = null,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,}) {
+  return _then(_self.copyWith(
+text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
+as String,versionNo: null == versionNo ? _self.versionNo : versionNo // ignore: cast_nullable_to_non_nullable
+as int,sanitizerV: null == sanitizerV ? _self.sanitizerV : sanitizerV // ignore: cast_nullable_to_non_nullable
+as String,converterV: null == converterV ? _self.converterV : converterV // ignore: cast_nullable_to_non_nullable
+as String,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
+as List<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,slug: freezed == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
+as String?,supersededBy: freezed == supersededBy ? _self.supersededBy : supersededBy // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ReadTextResponse].
+extension ReadTextResponsePatterns on ReadTextResponse {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ReadTextResponse value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ReadTextResponse() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ReadTextResponse value)  $default,){
+final _that = this;
+switch (_that) {
+case _ReadTextResponse():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ReadTextResponse value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ReadTextResponse() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'text')  String text, @JsonKey(name: 'version_no')  int versionNo, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'converter_v')  String converterV, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ReadTextResponse() when $default != null:
+return $default(_that.text,_that.versionNo,_that.sanitizerV,_that.converterV,_that.tags,_that.status,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'text')  String text, @JsonKey(name: 'version_no')  int versionNo, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'converter_v')  String converterV, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)  $default,) {final _that = this;
+switch (_that) {
+case _ReadTextResponse():
+return $default(_that.text,_that.versionNo,_that.sanitizerV,_that.converterV,_that.tags,_that.status,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'text')  String text, @JsonKey(name: 'version_no')  int versionNo, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'converter_v')  String converterV, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)?  $default,) {final _that = this;
+switch (_that) {
+case _ReadTextResponse() when $default != null:
+return $default(_that.text,_that.versionNo,_that.sanitizerV,_that.converterV,_that.tags,_that.status,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ReadTextResponse implements ReadTextResponse {
+  const _ReadTextResponse({@JsonKey(name: 'text') required this.text, @JsonKey(name: 'version_no') required this.versionNo, @JsonKey(name: 'sanitizer_v') required this.sanitizerV, @JsonKey(name: 'converter_v') required this.converterV, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'status') required this.status, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug, @JsonKey(name: 'superseded_by') this.supersededBy}): _tags = tags;
+  factory _ReadTextResponse.fromJson(Map<String, dynamic> json) => _$ReadTextResponseFromJson(json);
+
+@override@JsonKey(name: 'text') final  String text;
+@override@JsonKey(name: 'version_no') final  int versionNo;
+@override@JsonKey(name: 'sanitizer_v') final  String sanitizerV;
+@override@JsonKey(name: 'converter_v') final  String converterV;
+ final  List<String> _tags;
+@override@JsonKey(name: 'tags') List<String> get tags {
+  if (_tags is EqualUnmodifiableListView) return _tags;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_tags);
+}
+
+@override@JsonKey(name: 'status') final  String status;
+@override@JsonKey(name: 'title') final  String? title;
+@override@JsonKey(name: 'description') final  String? description;
+@override@JsonKey(name: 'slug') final  String? slug;
+@override@JsonKey(name: 'superseded_by') final  String? supersededBy;
+
+/// Create a copy of ReadTextResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ReadTextResponseCopyWith<_ReadTextResponse> get copyWith => __$ReadTextResponseCopyWithImpl<_ReadTextResponse>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ReadTextResponseToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReadTextResponse&&(identical(other.text, text) || other.text == text)&&(identical(other.versionNo, versionNo) || other.versionNo == versionNo)&&(identical(other.sanitizerV, sanitizerV) || other.sanitizerV == sanitizerV)&&(identical(other.converterV, converterV) || other.converterV == converterV)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,text,versionNo,sanitizerV,converterV,const DeepCollectionEquality().hash(_tags),status,title,description,slug,supersededBy);
+
+@override
+String toString() {
+  return 'ReadTextResponse(text: $text, versionNo: $versionNo, sanitizerV: $sanitizerV, converterV: $converterV, tags: $tags, status: $status, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ReadTextResponseCopyWith<$Res> implements $ReadTextResponseCopyWith<$Res> {
+  factory _$ReadTextResponseCopyWith(_ReadTextResponse value, $Res Function(_ReadTextResponse) _then) = __$ReadTextResponseCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'text') String text,@JsonKey(name: 'version_no') int versionNo,@JsonKey(name: 'sanitizer_v') String sanitizerV,@JsonKey(name: 'converter_v') String converterV,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy
+});
+
+
+
+
+}
+/// @nodoc
+class __$ReadTextResponseCopyWithImpl<$Res>
+    implements _$ReadTextResponseCopyWith<$Res> {
+  __$ReadTextResponseCopyWithImpl(this._self, this._then);
+
+  final _ReadTextResponse _self;
+  final $Res Function(_ReadTextResponse) _then;
+
+/// Create a copy of ReadTextResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? text = null,Object? versionNo = null,Object? sanitizerV = null,Object? converterV = null,Object? tags = null,Object? status = null,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,}) {
+  return _then(_ReadTextResponse(
+text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
+as String,versionNo: null == versionNo ? _self.versionNo : versionNo // ignore: cast_nullable_to_non_nullable
+as int,sanitizerV: null == sanitizerV ? _self.sanitizerV : sanitizerV // ignore: cast_nullable_to_non_nullable
+as String,converterV: null == converterV ? _self.converterV : converterV // ignore: cast_nullable_to_non_nullable
+as String,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
+as List<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,slug: freezed == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String?,supersededBy: freezed == supersededBy ? _self.supersededBy : supersededBy // ignore: cast_nullable_to_non_nullable
@@ -6253,6 +8522,326 @@ class __$ReleaseSlugTombstoneResponseCopyWithImpl<$Res>
 released: null == released ? _self.released : released // ignore: cast_nullable_to_non_nullable
 as bool,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$RestoreResponse {
+
+@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'url') String get url;@JsonKey(name: 'version') int get version;@JsonKey(name: 'size_bytes') int get sizeBytes;@JsonKey(name: 'sanitizer_v') String get sanitizerV;@JsonKey(name: 'modified') bool get modified;@JsonKey(name: 'stripped') List<String> get stripped;@JsonKey(name: 'will_not_render') List<String> get willNotRender;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'restored_from') int get restoredFrom;@JsonKey(name: 'source_sha256') String? get sourceSha256;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;
+/// Create a copy of RestoreResponse
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RestoreResponseCopyWith<RestoreResponse> get copyWith => _$RestoreResponseCopyWithImpl<RestoreResponse>(this as RestoreResponse, _$identity);
+
+  /// Serializes this RestoreResponse to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RestoreResponse&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.url, url) || other.url == url)&&(identical(other.version, version) || other.version == version)&&(identical(other.sizeBytes, sizeBytes) || other.sizeBytes == sizeBytes)&&(identical(other.sanitizerV, sanitizerV) || other.sanitizerV == sanitizerV)&&(identical(other.modified, modified) || other.modified == modified)&&const DeepCollectionEquality().equals(other.stripped, stripped)&&const DeepCollectionEquality().equals(other.willNotRender, willNotRender)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.restoredFrom, restoredFrom) || other.restoredFrom == restoredFrom)&&(identical(other.sourceSha256, sourceSha256) || other.sourceSha256 == sourceSha256)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,publicId,url,version,sizeBytes,sanitizerV,modified,const DeepCollectionEquality().hash(stripped),const DeepCollectionEquality().hash(willNotRender),const DeepCollectionEquality().hash(tags),restoredFrom,sourceSha256,title,description,slug);
+
+@override
+String toString() {
+  return 'RestoreResponse(publicId: $publicId, url: $url, version: $version, sizeBytes: $sizeBytes, sanitizerV: $sanitizerV, modified: $modified, stripped: $stripped, willNotRender: $willNotRender, tags: $tags, restoredFrom: $restoredFrom, sourceSha256: $sourceSha256, title: $title, description: $description, slug: $slug)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RestoreResponseCopyWith<$Res>  {
+  factory $RestoreResponseCopyWith(RestoreResponse value, $Res Function(RestoreResponse) _then) = _$RestoreResponseCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'url') String url,@JsonKey(name: 'version') int version,@JsonKey(name: 'size_bytes') int sizeBytes,@JsonKey(name: 'sanitizer_v') String sanitizerV,@JsonKey(name: 'modified') bool modified,@JsonKey(name: 'stripped') List<String> stripped,@JsonKey(name: 'will_not_render') List<String> willNotRender,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'restored_from') int restoredFrom,@JsonKey(name: 'source_sha256') String? sourceSha256,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug
+});
+
+
+
+
+}
+/// @nodoc
+class _$RestoreResponseCopyWithImpl<$Res>
+    implements $RestoreResponseCopyWith<$Res> {
+  _$RestoreResponseCopyWithImpl(this._self, this._then);
+
+  final RestoreResponse _self;
+  final $Res Function(RestoreResponse) _then;
+
+/// Create a copy of RestoreResponse
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? url = null,Object? version = null,Object? sizeBytes = null,Object? sanitizerV = null,Object? modified = null,Object? stripped = null,Object? willNotRender = null,Object? tags = null,Object? restoredFrom = null,Object? sourceSha256 = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,}) {
+  return _then(_self.copyWith(
+publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
+as String,url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
+as String,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
+as int,sizeBytes: null == sizeBytes ? _self.sizeBytes : sizeBytes // ignore: cast_nullable_to_non_nullable
+as int,sanitizerV: null == sanitizerV ? _self.sanitizerV : sanitizerV // ignore: cast_nullable_to_non_nullable
+as String,modified: null == modified ? _self.modified : modified // ignore: cast_nullable_to_non_nullable
+as bool,stripped: null == stripped ? _self.stripped : stripped // ignore: cast_nullable_to_non_nullable
+as List<String>,willNotRender: null == willNotRender ? _self.willNotRender : willNotRender // ignore: cast_nullable_to_non_nullable
+as List<String>,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
+as List<String>,restoredFrom: null == restoredFrom ? _self.restoredFrom : restoredFrom // ignore: cast_nullable_to_non_nullable
+as int,sourceSha256: freezed == sourceSha256 ? _self.sourceSha256 : sourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,slug: freezed == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [RestoreResponse].
+extension RestoreResponsePatterns on RestoreResponse {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _RestoreResponse value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _RestoreResponse() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _RestoreResponse value)  $default,){
+final _that = this;
+switch (_that) {
+case _RestoreResponse():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _RestoreResponse value)?  $default,){
+final _that = this;
+switch (_that) {
+case _RestoreResponse() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'url')  String url, @JsonKey(name: 'version')  int version, @JsonKey(name: 'size_bytes')  int sizeBytes, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'modified')  bool modified, @JsonKey(name: 'stripped')  List<String> stripped, @JsonKey(name: 'will_not_render')  List<String> willNotRender, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'restored_from')  int restoredFrom, @JsonKey(name: 'source_sha256')  String? sourceSha256, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _RestoreResponse() when $default != null:
+return $default(_that.publicId,_that.url,_that.version,_that.sizeBytes,_that.sanitizerV,_that.modified,_that.stripped,_that.willNotRender,_that.tags,_that.restoredFrom,_that.sourceSha256,_that.title,_that.description,_that.slug);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'url')  String url, @JsonKey(name: 'version')  int version, @JsonKey(name: 'size_bytes')  int sizeBytes, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'modified')  bool modified, @JsonKey(name: 'stripped')  List<String> stripped, @JsonKey(name: 'will_not_render')  List<String> willNotRender, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'restored_from')  int restoredFrom, @JsonKey(name: 'source_sha256')  String? sourceSha256, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)  $default,) {final _that = this;
+switch (_that) {
+case _RestoreResponse():
+return $default(_that.publicId,_that.url,_that.version,_that.sizeBytes,_that.sanitizerV,_that.modified,_that.stripped,_that.willNotRender,_that.tags,_that.restoredFrom,_that.sourceSha256,_that.title,_that.description,_that.slug);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'url')  String url, @JsonKey(name: 'version')  int version, @JsonKey(name: 'size_bytes')  int sizeBytes, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'modified')  bool modified, @JsonKey(name: 'stripped')  List<String> stripped, @JsonKey(name: 'will_not_render')  List<String> willNotRender, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'restored_from')  int restoredFrom, @JsonKey(name: 'source_sha256')  String? sourceSha256, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)?  $default,) {final _that = this;
+switch (_that) {
+case _RestoreResponse() when $default != null:
+return $default(_that.publicId,_that.url,_that.version,_that.sizeBytes,_that.sanitizerV,_that.modified,_that.stripped,_that.willNotRender,_that.tags,_that.restoredFrom,_that.sourceSha256,_that.title,_that.description,_that.slug);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _RestoreResponse implements RestoreResponse {
+  const _RestoreResponse({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'url') required this.url, @JsonKey(name: 'version') required this.version, @JsonKey(name: 'size_bytes') required this.sizeBytes, @JsonKey(name: 'sanitizer_v') required this.sanitizerV, @JsonKey(name: 'modified') required this.modified, @JsonKey(name: 'stripped') required final  List<String> stripped, @JsonKey(name: 'will_not_render') required final  List<String> willNotRender, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'restored_from') required this.restoredFrom, @JsonKey(name: 'source_sha256') this.sourceSha256, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug}): _stripped = stripped,_willNotRender = willNotRender,_tags = tags;
+  factory _RestoreResponse.fromJson(Map<String, dynamic> json) => _$RestoreResponseFromJson(json);
+
+@override@JsonKey(name: 'public_id') final  String publicId;
+@override@JsonKey(name: 'url') final  String url;
+@override@JsonKey(name: 'version') final  int version;
+@override@JsonKey(name: 'size_bytes') final  int sizeBytes;
+@override@JsonKey(name: 'sanitizer_v') final  String sanitizerV;
+@override@JsonKey(name: 'modified') final  bool modified;
+ final  List<String> _stripped;
+@override@JsonKey(name: 'stripped') List<String> get stripped {
+  if (_stripped is EqualUnmodifiableListView) return _stripped;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_stripped);
+}
+
+ final  List<String> _willNotRender;
+@override@JsonKey(name: 'will_not_render') List<String> get willNotRender {
+  if (_willNotRender is EqualUnmodifiableListView) return _willNotRender;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_willNotRender);
+}
+
+ final  List<String> _tags;
+@override@JsonKey(name: 'tags') List<String> get tags {
+  if (_tags is EqualUnmodifiableListView) return _tags;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_tags);
+}
+
+@override@JsonKey(name: 'restored_from') final  int restoredFrom;
+@override@JsonKey(name: 'source_sha256') final  String? sourceSha256;
+@override@JsonKey(name: 'title') final  String? title;
+@override@JsonKey(name: 'description') final  String? description;
+@override@JsonKey(name: 'slug') final  String? slug;
+
+/// Create a copy of RestoreResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$RestoreResponseCopyWith<_RestoreResponse> get copyWith => __$RestoreResponseCopyWithImpl<_RestoreResponse>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$RestoreResponseToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RestoreResponse&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.url, url) || other.url == url)&&(identical(other.version, version) || other.version == version)&&(identical(other.sizeBytes, sizeBytes) || other.sizeBytes == sizeBytes)&&(identical(other.sanitizerV, sanitizerV) || other.sanitizerV == sanitizerV)&&(identical(other.modified, modified) || other.modified == modified)&&const DeepCollectionEquality().equals(other._stripped, _stripped)&&const DeepCollectionEquality().equals(other._willNotRender, _willNotRender)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.restoredFrom, restoredFrom) || other.restoredFrom == restoredFrom)&&(identical(other.sourceSha256, sourceSha256) || other.sourceSha256 == sourceSha256)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,publicId,url,version,sizeBytes,sanitizerV,modified,const DeepCollectionEquality().hash(_stripped),const DeepCollectionEquality().hash(_willNotRender),const DeepCollectionEquality().hash(_tags),restoredFrom,sourceSha256,title,description,slug);
+
+@override
+String toString() {
+  return 'RestoreResponse(publicId: $publicId, url: $url, version: $version, sizeBytes: $sizeBytes, sanitizerV: $sanitizerV, modified: $modified, stripped: $stripped, willNotRender: $willNotRender, tags: $tags, restoredFrom: $restoredFrom, sourceSha256: $sourceSha256, title: $title, description: $description, slug: $slug)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$RestoreResponseCopyWith<$Res> implements $RestoreResponseCopyWith<$Res> {
+  factory _$RestoreResponseCopyWith(_RestoreResponse value, $Res Function(_RestoreResponse) _then) = __$RestoreResponseCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'url') String url,@JsonKey(name: 'version') int version,@JsonKey(name: 'size_bytes') int sizeBytes,@JsonKey(name: 'sanitizer_v') String sanitizerV,@JsonKey(name: 'modified') bool modified,@JsonKey(name: 'stripped') List<String> stripped,@JsonKey(name: 'will_not_render') List<String> willNotRender,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'restored_from') int restoredFrom,@JsonKey(name: 'source_sha256') String? sourceSha256,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug
+});
+
+
+
+
+}
+/// @nodoc
+class __$RestoreResponseCopyWithImpl<$Res>
+    implements _$RestoreResponseCopyWith<$Res> {
+  __$RestoreResponseCopyWithImpl(this._self, this._then);
+
+  final _RestoreResponse _self;
+  final $Res Function(_RestoreResponse) _then;
+
+/// Create a copy of RestoreResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? url = null,Object? version = null,Object? sizeBytes = null,Object? sanitizerV = null,Object? modified = null,Object? stripped = null,Object? willNotRender = null,Object? tags = null,Object? restoredFrom = null,Object? sourceSha256 = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,}) {
+  return _then(_RestoreResponse(
+publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
+as String,url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
+as String,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
+as int,sizeBytes: null == sizeBytes ? _self.sizeBytes : sizeBytes // ignore: cast_nullable_to_non_nullable
+as int,sanitizerV: null == sanitizerV ? _self.sanitizerV : sanitizerV // ignore: cast_nullable_to_non_nullable
+as String,modified: null == modified ? _self.modified : modified // ignore: cast_nullable_to_non_nullable
+as bool,stripped: null == stripped ? _self._stripped : stripped // ignore: cast_nullable_to_non_nullable
+as List<String>,willNotRender: null == willNotRender ? _self._willNotRender : willNotRender // ignore: cast_nullable_to_non_nullable
+as List<String>,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
+as List<String>,restoredFrom: null == restoredFrom ? _self.restoredFrom : restoredFrom // ignore: cast_nullable_to_non_nullable
+as int,sourceSha256: freezed == sourceSha256 ? _self.sourceSha256 : sourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,slug: freezed == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -7345,7 +9934,7 @@ as List<SearchHit>,
 /// @nodoc
 mixin _$SearchHit {
 
-@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'created_by_kind') String get createdByKind;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'status') String get status;@JsonKey(name: 'visibility') String get visibility;@JsonKey(name: 'score') double get score;@JsonKey(name: 'matched_field') String get matchedField;@JsonKey(name: 'snippet') String get snippet;@JsonKey(name: 'current_ver') int? get currentVer;@JsonKey(name: 'created_by_id') String? get createdById;@JsonKey(name: 'created_by_name') String? get createdByName;@JsonKey(name: 'current_size') int? get currentSize;@JsonKey(name: 'revoked_at') DateTime? get revokedAt;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;@JsonKey(name: 'superseded_by') String? get supersededBy;
+@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'updated_at') DateTime get updatedAt;@JsonKey(name: 'created_by_kind') String get createdByKind;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'status') String get status;@JsonKey(name: 'visibility') String get visibility;@JsonKey(name: 'score') double get score;@JsonKey(name: 'matched_field') String get matchedField;@JsonKey(name: 'snippet') String get snippet;@JsonKey(name: 'current_ver') int? get currentVer;@JsonKey(name: 'current_version_at') DateTime? get currentVersionAt;@JsonKey(name: 'created_by_id') String? get createdById;@JsonKey(name: 'created_by_name') String? get createdByName;@JsonKey(name: 'current_size') int? get currentSize;@JsonKey(name: 'current_source_sha256') String? get currentSourceSha256;@JsonKey(name: 'published_ver') int? get publishedVer;@JsonKey(name: 'published_source_sha256') String? get publishedSourceSha256;@JsonKey(name: 'revoked_at') DateTime? get revokedAt;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;@JsonKey(name: 'superseded_by') String? get supersededBy;
 /// Create a copy of SearchHit
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -7358,16 +9947,16 @@ $SearchHitCopyWith<SearchHit> get copyWith => _$SearchHitCopyWithImpl<SearchHit>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchHit&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.score, score) || other.score == score)&&(identical(other.matchedField, matchedField) || other.matchedField == matchedField)&&(identical(other.snippet, snippet) || other.snippet == snippet)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchHit&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.score, score) || other.score == score)&&(identical(other.matchedField, matchedField) || other.matchedField == matchedField)&&(identical(other.snippet, snippet) || other.snippet == snippet)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.currentVersionAt, currentVersionAt) || other.currentVersionAt == currentVersionAt)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.currentSourceSha256, currentSourceSha256) || other.currentSourceSha256 == currentSourceSha256)&&(identical(other.publishedVer, publishedVer) || other.publishedVer == publishedVer)&&(identical(other.publishedSourceSha256, publishedSourceSha256) || other.publishedSourceSha256 == publishedSourceSha256)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,publicId,createdAt,createdByKind,const DeepCollectionEquality().hash(tags),status,visibility,score,matchedField,snippet,currentVer,createdById,createdByName,currentSize,revokedAt,title,description,slug,supersededBy);
+int get hashCode => Object.hashAll([runtimeType,publicId,createdAt,updatedAt,createdByKind,const DeepCollectionEquality().hash(tags),status,visibility,score,matchedField,snippet,currentVer,currentVersionAt,createdById,createdByName,currentSize,currentSourceSha256,publishedVer,publishedSourceSha256,revokedAt,title,description,slug,supersededBy]);
 
 @override
 String toString() {
-  return 'SearchHit(publicId: $publicId, createdAt: $createdAt, createdByKind: $createdByKind, tags: $tags, status: $status, visibility: $visibility, score: $score, matchedField: $matchedField, snippet: $snippet, currentVer: $currentVer, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy)';
+  return 'SearchHit(publicId: $publicId, createdAt: $createdAt, updatedAt: $updatedAt, createdByKind: $createdByKind, tags: $tags, status: $status, visibility: $visibility, score: $score, matchedField: $matchedField, snippet: $snippet, currentVer: $currentVer, currentVersionAt: $currentVersionAt, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, currentSourceSha256: $currentSourceSha256, publishedVer: $publishedVer, publishedSourceSha256: $publishedSourceSha256, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy)';
 }
 
 
@@ -7378,7 +9967,7 @@ abstract mixin class $SearchHitCopyWith<$Res>  {
   factory $SearchHitCopyWith(SearchHit value, $Res Function(SearchHit) _then) = _$SearchHitCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'score') double score,@JsonKey(name: 'matched_field') String matchedField,@JsonKey(name: 'snippet') String snippet,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'score') double score,@JsonKey(name: 'matched_field') String matchedField,@JsonKey(name: 'snippet') String snippet,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'current_version_at') DateTime? currentVersionAt,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'current_source_sha256') String? currentSourceSha256,@JsonKey(name: 'published_ver') int? publishedVer,@JsonKey(name: 'published_source_sha256') String? publishedSourceSha256,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy
 });
 
 
@@ -7395,10 +9984,11 @@ class _$SearchHitCopyWithImpl<$Res>
 
 /// Create a copy of SearchHit
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? createdAt = null,Object? createdByKind = null,Object? tags = null,Object? status = null,Object? visibility = null,Object? score = null,Object? matchedField = null,Object? snippet = null,Object? currentVer = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? createdAt = null,Object? updatedAt = null,Object? createdByKind = null,Object? tags = null,Object? status = null,Object? visibility = null,Object? score = null,Object? matchedField = null,Object? snippet = null,Object? currentVer = freezed,Object? currentVersionAt = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? currentSourceSha256 = freezed,Object? publishedVer = freezed,Object? publishedSourceSha256 = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,}) {
   return _then(_self.copyWith(
 publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,createdByKind: null == createdByKind ? _self.createdByKind : createdByKind // ignore: cast_nullable_to_non_nullable
 as String,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
 as List<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -7407,10 +9997,14 @@ as String,score: null == score ? _self.score : score // ignore: cast_nullable_to
 as double,matchedField: null == matchedField ? _self.matchedField : matchedField // ignore: cast_nullable_to_non_nullable
 as String,snippet: null == snippet ? _self.snippet : snippet // ignore: cast_nullable_to_non_nullable
 as String,currentVer: freezed == currentVer ? _self.currentVer : currentVer // ignore: cast_nullable_to_non_nullable
-as int?,createdById: freezed == createdById ? _self.createdById : createdById // ignore: cast_nullable_to_non_nullable
+as int?,currentVersionAt: freezed == currentVersionAt ? _self.currentVersionAt : currentVersionAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,createdById: freezed == createdById ? _self.createdById : createdById // ignore: cast_nullable_to_non_nullable
 as String?,createdByName: freezed == createdByName ? _self.createdByName : createdByName // ignore: cast_nullable_to_non_nullable
 as String?,currentSize: freezed == currentSize ? _self.currentSize : currentSize // ignore: cast_nullable_to_non_nullable
-as int?,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
+as int?,currentSourceSha256: freezed == currentSourceSha256 ? _self.currentSourceSha256 : currentSourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,publishedVer: freezed == publishedVer ? _self.publishedVer : publishedVer // ignore: cast_nullable_to_non_nullable
+as int?,publishedSourceSha256: freezed == publishedSourceSha256 ? _self.publishedSourceSha256 : publishedSourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,slug: freezed == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -7500,10 +10094,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'score')  double score, @JsonKey(name: 'matched_field')  String matchedField, @JsonKey(name: 'snippet')  String snippet, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'score')  double score, @JsonKey(name: 'matched_field')  String matchedField, @JsonKey(name: 'snippet')  String snippet, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'current_version_at')  DateTime? currentVersionAt, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'current_source_sha256')  String? currentSourceSha256, @JsonKey(name: 'published_ver')  int? publishedVer, @JsonKey(name: 'published_source_sha256')  String? publishedSourceSha256, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SearchHit() when $default != null:
-return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.score,_that.matchedField,_that.snippet,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
+return $default(_that.publicId,_that.createdAt,_that.updatedAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.score,_that.matchedField,_that.snippet,_that.currentVer,_that.currentVersionAt,_that.createdById,_that.createdByName,_that.currentSize,_that.currentSourceSha256,_that.publishedVer,_that.publishedSourceSha256,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
   return orElse();
 
 }
@@ -7521,10 +10115,10 @@ return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'score')  double score, @JsonKey(name: 'matched_field')  String matchedField, @JsonKey(name: 'snippet')  String snippet, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'score')  double score, @JsonKey(name: 'matched_field')  String matchedField, @JsonKey(name: 'snippet')  String snippet, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'current_version_at')  DateTime? currentVersionAt, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'current_source_sha256')  String? currentSourceSha256, @JsonKey(name: 'published_ver')  int? publishedVer, @JsonKey(name: 'published_source_sha256')  String? publishedSourceSha256, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)  $default,) {final _that = this;
 switch (_that) {
 case _SearchHit():
-return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.score,_that.matchedField,_that.snippet,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
+return $default(_that.publicId,_that.createdAt,_that.updatedAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.score,_that.matchedField,_that.snippet,_that.currentVer,_that.currentVersionAt,_that.createdById,_that.createdByName,_that.currentSize,_that.currentSourceSha256,_that.publishedVer,_that.publishedSourceSha256,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -7541,10 +10135,10 @@ return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'score')  double score, @JsonKey(name: 'matched_field')  String matchedField, @JsonKey(name: 'snippet')  String snippet, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'updated_at')  DateTime updatedAt, @JsonKey(name: 'created_by_kind')  String createdByKind, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'status')  String status, @JsonKey(name: 'visibility')  String visibility, @JsonKey(name: 'score')  double score, @JsonKey(name: 'matched_field')  String matchedField, @JsonKey(name: 'snippet')  String snippet, @JsonKey(name: 'current_ver')  int? currentVer, @JsonKey(name: 'current_version_at')  DateTime? currentVersionAt, @JsonKey(name: 'created_by_id')  String? createdById, @JsonKey(name: 'created_by_name')  String? createdByName, @JsonKey(name: 'current_size')  int? currentSize, @JsonKey(name: 'current_source_sha256')  String? currentSourceSha256, @JsonKey(name: 'published_ver')  int? publishedVer, @JsonKey(name: 'published_source_sha256')  String? publishedSourceSha256, @JsonKey(name: 'revoked_at')  DateTime? revokedAt, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug, @JsonKey(name: 'superseded_by')  String? supersededBy)?  $default,) {final _that = this;
 switch (_that) {
 case _SearchHit() when $default != null:
-return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.score,_that.matchedField,_that.snippet,_that.currentVer,_that.createdById,_that.createdByName,_that.currentSize,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
+return $default(_that.publicId,_that.createdAt,_that.updatedAt,_that.createdByKind,_that.tags,_that.status,_that.visibility,_that.score,_that.matchedField,_that.snippet,_that.currentVer,_that.currentVersionAt,_that.createdById,_that.createdByName,_that.currentSize,_that.currentSourceSha256,_that.publishedVer,_that.publishedSourceSha256,_that.revokedAt,_that.title,_that.description,_that.slug,_that.supersededBy);case _:
   return null;
 
 }
@@ -7556,11 +10150,12 @@ return $default(_that.publicId,_that.createdAt,_that.createdByKind,_that.tags,_t
 @JsonSerializable()
 
 class _SearchHit extends SearchHit {
-  const _SearchHit({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'created_by_kind') required this.createdByKind, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'status') required this.status, @JsonKey(name: 'visibility') required this.visibility, @JsonKey(name: 'score') required this.score, @JsonKey(name: 'matched_field') required this.matchedField, @JsonKey(name: 'snippet') required this.snippet, @JsonKey(name: 'current_ver') this.currentVer, @JsonKey(name: 'created_by_id') this.createdById, @JsonKey(name: 'created_by_name') this.createdByName, @JsonKey(name: 'current_size') this.currentSize, @JsonKey(name: 'revoked_at') this.revokedAt, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug, @JsonKey(name: 'superseded_by') this.supersededBy}): _tags = tags,super._();
+  const _SearchHit({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'created_by_kind') required this.createdByKind, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'status') required this.status, @JsonKey(name: 'visibility') required this.visibility, @JsonKey(name: 'score') required this.score, @JsonKey(name: 'matched_field') required this.matchedField, @JsonKey(name: 'snippet') required this.snippet, @JsonKey(name: 'current_ver') this.currentVer, @JsonKey(name: 'current_version_at') this.currentVersionAt, @JsonKey(name: 'created_by_id') this.createdById, @JsonKey(name: 'created_by_name') this.createdByName, @JsonKey(name: 'current_size') this.currentSize, @JsonKey(name: 'current_source_sha256') this.currentSourceSha256, @JsonKey(name: 'published_ver') this.publishedVer, @JsonKey(name: 'published_source_sha256') this.publishedSourceSha256, @JsonKey(name: 'revoked_at') this.revokedAt, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug, @JsonKey(name: 'superseded_by') this.supersededBy}): _tags = tags,super._();
   factory _SearchHit.fromJson(Map<String, dynamic> json) => _$SearchHitFromJson(json);
 
 @override@JsonKey(name: 'public_id') final  String publicId;
 @override@JsonKey(name: 'created_at') final  DateTime createdAt;
+@override@JsonKey(name: 'updated_at') final  DateTime updatedAt;
 @override@JsonKey(name: 'created_by_kind') final  String createdByKind;
  final  List<String> _tags;
 @override@JsonKey(name: 'tags') List<String> get tags {
@@ -7575,9 +10170,13 @@ class _SearchHit extends SearchHit {
 @override@JsonKey(name: 'matched_field') final  String matchedField;
 @override@JsonKey(name: 'snippet') final  String snippet;
 @override@JsonKey(name: 'current_ver') final  int? currentVer;
+@override@JsonKey(name: 'current_version_at') final  DateTime? currentVersionAt;
 @override@JsonKey(name: 'created_by_id') final  String? createdById;
 @override@JsonKey(name: 'created_by_name') final  String? createdByName;
 @override@JsonKey(name: 'current_size') final  int? currentSize;
+@override@JsonKey(name: 'current_source_sha256') final  String? currentSourceSha256;
+@override@JsonKey(name: 'published_ver') final  int? publishedVer;
+@override@JsonKey(name: 'published_source_sha256') final  String? publishedSourceSha256;
 @override@JsonKey(name: 'revoked_at') final  DateTime? revokedAt;
 @override@JsonKey(name: 'title') final  String? title;
 @override@JsonKey(name: 'description') final  String? description;
@@ -7597,16 +10196,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchHit&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.score, score) || other.score == score)&&(identical(other.matchedField, matchedField) || other.matchedField == matchedField)&&(identical(other.snippet, snippet) || other.snippet == snippet)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchHit&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdByKind, createdByKind) || other.createdByKind == createdByKind)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.status, status) || other.status == status)&&(identical(other.visibility, visibility) || other.visibility == visibility)&&(identical(other.score, score) || other.score == score)&&(identical(other.matchedField, matchedField) || other.matchedField == matchedField)&&(identical(other.snippet, snippet) || other.snippet == snippet)&&(identical(other.currentVer, currentVer) || other.currentVer == currentVer)&&(identical(other.currentVersionAt, currentVersionAt) || other.currentVersionAt == currentVersionAt)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.createdByName, createdByName) || other.createdByName == createdByName)&&(identical(other.currentSize, currentSize) || other.currentSize == currentSize)&&(identical(other.currentSourceSha256, currentSourceSha256) || other.currentSourceSha256 == currentSourceSha256)&&(identical(other.publishedVer, publishedVer) || other.publishedVer == publishedVer)&&(identical(other.publishedSourceSha256, publishedSourceSha256) || other.publishedSourceSha256 == publishedSourceSha256)&&(identical(other.revokedAt, revokedAt) || other.revokedAt == revokedAt)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.supersededBy, supersededBy) || other.supersededBy == supersededBy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,publicId,createdAt,createdByKind,const DeepCollectionEquality().hash(_tags),status,visibility,score,matchedField,snippet,currentVer,createdById,createdByName,currentSize,revokedAt,title,description,slug,supersededBy);
+int get hashCode => Object.hashAll([runtimeType,publicId,createdAt,updatedAt,createdByKind,const DeepCollectionEquality().hash(_tags),status,visibility,score,matchedField,snippet,currentVer,currentVersionAt,createdById,createdByName,currentSize,currentSourceSha256,publishedVer,publishedSourceSha256,revokedAt,title,description,slug,supersededBy]);
 
 @override
 String toString() {
-  return 'SearchHit(publicId: $publicId, createdAt: $createdAt, createdByKind: $createdByKind, tags: $tags, status: $status, visibility: $visibility, score: $score, matchedField: $matchedField, snippet: $snippet, currentVer: $currentVer, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy)';
+  return 'SearchHit(publicId: $publicId, createdAt: $createdAt, updatedAt: $updatedAt, createdByKind: $createdByKind, tags: $tags, status: $status, visibility: $visibility, score: $score, matchedField: $matchedField, snippet: $snippet, currentVer: $currentVer, currentVersionAt: $currentVersionAt, createdById: $createdById, createdByName: $createdByName, currentSize: $currentSize, currentSourceSha256: $currentSourceSha256, publishedVer: $publishedVer, publishedSourceSha256: $publishedSourceSha256, revokedAt: $revokedAt, title: $title, description: $description, slug: $slug, supersededBy: $supersededBy)';
 }
 
 
@@ -7617,7 +10216,7 @@ abstract mixin class _$SearchHitCopyWith<$Res> implements $SearchHitCopyWith<$Re
   factory _$SearchHitCopyWith(_SearchHit value, $Res Function(_SearchHit) _then) = __$SearchHitCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'score') double score,@JsonKey(name: 'matched_field') String matchedField,@JsonKey(name: 'snippet') String snippet,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'updated_at') DateTime updatedAt,@JsonKey(name: 'created_by_kind') String createdByKind,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'status') String status,@JsonKey(name: 'visibility') String visibility,@JsonKey(name: 'score') double score,@JsonKey(name: 'matched_field') String matchedField,@JsonKey(name: 'snippet') String snippet,@JsonKey(name: 'current_ver') int? currentVer,@JsonKey(name: 'current_version_at') DateTime? currentVersionAt,@JsonKey(name: 'created_by_id') String? createdById,@JsonKey(name: 'created_by_name') String? createdByName,@JsonKey(name: 'current_size') int? currentSize,@JsonKey(name: 'current_source_sha256') String? currentSourceSha256,@JsonKey(name: 'published_ver') int? publishedVer,@JsonKey(name: 'published_source_sha256') String? publishedSourceSha256,@JsonKey(name: 'revoked_at') DateTime? revokedAt,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug,@JsonKey(name: 'superseded_by') String? supersededBy
 });
 
 
@@ -7634,10 +10233,11 @@ class __$SearchHitCopyWithImpl<$Res>
 
 /// Create a copy of SearchHit
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? createdAt = null,Object? createdByKind = null,Object? tags = null,Object? status = null,Object? visibility = null,Object? score = null,Object? matchedField = null,Object? snippet = null,Object? currentVer = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? createdAt = null,Object? updatedAt = null,Object? createdByKind = null,Object? tags = null,Object? status = null,Object? visibility = null,Object? score = null,Object? matchedField = null,Object? snippet = null,Object? currentVer = freezed,Object? currentVersionAt = freezed,Object? createdById = freezed,Object? createdByName = freezed,Object? currentSize = freezed,Object? currentSourceSha256 = freezed,Object? publishedVer = freezed,Object? publishedSourceSha256 = freezed,Object? revokedAt = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,Object? supersededBy = freezed,}) {
   return _then(_SearchHit(
 publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,createdByKind: null == createdByKind ? _self.createdByKind : createdByKind // ignore: cast_nullable_to_non_nullable
 as String,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
 as List<String>,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -7646,10 +10246,14 @@ as String,score: null == score ? _self.score : score // ignore: cast_nullable_to
 as double,matchedField: null == matchedField ? _self.matchedField : matchedField // ignore: cast_nullable_to_non_nullable
 as String,snippet: null == snippet ? _self.snippet : snippet // ignore: cast_nullable_to_non_nullable
 as String,currentVer: freezed == currentVer ? _self.currentVer : currentVer // ignore: cast_nullable_to_non_nullable
-as int?,createdById: freezed == createdById ? _self.createdById : createdById // ignore: cast_nullable_to_non_nullable
+as int?,currentVersionAt: freezed == currentVersionAt ? _self.currentVersionAt : currentVersionAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,createdById: freezed == createdById ? _self.createdById : createdById // ignore: cast_nullable_to_non_nullable
 as String?,createdByName: freezed == createdByName ? _self.createdByName : createdByName // ignore: cast_nullable_to_non_nullable
 as String?,currentSize: freezed == currentSize ? _self.currentSize : currentSize // ignore: cast_nullable_to_non_nullable
-as int?,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
+as int?,currentSourceSha256: freezed == currentSourceSha256 ? _self.currentSourceSha256 : currentSourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,publishedVer: freezed == publishedVer ? _self.publishedVer : publishedVer // ignore: cast_nullable_to_non_nullable
+as int?,publishedSourceSha256: freezed == publishedSourceSha256 ? _self.publishedSourceSha256 : publishedSourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,revokedAt: freezed == revokedAt ? _self.revokedAt : revokedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,slug: freezed == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
@@ -9016,7 +11620,7 @@ as String?,
 /// @nodoc
 mixin _$WriteResponse {
 
-@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'url') String get url;@JsonKey(name: 'version') int get version;@JsonKey(name: 'size_bytes') int get sizeBytes;@JsonKey(name: 'sanitizer_v') String get sanitizerV;@JsonKey(name: 'modified') bool get modified;@JsonKey(name: 'stripped') List<String> get stripped;@JsonKey(name: 'will_not_render') List<String> get willNotRender;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;
+@JsonKey(name: 'public_id') String get publicId;@JsonKey(name: 'url') String get url;@JsonKey(name: 'version') int get version;@JsonKey(name: 'size_bytes') int get sizeBytes;@JsonKey(name: 'sanitizer_v') String get sanitizerV;@JsonKey(name: 'modified') bool get modified;@JsonKey(name: 'stripped') List<String> get stripped;@JsonKey(name: 'will_not_render') List<String> get willNotRender;@JsonKey(name: 'tags') List<String> get tags;@JsonKey(name: 'source_sha256') String? get sourceSha256;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'description') String? get description;@JsonKey(name: 'slug') String? get slug;
 /// Create a copy of WriteResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -9029,16 +11633,16 @@ $WriteResponseCopyWith<WriteResponse> get copyWith => _$WriteResponseCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WriteResponse&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.url, url) || other.url == url)&&(identical(other.version, version) || other.version == version)&&(identical(other.sizeBytes, sizeBytes) || other.sizeBytes == sizeBytes)&&(identical(other.sanitizerV, sanitizerV) || other.sanitizerV == sanitizerV)&&(identical(other.modified, modified) || other.modified == modified)&&const DeepCollectionEquality().equals(other.stripped, stripped)&&const DeepCollectionEquality().equals(other.willNotRender, willNotRender)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WriteResponse&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.url, url) || other.url == url)&&(identical(other.version, version) || other.version == version)&&(identical(other.sizeBytes, sizeBytes) || other.sizeBytes == sizeBytes)&&(identical(other.sanitizerV, sanitizerV) || other.sanitizerV == sanitizerV)&&(identical(other.modified, modified) || other.modified == modified)&&const DeepCollectionEquality().equals(other.stripped, stripped)&&const DeepCollectionEquality().equals(other.willNotRender, willNotRender)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.sourceSha256, sourceSha256) || other.sourceSha256 == sourceSha256)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,publicId,url,version,sizeBytes,sanitizerV,modified,const DeepCollectionEquality().hash(stripped),const DeepCollectionEquality().hash(willNotRender),const DeepCollectionEquality().hash(tags),title,description,slug);
+int get hashCode => Object.hash(runtimeType,publicId,url,version,sizeBytes,sanitizerV,modified,const DeepCollectionEquality().hash(stripped),const DeepCollectionEquality().hash(willNotRender),const DeepCollectionEquality().hash(tags),sourceSha256,title,description,slug);
 
 @override
 String toString() {
-  return 'WriteResponse(publicId: $publicId, url: $url, version: $version, sizeBytes: $sizeBytes, sanitizerV: $sanitizerV, modified: $modified, stripped: $stripped, willNotRender: $willNotRender, tags: $tags, title: $title, description: $description, slug: $slug)';
+  return 'WriteResponse(publicId: $publicId, url: $url, version: $version, sizeBytes: $sizeBytes, sanitizerV: $sanitizerV, modified: $modified, stripped: $stripped, willNotRender: $willNotRender, tags: $tags, sourceSha256: $sourceSha256, title: $title, description: $description, slug: $slug)';
 }
 
 
@@ -9049,7 +11653,7 @@ abstract mixin class $WriteResponseCopyWith<$Res>  {
   factory $WriteResponseCopyWith(WriteResponse value, $Res Function(WriteResponse) _then) = _$WriteResponseCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'url') String url,@JsonKey(name: 'version') int version,@JsonKey(name: 'size_bytes') int sizeBytes,@JsonKey(name: 'sanitizer_v') String sanitizerV,@JsonKey(name: 'modified') bool modified,@JsonKey(name: 'stripped') List<String> stripped,@JsonKey(name: 'will_not_render') List<String> willNotRender,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'url') String url,@JsonKey(name: 'version') int version,@JsonKey(name: 'size_bytes') int sizeBytes,@JsonKey(name: 'sanitizer_v') String sanitizerV,@JsonKey(name: 'modified') bool modified,@JsonKey(name: 'stripped') List<String> stripped,@JsonKey(name: 'will_not_render') List<String> willNotRender,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'source_sha256') String? sourceSha256,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug
 });
 
 
@@ -9066,7 +11670,7 @@ class _$WriteResponseCopyWithImpl<$Res>
 
 /// Create a copy of WriteResponse
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? url = null,Object? version = null,Object? sizeBytes = null,Object? sanitizerV = null,Object? modified = null,Object? stripped = null,Object? willNotRender = null,Object? tags = null,Object? title = freezed,Object? description = freezed,Object? slug = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? publicId = null,Object? url = null,Object? version = null,Object? sizeBytes = null,Object? sanitizerV = null,Object? modified = null,Object? stripped = null,Object? willNotRender = null,Object? tags = null,Object? sourceSha256 = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,}) {
   return _then(_self.copyWith(
 publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
 as String,url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
@@ -9077,7 +11681,8 @@ as String,modified: null == modified ? _self.modified : modified // ignore: cast
 as bool,stripped: null == stripped ? _self.stripped : stripped // ignore: cast_nullable_to_non_nullable
 as List<String>,willNotRender: null == willNotRender ? _self.willNotRender : willNotRender // ignore: cast_nullable_to_non_nullable
 as List<String>,tags: null == tags ? _self.tags : tags // ignore: cast_nullable_to_non_nullable
-as List<String>,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as List<String>,sourceSha256: freezed == sourceSha256 ? _self.sourceSha256 : sourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,slug: freezed == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String?,
@@ -9165,10 +11770,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'url')  String url, @JsonKey(name: 'version')  int version, @JsonKey(name: 'size_bytes')  int sizeBytes, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'modified')  bool modified, @JsonKey(name: 'stripped')  List<String> stripped, @JsonKey(name: 'will_not_render')  List<String> willNotRender, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'url')  String url, @JsonKey(name: 'version')  int version, @JsonKey(name: 'size_bytes')  int sizeBytes, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'modified')  bool modified, @JsonKey(name: 'stripped')  List<String> stripped, @JsonKey(name: 'will_not_render')  List<String> willNotRender, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'source_sha256')  String? sourceSha256, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WriteResponse() when $default != null:
-return $default(_that.publicId,_that.url,_that.version,_that.sizeBytes,_that.sanitizerV,_that.modified,_that.stripped,_that.willNotRender,_that.tags,_that.title,_that.description,_that.slug);case _:
+return $default(_that.publicId,_that.url,_that.version,_that.sizeBytes,_that.sanitizerV,_that.modified,_that.stripped,_that.willNotRender,_that.tags,_that.sourceSha256,_that.title,_that.description,_that.slug);case _:
   return orElse();
 
 }
@@ -9186,10 +11791,10 @@ return $default(_that.publicId,_that.url,_that.version,_that.sizeBytes,_that.san
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'url')  String url, @JsonKey(name: 'version')  int version, @JsonKey(name: 'size_bytes')  int sizeBytes, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'modified')  bool modified, @JsonKey(name: 'stripped')  List<String> stripped, @JsonKey(name: 'will_not_render')  List<String> willNotRender, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'url')  String url, @JsonKey(name: 'version')  int version, @JsonKey(name: 'size_bytes')  int sizeBytes, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'modified')  bool modified, @JsonKey(name: 'stripped')  List<String> stripped, @JsonKey(name: 'will_not_render')  List<String> willNotRender, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'source_sha256')  String? sourceSha256, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)  $default,) {final _that = this;
 switch (_that) {
 case _WriteResponse():
-return $default(_that.publicId,_that.url,_that.version,_that.sizeBytes,_that.sanitizerV,_that.modified,_that.stripped,_that.willNotRender,_that.tags,_that.title,_that.description,_that.slug);case _:
+return $default(_that.publicId,_that.url,_that.version,_that.sizeBytes,_that.sanitizerV,_that.modified,_that.stripped,_that.willNotRender,_that.tags,_that.sourceSha256,_that.title,_that.description,_that.slug);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -9206,10 +11811,10 @@ return $default(_that.publicId,_that.url,_that.version,_that.sizeBytes,_that.san
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'url')  String url, @JsonKey(name: 'version')  int version, @JsonKey(name: 'size_bytes')  int sizeBytes, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'modified')  bool modified, @JsonKey(name: 'stripped')  List<String> stripped, @JsonKey(name: 'will_not_render')  List<String> willNotRender, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'public_id')  String publicId, @JsonKey(name: 'url')  String url, @JsonKey(name: 'version')  int version, @JsonKey(name: 'size_bytes')  int sizeBytes, @JsonKey(name: 'sanitizer_v')  String sanitizerV, @JsonKey(name: 'modified')  bool modified, @JsonKey(name: 'stripped')  List<String> stripped, @JsonKey(name: 'will_not_render')  List<String> willNotRender, @JsonKey(name: 'tags')  List<String> tags, @JsonKey(name: 'source_sha256')  String? sourceSha256, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'description')  String? description, @JsonKey(name: 'slug')  String? slug)?  $default,) {final _that = this;
 switch (_that) {
 case _WriteResponse() when $default != null:
-return $default(_that.publicId,_that.url,_that.version,_that.sizeBytes,_that.sanitizerV,_that.modified,_that.stripped,_that.willNotRender,_that.tags,_that.title,_that.description,_that.slug);case _:
+return $default(_that.publicId,_that.url,_that.version,_that.sizeBytes,_that.sanitizerV,_that.modified,_that.stripped,_that.willNotRender,_that.tags,_that.sourceSha256,_that.title,_that.description,_that.slug);case _:
   return null;
 
 }
@@ -9221,7 +11826,7 @@ return $default(_that.publicId,_that.url,_that.version,_that.sizeBytes,_that.san
 @JsonSerializable()
 
 class _WriteResponse implements WriteResponse {
-  const _WriteResponse({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'url') required this.url, @JsonKey(name: 'version') required this.version, @JsonKey(name: 'size_bytes') required this.sizeBytes, @JsonKey(name: 'sanitizer_v') required this.sanitizerV, @JsonKey(name: 'modified') required this.modified, @JsonKey(name: 'stripped') required final  List<String> stripped, @JsonKey(name: 'will_not_render') required final  List<String> willNotRender, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug}): _stripped = stripped,_willNotRender = willNotRender,_tags = tags;
+  const _WriteResponse({@JsonKey(name: 'public_id') required this.publicId, @JsonKey(name: 'url') required this.url, @JsonKey(name: 'version') required this.version, @JsonKey(name: 'size_bytes') required this.sizeBytes, @JsonKey(name: 'sanitizer_v') required this.sanitizerV, @JsonKey(name: 'modified') required this.modified, @JsonKey(name: 'stripped') required final  List<String> stripped, @JsonKey(name: 'will_not_render') required final  List<String> willNotRender, @JsonKey(name: 'tags') required final  List<String> tags, @JsonKey(name: 'source_sha256') this.sourceSha256, @JsonKey(name: 'title') this.title, @JsonKey(name: 'description') this.description, @JsonKey(name: 'slug') this.slug}): _stripped = stripped,_willNotRender = willNotRender,_tags = tags;
   factory _WriteResponse.fromJson(Map<String, dynamic> json) => _$WriteResponseFromJson(json);
 
 @override@JsonKey(name: 'public_id') final  String publicId;
@@ -9251,6 +11856,7 @@ class _WriteResponse implements WriteResponse {
   return EqualUnmodifiableListView(_tags);
 }
 
+@override@JsonKey(name: 'source_sha256') final  String? sourceSha256;
 @override@JsonKey(name: 'title') final  String? title;
 @override@JsonKey(name: 'description') final  String? description;
 @override@JsonKey(name: 'slug') final  String? slug;
@@ -9268,16 +11874,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WriteResponse&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.url, url) || other.url == url)&&(identical(other.version, version) || other.version == version)&&(identical(other.sizeBytes, sizeBytes) || other.sizeBytes == sizeBytes)&&(identical(other.sanitizerV, sanitizerV) || other.sanitizerV == sanitizerV)&&(identical(other.modified, modified) || other.modified == modified)&&const DeepCollectionEquality().equals(other._stripped, _stripped)&&const DeepCollectionEquality().equals(other._willNotRender, _willNotRender)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WriteResponse&&(identical(other.publicId, publicId) || other.publicId == publicId)&&(identical(other.url, url) || other.url == url)&&(identical(other.version, version) || other.version == version)&&(identical(other.sizeBytes, sizeBytes) || other.sizeBytes == sizeBytes)&&(identical(other.sanitizerV, sanitizerV) || other.sanitizerV == sanitizerV)&&(identical(other.modified, modified) || other.modified == modified)&&const DeepCollectionEquality().equals(other._stripped, _stripped)&&const DeepCollectionEquality().equals(other._willNotRender, _willNotRender)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.sourceSha256, sourceSha256) || other.sourceSha256 == sourceSha256)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.slug, slug) || other.slug == slug));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,publicId,url,version,sizeBytes,sanitizerV,modified,const DeepCollectionEquality().hash(_stripped),const DeepCollectionEquality().hash(_willNotRender),const DeepCollectionEquality().hash(_tags),title,description,slug);
+int get hashCode => Object.hash(runtimeType,publicId,url,version,sizeBytes,sanitizerV,modified,const DeepCollectionEquality().hash(_stripped),const DeepCollectionEquality().hash(_willNotRender),const DeepCollectionEquality().hash(_tags),sourceSha256,title,description,slug);
 
 @override
 String toString() {
-  return 'WriteResponse(publicId: $publicId, url: $url, version: $version, sizeBytes: $sizeBytes, sanitizerV: $sanitizerV, modified: $modified, stripped: $stripped, willNotRender: $willNotRender, tags: $tags, title: $title, description: $description, slug: $slug)';
+  return 'WriteResponse(publicId: $publicId, url: $url, version: $version, sizeBytes: $sizeBytes, sanitizerV: $sanitizerV, modified: $modified, stripped: $stripped, willNotRender: $willNotRender, tags: $tags, sourceSha256: $sourceSha256, title: $title, description: $description, slug: $slug)';
 }
 
 
@@ -9288,7 +11894,7 @@ abstract mixin class _$WriteResponseCopyWith<$Res> implements $WriteResponseCopy
   factory _$WriteResponseCopyWith(_WriteResponse value, $Res Function(_WriteResponse) _then) = __$WriteResponseCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'url') String url,@JsonKey(name: 'version') int version,@JsonKey(name: 'size_bytes') int sizeBytes,@JsonKey(name: 'sanitizer_v') String sanitizerV,@JsonKey(name: 'modified') bool modified,@JsonKey(name: 'stripped') List<String> stripped,@JsonKey(name: 'will_not_render') List<String> willNotRender,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug
+@JsonKey(name: 'public_id') String publicId,@JsonKey(name: 'url') String url,@JsonKey(name: 'version') int version,@JsonKey(name: 'size_bytes') int sizeBytes,@JsonKey(name: 'sanitizer_v') String sanitizerV,@JsonKey(name: 'modified') bool modified,@JsonKey(name: 'stripped') List<String> stripped,@JsonKey(name: 'will_not_render') List<String> willNotRender,@JsonKey(name: 'tags') List<String> tags,@JsonKey(name: 'source_sha256') String? sourceSha256,@JsonKey(name: 'title') String? title,@JsonKey(name: 'description') String? description,@JsonKey(name: 'slug') String? slug
 });
 
 
@@ -9305,7 +11911,7 @@ class __$WriteResponseCopyWithImpl<$Res>
 
 /// Create a copy of WriteResponse
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? url = null,Object? version = null,Object? sizeBytes = null,Object? sanitizerV = null,Object? modified = null,Object? stripped = null,Object? willNotRender = null,Object? tags = null,Object? title = freezed,Object? description = freezed,Object? slug = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? publicId = null,Object? url = null,Object? version = null,Object? sizeBytes = null,Object? sanitizerV = null,Object? modified = null,Object? stripped = null,Object? willNotRender = null,Object? tags = null,Object? sourceSha256 = freezed,Object? title = freezed,Object? description = freezed,Object? slug = freezed,}) {
   return _then(_WriteResponse(
 publicId: null == publicId ? _self.publicId : publicId // ignore: cast_nullable_to_non_nullable
 as String,url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
@@ -9316,7 +11922,8 @@ as String,modified: null == modified ? _self.modified : modified // ignore: cast
 as bool,stripped: null == stripped ? _self._stripped : stripped // ignore: cast_nullable_to_non_nullable
 as List<String>,willNotRender: null == willNotRender ? _self._willNotRender : willNotRender // ignore: cast_nullable_to_non_nullable
 as List<String>,tags: null == tags ? _self._tags : tags // ignore: cast_nullable_to_non_nullable
-as List<String>,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as List<String>,sourceSha256: freezed == sourceSha256 ? _self.sourceSha256 : sourceSha256 // ignore: cast_nullable_to_non_nullable
+as String?,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,slug: freezed == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String?,

@@ -1,6 +1,5 @@
 import 'dart:developer' as dev;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
 import '../api/api.dart';
 import '../core/api_client.dart';
 import '../core/document_cache.dart';
@@ -425,27 +424,112 @@ class DocumentsListNotifier extends Notifier<DocumentsListState> {
     return write;
   }
 
-  Future<int> restoreVersion(String publicId, int version) async {
+  /// List a document's version history via `GET /admin/documents/:id/versions`
+  /// — newest first, capped at the 200 most recent versions, with no cursor.
+  ///
+  /// Deliberately uncached and never folded into [DocumentsListState]: the
+  /// history is a live view that a promote or a restore invalidates the moment
+  /// it happens, and it is only ever read by a screen that is already open. Its
+  /// `current_ver` (and each row's `isCurrent` / `isPublished`) is the canonical
+  /// answer to "what is live, and what is being served" at the instant of the
+  /// call, so callers should re-fetch rather than hold on to it.
+  Future<ListVersionsResponse> fetchVersions(String publicId) async {
+    final dio = ref.read(dioProvider);
+    final response = await dio.get('/admin/documents/$publicId/versions');
+    return ListVersionsResponse.fromJson(
+      response.data as Map<String, dynamic>,
+    );
+  }
+
+  /// Move the publication pointer to [version] via
+  /// `POST /admin/documents/:id/promote` — the operator-only way to change what
+  /// the HTML byte path serves for a public document (`GET /d/:id/raw` and
+  /// `GET /s/:slug` serve `published_ver` whenever the document is public and a
+  /// version has been promoted; everything else keeps serving `current_ver`).
+  ///
+  /// Promote is NOT a write: it bumps no version, re-runs no sanitizer, and
+  /// triggers no FTS/vector resync — it only repoints an existing version. It is
+  /// therefore idempotent (promoting the version that is already published is a
+  /// no-op) and it is allowed on a private document, which stages the choice
+  /// before the door opens: nothing is served differently until visibility flips
+  /// to public, at which point the staged version is what visitors get.
+  ///
+  /// The response is canonical for `published_ver`, so mirror it onto the row in
+  /// state and the offline cache the same way the visibility/slug/tags/status
+  /// mutators mirror theirs.
+  ///
+  /// It returns the [PromoteResponse] rather than a [DocumentListing] because a
+  /// promoted document need not be in [state.documents] at all — Search opens
+  /// the Reader on a listing synthesised from a [SearchHit], the in-WebView link
+  /// handler can hand it a placeholder, and a tag filter or an unpaged tail
+  /// simply leaves the row out. Reading the answer back out of the loaded list
+  /// would make a successful promote look like a failure in exactly those cases,
+  /// and reporting "couldn't publish" over a pointer that really did move is the
+  /// one lie the publication gate cannot afford. Every caller already holds the
+  /// listing it is displaying, so folding `published_ver` onto that is both
+  /// cheaper and always possible.
+  Future<PromoteResponse> promoteVersion(String publicId, int version) async {
     final dio = ref.read(dioProvider);
     final response = await dio.post(
-      '/d/$publicId/restore',
-      data: FormData.fromMap({'version': version}),
-      options: Options(contentType: Headers.formUrlEncodedContentType),
+      '/admin/documents/$publicId/promote',
+      data: {'version': version},
+    );
+    final promoted = PromoteResponse.fromJson(
+      response.data as Map<String, dynamic>,
     );
 
-    int newVer = version + 1;
-    if (response.data is Map) {
-      newVer =
-          response.data['version'] as int? ??
-          (response.data['new_version'] as int? ?? (version + 1));
-    } else if (response.data is int) {
-      newVer = response.data as int;
-    } else if (response.data is String) {
-      newVer = int.tryParse(response.data.toString()) ?? (version + 1);
-    }
+    final updatedDocs = state.documents.map((doc) {
+      if (doc.publicId == publicId) {
+        return doc.copyWith(publishedVer: promoted.publishedVer);
+      }
+      return doc;
+    }).toList();
+
+    state = DocumentsListState(
+      documents: updatedDocs,
+      nextCursor: state.nextCursor,
+      isLoading: state.isLoading,
+      hasError: state.hasError,
+      errorMessage: state.errorMessage,
+      aggregatedTags: state.aggregatedTags,
+      isOffline: state.isOffline,
+    );
+    await DocumentCacheManager.saveCachedDocumentList(updatedDocs);
+
+    return promoted;
+  }
+
+  /// Restore an older version via the operator route
+  /// `POST /admin/documents/:id/restore`.
+  ///
+  /// Restore is mandatorily restore-as-new: the backend re-writes the chosen
+  /// version's retained source as a BRAND-NEW version on top of the history and
+  /// never rewinds `current_ver`, so the returned [RestoreResponse.version] is
+  /// the new head and nothing is ever lost. Because it re-runs the current
+  /// sanitizer over old source, the response carries a fresh sanitizer report —
+  /// `modified` / `stripped` / `willNotRender` — which is exactly why this
+  /// returns the typed response rather than a bare version number: a restore can
+  /// come back materially different from what the operator was looking at, and
+  /// the caller has to be able to say so.
+  ///
+  /// A caller must check [VersionListing.sourcePresent] before offering this: a
+  /// pre-0008 version predates source retention, has no source to re-write, and
+  /// cannot be restored.
+  ///
+  /// Restore DOES bump `current_ver`, so reload the canonical first page to pick
+  /// up the new head, size and timestamps everywhere the listing is shown.
+  Future<RestoreResponse> restoreVersion(String publicId, int version) async {
+    final dio = ref.read(dioProvider);
+    final response = await dio.post(
+      '/admin/documents/$publicId/restore',
+      data: {'version': version},
+    );
+    final restored = RestoreResponse.fromJson(
+      response.data as Map<String, dynamic>,
+    );
 
     await loadNextPage(clear: true);
-    return newVer;
+    return restored;
   }
 
   /// Walks `POST /admin/vectors/backfill` to completion, populating the semantic

@@ -13,6 +13,7 @@ import '../core/design/typography.dart';
 import '../core/document_cache.dart';
 import '../core/format.dart';
 import '../api/api.dart';
+import '../core/publication.dart';
 import '../core/secure_storage.dart';
 import '../l10n/l10n.dart';
 import '../providers/document_provider.dart';
@@ -182,10 +183,15 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         // Fallback
       }
 
-      // Placeholder fallback if not found or unauthorized
+      // Placeholder fallback if not found or unauthorized. We know nothing
+      // about this document's history, so `updatedAt` borrows the same
+      // synthesised "now" as `createdAt` — a record we invented has never been
+      // touched, and claiming any other timestamp would be a fabrication.
+      final now = DateTime.now();
       return DocumentListing(
         publicId: publicId,
-        createdAt: DateTime.now(),
+        createdAt: now,
+        updatedAt: now,
         createdByKind: 'agent',
         tags: [],
         status: 'active',
@@ -307,6 +313,30 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
   }
 
+  /// Adopt the document's CURRENT version from a byte-path response, so the
+  /// chrome can tell the operator that what they are reading is behind the
+  /// head.
+  ///
+  /// The listing alone can no longer answer "is there newer work?": it is
+  /// fetched once and the head moves whenever an agent writes. The `/raw`
+  /// response answers it on every load — `x-doc-current-version` rides 200s and
+  /// 304s alike — so the reader learns about a write it never asked about.
+  ///
+  /// Only a version AHEAD of what we hold is adopted. Versions only ever count
+  /// upwards (a restore appends a new head; a promote moves no version at all),
+  /// so a lower number is never news about the document — it is
+  /// [resolveCurrentVersion] falling back to the ETag because the header was
+  /// absent, which on a promoted public document yields the published version.
+  /// Writing that back would erase the very divergence this is here to report.
+  void _adoptCurrentVersion(Headers headers) {
+    final current = resolveCurrentVersion(headers);
+    if (current == null) return;
+    final known = _currentDoc.currentVer;
+    if (known != null && current <= known) return;
+    if (!mounted) return;
+    setState(() => _currentDoc = _currentDoc.copyWith(currentVer: current));
+  }
+
   Future<void> _loadHtmlIntoWebview({bool force = false}) async {
     if (_baseUrl == null) return;
     final l10n = context.l10n;
@@ -322,21 +352,44 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       if (!mounted) return;
     }
 
-    // Which version's body to render and cache under. 0 == latest, which is
-    // always the server's current version (`/d/:id/raw`); any other value is a
-    // pinned historical version. For the latest view this is the authoritative
-    // `currentVer` from the metadata record (just refreshed above on a forced
-    // load) — never a value scraped from the ETag.
+    // Which version's body to render and cache under. 0 == latest, i.e.
+    // whatever `/d/:id/raw` serves; any other value is a pinned historical
+    // version, which names itself in the URL.
+    //
+    // For the latest view that is the SERVED version, not `currentVer`: under
+    // the 2.0.0 publication gate a public document with a promoted
+    // `published_ver` serves those older bytes to everyone, this operator
+    // included. Expecting `currentVer` here would file the published bytes
+    // under the current version number, and every surface reading that cache —
+    // the chip, the offline render, the next conditional GET — would then
+    // mislabel them.
     final int versionToLoad = _selectedVersion == 0
-        ? (_currentDoc.currentVer ?? 1)
+        ? (_currentDoc.servedVer ?? 1)
         : _selectedVersion;
 
-    // Locate a cached body to paint instantly (offline resilience). For the
-    // latest view we accept any cached version of the document; for a pinned
-    // historical view only the exact version qualifies.
+    // Locate a cached body to paint instantly (offline resilience). For a
+    // pinned historical view only the exact version qualifies; for the latest
+    // view we accept a cached body at or behind the served version, but never
+    // one AHEAD of it.
+    //
+    // That cut-off is the publication gate applied to the cache. Pinning to the
+    // unpublished head — which the served-version banner's CTA exists to do —
+    // caches those bytes and evicts every other body for the document, so the
+    // only body on disk is one no reader can get. Painting it here would put
+    // unpublished bytes under a chip that says "Live v4" and a banner that says
+    // the operator is reading what everyone else is served, and offline (or on a
+    // failed request, where the catch below deliberately leaves the cached body
+    // up) that is where it would stay. A body at or behind the served version is
+    // ordinary staleness — it was really served once, and the fresh response
+    // replaces it — so it still paints. When we have no served version to
+    // compare against, we cannot call the cache ahead and it paints as before.
     int? cachedVersion;
     if (_selectedVersion == 0) {
-      cachedVersion = await DocumentCacheManager.getCachedVersion(publicId);
+      final cached = await DocumentCacheManager.getCachedVersion(publicId);
+      final servedVer = _currentDoc.servedVer;
+      cachedVersion = (cached != null && servedVer != null && cached > servedVer)
+          ? null
+          : cached;
     } else if (await DocumentCacheManager.isCached(
       publicId,
       _selectedVersion,
@@ -379,6 +432,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         ),
       );
 
+      // Both branches below carry `x-doc-current-version`, so the document's
+      // head is reconciled either way — a 304 is the likeliest answer we get on
+      // a gated document (the published bytes it serves rarely change), and it
+      // is precisely then that the head has moved on without us.
+      _adoptCurrentVersion(response.headers);
+
       if (response.statusCode == 304) {
         // Cache is valid and matches the server version!
         // No need to update the cache or reload the WebView since we already
@@ -388,6 +447,18 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
       // 200 OK: render fresh HTML and update the body cache.
       final freshHtml = response.data as String;
+
+      // The ETag names the version the server just handed us, so it outranks
+      // anything the metadata record predicted — it is the server describing
+      // the exact bytes in hand rather than us inferring them from a listing
+      // that may have been fetched before the last promote. The predicted
+      // [versionToLoad] stays as the fallback for a stripped or malformed
+      // header. The pinned historical view is exempt: its URL already names the
+      // version, and taking the label from a header there could file the bytes
+      // under a key the cache lookup would never ask for again.
+      final int versionToCache = _selectedVersion == 0
+          ? (resolveServedVersion(response.headers) ?? versionToLoad)
+          : versionToLoad;
 
       // Idempotent body update: when the freshly fetched bytes are identical to
       // what's already cached (and on screen), don't rewrite the cache or reload
@@ -403,7 +474,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       // self-heals here.
       await DocumentCacheManager.saveCachedHtml(
         publicId,
-        versionToLoad,
+        versionToCache,
         freshHtml,
       );
 
@@ -894,24 +965,32 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     return true;
   }
 
+  /// Restore is restore-as-new: the backend re-writes the chosen version's
+  /// retained source as a brand-new head, so [RestoreResponse.version] is a
+  /// number that did not exist before the call — never [version] itself.
+  ///
+  /// It moves `current_ver` and deliberately leaves `published_ver` where it
+  /// was, so on a gated public document the restored head is *not* what readers
+  /// get. Resetting to the latest view is still right (it is the honest one),
+  /// and the served-version banner is what now explains the gap.
   Future<void> _restoreVersion(int version) async {
     final l10n = context.l10n;
     setState(() => _updatingProperties = true);
     try {
-      final newVer = await ref
+      final restored = await ref
           .read(documentsListProvider.notifier)
           .restoreVersion(_currentDoc.publicId, version);
 
       setState(() {
         _selectedVersion = 0; // reset to latest
-        _currentDoc = _currentDoc.copyWith(currentVer: newVer);
+        _currentDoc = _currentDoc.copyWith(currentVer: restored.version);
         _updatingProperties = false;
       });
 
       await _reloadWebview();
 
       if (!mounted) return;
-      showToast(context, l10n.restoredVersion(version, newVer));
+      showToast(context, l10n.restoredVersion(version, restored.version));
     } catch (e) {
       setState(() => _updatingProperties = false);
       if (!mounted) return;
@@ -937,85 +1016,205 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     }
   }
 
+  /// Move the publication pointer to [version] — the operator-only act that
+  /// decides which bytes `/d/:id/raw` and `/s/:slug` hand to everyone.
+  ///
+  /// The response is canonical for `published_ver`, so it is folded onto
+  /// `_currentDoc` — the listing this screen is already showing, which is the
+  /// only copy guaranteed to exist for a document opened from Search or from an
+  /// in-WebView link. The version chip and the served-version banner both derive
+  /// from it and have to re-evaluate the moment the pointer moves. The body is
+  /// re-fetched only when the served version actually changed — promoting on a
+  /// private document stages the choice without changing a single served byte,
+  /// and a pinned historical view is reading a URL the pointer does not affect.
+  Future<void> _publishVersion(int version) async {
+    final l10n = context.l10n;
+    final servedBefore = _currentDoc.servedVer;
+    setState(() => _updatingProperties = true);
+    try {
+      final promoted = await ref
+          .read(documentsListProvider.notifier)
+          .promoteVersion(_currentDoc.publicId, version);
+
+      if (!mounted) return;
+      final updated = _currentDoc.copyWith(publishedVer: promoted.publishedVer);
+      setState(() {
+        _currentDoc = updated;
+        _updatingProperties = false;
+      });
+
+      // Report what the backend actually pointed at rather than what we asked
+      // for.
+      showToast(context, l10n.publishedToast(promoted.publishedVer));
+
+      if (_selectedVersion == 0 && updated.servedVer != servedBefore) {
+        await _reloadWebview(force: true);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _updatingProperties = false);
+      // A promote can only fail on a version the server no longer has, so name
+      // that case rather than blaming the network for it.
+      final failed = ApiError.fromException(e).code == ErrorCode.versionNotFound
+          ? l10n.versionNotFoundToast
+          : l10n.publishFailedToast;
+      showToast(context, failed, danger: true);
+    }
+  }
+
+  Future<void> _confirmPublish(int version) async {
+    final l10n = context.l10n;
+    final confirmed = await showConfirmSheet(
+      context,
+      title: l10n.publishVersionTitle(version),
+      cta: l10n.publishAction,
+      danger: false,
+      body: Text(l10n.publishVersionBody(version)),
+    );
+    if (confirmed) {
+      await _publishVersion(version);
+    }
+  }
+
   // ----------------------------------------------------------------
   // Sheets
   // ----------------------------------------------------------------
 
+  /// Version history, read live from `GET /admin/documents/:id/versions`.
+  ///
+  /// The list is fetched per open and never cached: a promote or a restore
+  /// invalidates it the instant it happens, and the two things the rows assert
+  /// — which version is CURRENT and which one is LIVE — are independent under
+  /// the publication gate, so a stale list would misstate what readers are
+  /// actually being served. The future is started here, outside the builder, so
+  /// a sheet rebuild (keyboard, rotation) doesn't re-issue the request.
   void _openVersionSheet() {
-    final maxVer = _currentDoc.currentVer;
-    if (maxVer == null) return;
     final l10n = context.l10n;
+    final history = ref
+        .read(documentsListProvider.notifier)
+        .fetchVersions(_currentDoc.publicId);
+
     showAppSheet<void>(
       context,
       builder: (sheetContext) {
         final c = sheetContext.colors;
-        final count = maxVer < 6 ? maxVer : 6;
-        final versions = List<int>.generate(count, (i) => maxVer - i);
         return AppSheet(
           title: l10n.versionHistory,
           subtitle: l10n.onTheMenu,
           icon: Icons.layers_outlined,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (_selectedVersion != 0)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(11),
-                  decoration: BoxDecoration(
-                    color: c.honey.withValues(alpha: 0.12),
-                    border: Border.all(color: c.honey.withValues(alpha: 0.30)),
-                    borderRadius: BorderRadius.circular(AppRadii.md),
+          child: FutureBuilder<ListVersionsResponse>(
+            future: history,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState != ConnectionState.done) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 36),
+                  child: Center(
+                    child: CircularProgressIndicator(color: c.clay),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.history, size: 16, color: c.honeyD),
-                      const SizedBox(width: 9),
-                      Expanded(
-                        child: Text(
-                          l10n.viewingHistoricalShort(_selectedVersion),
-                          style: AppText.small.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: c.honeyD,
-                          ),
+                );
+              }
+              final data = snapshot.data;
+              if (data == null) {
+                return Row(
+                  children: [
+                    Icon(Icons.cloud_off, size: 17, color: c.red),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: Text(
+                        l10n.versionHistoryLoadFailed,
+                        style: AppText.small.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: c.red,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              for (final v in versions)
-                _VersionRow(
-                  version: v,
-                  isLatest: v == maxVer,
-                  isSelected:
-                      (_selectedVersion == 0 && v == maxVer) ||
-                      _selectedVersion == v,
-                  createdAt: _currentDoc.createdAt,
-                  onTap: () {
-                    Navigator.of(sheetContext).pop();
-                    setState(() => _selectedVersion = v == maxVer ? 0 : v);
-                    _reloadWebview();
-                  },
-                ),
-              if (_selectedVersion != 0) ...[
-                const SizedBox(height: 14),
-                AppButton(
-                  l10n.restoreVersionTitle(_selectedVersion),
-                  variant: AppBtnVariant.primary,
-                  icon: Icons.refresh,
-                  expand: true,
-                  onPressed: _updatingProperties
-                      ? null
-                      : () {
-                          Navigator.of(sheetContext).pop();
-                          _confirmRestore(_selectedVersion);
-                        },
-                ),
-              ],
-            ],
+                    ),
+                  ],
+                );
+              }
+              return _buildVersionList(sheetContext, data);
+            },
           ),
         );
       },
+    );
+  }
+
+  /// The body of the version sheet once the history has landed.
+  ///
+  /// The served version is recomputed from the fetched history rather than read
+  /// off `_currentDoc`, because the history is the fresher of the two: it names
+  /// the head and the published row as of this request. Visibility is the one
+  /// term it cannot supply — the serving rule only consults `published_ver` for
+  /// a public document — so that still comes from the listing.
+  Widget _buildVersionList(
+    BuildContext sheetContext,
+    ListVersionsResponse history,
+  ) {
+    final l10n = sheetContext.l10n;
+
+    int? publishedNo;
+    for (final entry in history.versions) {
+      if (entry.isPublished) {
+        publishedNo = entry.versionNo;
+        break;
+      }
+    }
+    final int servedNo = (_currentDoc.isPublic && publishedNo != null)
+        ? publishedNo
+        : history.currentVer;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_selectedVersion != 0)
+          _SheetNote(
+            icon: Icons.history,
+            text: l10n.viewingHistoricalShort(_selectedVersion),
+          ),
+        if (_currentDoc.isPublic && publishedNo == null)
+          _SheetNote(icon: Icons.public_off, text: l10n.nothingPublishedYet),
+        for (final entry in history.versions)
+          _VersionRow(
+            entry: entry,
+            // A row is "selected" when the reader is showing its bytes: the
+            // latest view is showing whichever version the byte path serves,
+            // which on a gated document is not the head.
+            isSelected:
+                (_selectedVersion == 0 && entry.versionNo == servedNo) ||
+                _selectedVersion == entry.versionNo,
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              setState(() {
+                // Only the served version can be reached through the latest
+                // view; anything else has to be pinned to `/d/:id/v/:n/raw`,
+                // including the head of a document whose newer work is still
+                // behind the publication gate.
+                _selectedVersion = entry.versionNo == servedNo
+                    ? 0
+                    : entry.versionNo;
+              });
+              _reloadWebview();
+            },
+            onPublish: entry.isPublished || _updatingProperties
+                ? null
+                : () {
+                    Navigator.of(sheetContext).pop();
+                    _confirmPublish(entry.versionNo);
+                  },
+            // Restore rewrites a version's retained source as a new head, so it
+            // is meaningless on the head itself and impossible without that
+            // source — a pre-retention version can only be read, never revived.
+            // The row still shows the disabled control in the latter case and
+            // says why; silently omitting it would read as an app bug.
+            showRestore: !entry.isCurrent,
+            onRestore: entry.sourcePresent && !_updatingProperties
+                ? () {
+                    Navigator.of(sheetContext).pop();
+                    _confirmRestore(entry.versionNo);
+                  }
+                : null,
+          ),
+      ],
     );
   }
 
@@ -1183,6 +1382,16 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     final ver = _currentDoc.currentVer;
     final topPad = MediaQuery.paddingOf(context).top;
 
+    // What the WebView is actually showing on the latest view. On a gated
+    // public document those are the published bytes, not the head, so the chip
+    // has to name the served version — labelling the screen "v7" while the
+    // reader is looking at v5 is the exact lie 2.0.0 makes possible.
+    final servedVer = _currentDoc.servedVer;
+    final showingServed =
+        _selectedVersion == 0 &&
+        _currentDoc.hasUnpublishedWork &&
+        servedVer != null;
+
     // On wide layouts the document surface centers into a readable column
     // ([AppLayout.readerMax]); on phones the gutters collapse to the original
     // insets (0 for the WebView card, which owns the screen edge-to-edge).
@@ -1219,7 +1428,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                   _BackPill(onTap: () => Navigator.of(context).pop()),
                   const Spacer(),
                   if (ver != null && !isRevoked) ...[
-                    _VersionChip(version: ver, onTap: _openVersionSheet),
+                    _VersionChip(
+                      version: showingServed ? servedVer : ver,
+                      live: showingServed,
+                      onTap: _openVersionSheet,
+                    ),
                     const SizedBox(width: 8),
                   ],
                   _CircleIconButton(
@@ -1335,6 +1548,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       children: [
         if (_currentDoc.status == 'deprecated') _buildDeprecatedBanner(),
         if (_selectedVersion != 0) _buildHistoricalBanner(),
+        if (_selectedVersion == 0 && _currentDoc.hasUnpublishedWork)
+          _buildServedBanner(),
         Expanded(child: _buildReadView()),
       ],
     );
@@ -1411,8 +1626,15 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     ).push(MaterialPageRoute(builder: (_) => ReaderScreen(doc: doc)));
   }
 
+  /// Honey caution banner on a pinned historical version.
+  ///
+  /// Restore is offered for every pinned version except the head. Pinning to
+  /// the head is an ordinary state now that the served-version banner's CTA
+  /// leads there — it is the only way to read unpublished work — and restoring
+  /// it would just append a duplicate of what is already current.
   Widget _buildHistoricalBanner() {
     final c = context.colors;
+    final isHead = _selectedVersion == _currentDoc.currentVer;
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 12),
@@ -1435,16 +1657,84 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          AppButton(
-            context.l10n.restore,
-            variant: AppBtnVariant.warm,
-            icon: Icons.refresh,
-            small: true,
-            onPressed: _updatingProperties
-                ? null
-                : () => _confirmRestore(_selectedVersion),
+          if (!isHead) ...[
+            const SizedBox(width: 8),
+            AppButton(
+              context.l10n.restore,
+              variant: AppBtnVariant.warm,
+              icon: Icons.refresh,
+              small: true,
+              onPressed: _updatingProperties
+                  ? null
+                  : () => _confirmRestore(_selectedVersion),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Honey caution banner for the publication gate: the document has a newer
+  /// version than the one `/d/:id/raw` serves, so the WebView above is showing
+  /// the operator exactly what an anonymous visitor sees — which, without
+  /// saying so, reads as if the newest write never landed.
+  ///
+  /// The CTA pins the view to the head, which routes through the same
+  /// operator-only `/d/:id/v/:n/raw` path the version sheet uses; the byte path
+  /// has no way to serve the unpublished head, and this deliberately does not
+  /// publish anything on the operator's behalf.
+  Widget _buildServedBanner() {
+    final c = context.colors;
+    final l10n = context.l10n;
+    final currentVer = _currentDoc.currentVer;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: c.honey.withValues(alpha: 0.12),
+        border: Border.all(color: c.honey.withValues(alpha: 0.30)),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.public, size: 18, color: c.honeyD),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.readerServedBannerTitle,
+                  style: AppText.small.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: c.honeyD,
+                  ),
+                ),
+                if (currentVer != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    l10n.readerServedBannerBody(currentVer),
+                    style: AppText.small.copyWith(color: c.honeyD),
+                  ),
+                ],
+              ],
+            ),
           ),
+          if (currentVer != null) ...[
+            const SizedBox(width: 8),
+            AppButton(
+              l10n.readerViewNewestAction(currentVer),
+              variant: AppBtnVariant.warm,
+              icon: Icons.arrow_forward,
+              small: true,
+              onPressed: () {
+                setState(() => _selectedVersion = currentVer);
+                _reloadWebview();
+              },
+            ),
+          ],
         ],
       ),
     );
@@ -1556,32 +1846,49 @@ class _CircleIconButton extends StatelessWidget {
 }
 
 /// Compact version pill in the top bar — taps through to the version sheet.
+///
+/// [live] says the number is the SERVED (published) version rather than the
+/// document's head, which is the only honest label when the two differ: the
+/// chip describes what is on screen, so it reads "Live v5" in honey while the
+/// head sits at v7 behind the publication gate.
 class _VersionChip extends StatelessWidget {
-  const _VersionChip({required this.version, required this.onTap});
+  const _VersionChip({
+    required this.version,
+    required this.live,
+    required this.onTap,
+  });
   final int version;
+  final bool live;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final fg = live ? c.honeyD : c.textDim;
     return PressCard(
       onPress: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
           color: c.surface,
-          border: Border.all(color: c.line),
+          border: Border.all(color: live ? c.honey : c.line),
           borderRadius: BorderRadius.circular(AppRadii.pill),
           boxShadow: c.shadow,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.layers_outlined, size: 14, color: c.textDim),
+            Icon(
+              live ? Icons.public : Icons.layers_outlined,
+              size: 14,
+              color: fg,
+            ),
             const SizedBox(width: 6),
             Text(
-              context.l10n.versionLabel('$version'),
-              style: AppText.titleSm.copyWith(fontSize: 12.5, color: c.textDim),
+              live
+                  ? context.l10n.liveVersionLabel('$version')
+                  : context.l10n.versionLabel('$version'),
+              style: AppText.titleSm.copyWith(fontSize: 12.5, color: fg),
             ),
           ],
         ),
@@ -1590,24 +1897,81 @@ class _VersionChip extends StatelessWidget {
   }
 }
 
+/// Inline honey note inside a sheet — the sheet-scale sibling of the reader's
+/// banners, used for the state of the list as a whole rather than of one row.
+class _SheetNote extends StatelessWidget {
+  const _SheetNote({required this.icon, required this.text});
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: c.honey.withValues(alpha: 0.12),
+        border: Border.all(color: c.honey.withValues(alpha: 0.30)),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: c.honeyD),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              text,
+              style: AppText.small.copyWith(
+                fontWeight: FontWeight.w600,
+                color: c.honeyD,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One row of the real version history.
+///
+/// CURRENT and LIVE are orthogonal badges, not two names for the newest thing:
+/// CURRENT is the head every credentialed surface reads, LIVE is the version
+/// the HTML byte path hands to readers. A row can carry both (the usual case),
+/// either (a public document with older published work), or neither.
 class _VersionRow extends StatelessWidget {
   const _VersionRow({
-    required this.version,
-    required this.isLatest,
+    required this.entry,
     required this.isSelected,
-    required this.createdAt,
     required this.onTap,
+    required this.onPublish,
+    required this.showRestore,
+    required this.onRestore,
   });
-  final int version;
-  final bool isLatest;
+
+  final VersionListing entry;
   final bool isSelected;
-  final DateTime createdAt;
   final VoidCallback onTap;
+
+  /// Null when this version is already the published one, or a publish is
+  /// already in flight.
+  final VoidCallback? onPublish;
+
+  /// Whether restore is offered at all — it is not, on the head itself.
+  final bool showRestore;
+
+  /// Null when the version's source was never retained (the control stays
+  /// visible but disabled, explained by the note beneath it).
+  final VoidCallback? onRestore;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     final l10n = context.l10n;
+    final author = entry.authorName;
+    final hasActions = onPublish != null || showRestore;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadii.lg),
@@ -1617,33 +1981,108 @@ class _VersionRow extends StatelessWidget {
           color: isSelected ? c.surface2 : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadii.lg),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 9,
-              height: 9,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isLatest ? c.honey : c.line,
+            Row(
+              children: [
+                Container(
+                  width: 9,
+                  height: 9,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: entry.isPublished
+                        ? c.green
+                        : (entry.isCurrent ? c.honey : c.line),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  l10n.versionLabel('${entry.versionNo}'),
+                  style: AppText.mono.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: c.text,
+                  ),
+                ),
+                if (entry.isCurrent) ...[
+                  const SizedBox(width: 8),
+                  Pill(
+                    l10n.versionBadgeCurrent,
+                    tone: PillTone.honey,
+                    small: true,
+                  ),
+                ],
+                if (entry.isPublished) ...[
+                  const SizedBox(width: 6),
+                  Pill(
+                    l10n.versionBadgeLive,
+                    tone: PillTone.green,
+                    icon: Icons.public,
+                    small: true,
+                  ),
+                ],
+                const Spacer(),
+                Text(
+                  relTime(l10n, entry.createdAt),
+                  style: AppText.small.copyWith(color: c.textFaint),
+                ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Padding(
+              padding: const EdgeInsets.only(left: 21),
+              child: Text(
+                [
+                  if (author != null && author.isNotEmpty)
+                    l10n.versionAuthorBy(author),
+                  fmtDate(entry.createdAt),
+                  fmtBytes(entry.sizeBytes),
+                  if (!entry.sourcePresent) l10n.versionNoSource,
+                ].join(' · '),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.small.copyWith(color: c.textFaint),
               ),
             ),
-            const SizedBox(width: 12),
-            Text(
-              l10n.versionLabel('$version'),
-              style: AppText.mono.copyWith(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: c.text,
+            if (hasActions) ...[
+              const SizedBox(height: 9),
+              Padding(
+                padding: const EdgeInsets.only(left: 21),
+                child: Row(
+                  children: [
+                    if (onPublish != null) ...[
+                      AppButton(
+                        l10n.publishAction,
+                        variant: AppBtnVariant.warm,
+                        icon: Icons.public,
+                        small: true,
+                        onPressed: onPublish,
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    if (showRestore)
+                      AppButton(
+                        l10n.restore,
+                        variant: AppBtnVariant.outline,
+                        icon: Icons.refresh,
+                        small: true,
+                        onPressed: onRestore,
+                      ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            if (isLatest)
-              Pill(l10n.currentBadge, tone: PillTone.honey, small: true),
-            const Spacer(),
-            Text(
-              isLatest ? relTime(l10n, createdAt) : l10n.earlier,
-              style: AppText.small.copyWith(color: c.textFaint),
-            ),
+              if (showRestore && !entry.sourcePresent) ...[
+                const SizedBox(height: 6),
+                Padding(
+                  padding: const EdgeInsets.only(left: 21),
+                  child: Text(
+                    l10n.versionNoSourceHint,
+                    style: AppText.small.copyWith(color: c.textFaint),
+                  ),
+                ),
+              ],
+            ],
           ],
         ),
       ),

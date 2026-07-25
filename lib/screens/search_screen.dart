@@ -7,8 +7,10 @@ import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../api/api.dart';
 import '../core/design/typography.dart';
+import '../core/publication.dart';
 import '../l10n/l10n.dart';
 import '../providers/document_provider.dart';
+import '../widgets/doc_feed_card.dart';
 import '../widgets/pill.dart';
 import '../widgets/press_card.dart';
 import 'reader_screen.dart';
@@ -533,6 +535,14 @@ class _SearchHitCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 if (doc.status == 'deprecated') ...[
                   const DeprecatedBadge(),
+                  const SizedBox(width: 6),
+                ],
+                // Search still indexes the current version, so a snippet can
+                // quote text no reader has been served yet. The marker sits
+                // beside its sibling badge because this card has no version
+                // number of its own to qualify.
+                if (!doc.isRevoked && doc.hasUnpublishedWork) ...[
+                  const NotLiveBadge(),
                   const SizedBox(width: 6),
                 ],
                 Pill(
