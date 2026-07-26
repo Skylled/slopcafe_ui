@@ -23,6 +23,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:slopcafe_ui/api/api.dart';
+import 'package:slopcafe_ui/core/changes.dart';
 import 'package:slopcafe_ui/core/links.dart';
 import 'package:slopcafe_ui/core/publication.dart';
 
@@ -227,22 +228,76 @@ Future<void> main() async {
       'a redirect is stale, not broken',
       !graph.outbound[1].isBroken && graph.outbound[1].canOpen,
     );
-    _check(
-      'a retired slug is repairable',
-      graph.outbound[2].canRepairSlug,
-    );
+    _check('a retired slug is repairable', graph.outbound[2].canRepairSlug);
     _check(
       'a missing name is broken but not repairable',
       graph.outbound[4].isBroken && !graph.outbound[4].canRepairSlug,
     );
-    _check(
-      'a /d/ link is never repairable',
-      !graph.outbound[3].canRepairSlug,
-    );
+    _check('a /d/ link is never repairable', !graph.outbound[3].canRepairSlug);
     _check(
       'an unrecognised state degrades to unknown and reads as healthy',
       LinkState.fromWire('a-state-from-the-future') == LinkState.unknown &&
           !LinkState.unknown.isBroken,
+    );
+  } catch (e) {
+    _check('parses without throwing', false, '$e');
+  }
+
+  // --- 3c. Fixture: the change feed's kind derivation ------------------------
+  //
+  // `updated_at` vs `current_version_at` is the only evidence a row carries
+  // about WHAT changed, and the contract warns the two are stamped by different
+  // statements of one D1 batch — so a pure content write can leave them a
+  // millisecond apart in EITHER direction. This pins the tolerance behaviour at
+  // the JSON layer (where the timestamps arrive as strings the generator types
+  // into DateTime) rather than only in the hermetic unit test.
+  stdout.writeln('\nChange-feed fixture (updated_at vs current_version_at):');
+  try {
+    DocumentListing row(String updatedAt, String? versionAt) =>
+        DocumentListing.fromJson({
+          'public_id': 'pub_change_demo',
+          'created_at': '2026-01-04T10:00:00.000Z',
+          'updated_at': updatedAt,
+          'current_version_at': versionAt,
+          'current_ver': 3,
+          'created_by_kind': 'operator',
+          'tags': <String>[],
+          'status': 'active',
+          'visibility': 'public',
+        });
+
+    // Retagged eight days after the last write: no version was bumped, so this
+    // is precisely the change nothing else in the app can see.
+    final reclassified = row(
+      '2026-07-20T15:00:00.000Z',
+      '2026-07-12T09:00:00.000Z',
+    );
+    // The same batch, two statements, 40ms apart the "wrong" way.
+    final written = row('2026-07-20T15:00:00.000Z', '2026-07-20T15:00:00.040Z');
+    final revoked = DocumentListing.fromJson(revokedJson);
+
+    _check('parses without throwing', true);
+    _check(
+      'a retag long after the write is proven classification-only',
+      reclassified.changeKind == ChangeKind.classification &&
+          reclassified.isClassificationOnlyChange,
+    );
+    _check(
+      'sub-second batch skew still reads as a content write',
+      written.changeKind == ChangeKind.content,
+    );
+    _check(
+      'a revoked row is a revoke, not an unknown',
+      revoked.changeKind == ChangeKind.revoked,
+    );
+    _check(
+      'updated_since is emitted as a UTC instant',
+      ChangeWindow.day.updatedSince(DateTime.utc(2026, 7, 25, 18, 30))! ==
+          '2026-07-24T18:30:00.000Z',
+    );
+    _check(
+      'the all window omits updated_since entirely',
+      ChangeWindow.all.updatedSince(DateTime.utc(2026, 7, 25)) == null,
     );
   } catch (e) {
     _check('parses without throwing', false, '$e');
@@ -330,6 +385,77 @@ Future<void> main() async {
       _check('parsed ${hits.documents.length} search hits', true);
     } catch (e) {
       _check('search parses', false, '$e');
+    }
+
+    // The change feed, including the one rule the client's whole pagination
+    // design is built around: a cursor carries the ordering that minted it, and
+    // replaying it under the other ordering is a hard 400 bad_cursor rather than
+    // a silent re-sort. Read-only — a 400 here costs nothing and proves the trap
+    // is still armed on the server side.
+    stdout.writeln('\nLive authenticated change feed (?order=updated):');
+    try {
+      final res = await dio.get(
+        '/admin/documents',
+        queryParameters: {'limit': 5, 'order': DocumentOrder.updated.wire},
+        options: auth,
+      );
+      _check('HTTP 200', res.statusCode == 200, '${res.statusCode}');
+      final feed = ListDocumentsResponse.fromJson(
+        Map<String, dynamic>.from(res.data as Map),
+      );
+      _check('parsed ${feed.documents.length} changed documents', true);
+
+      final stamps = feed.documents.map((d) => d.updatedAt).toList();
+      _check(
+        'rows arrive most-recently-changed first',
+        List.generate(
+          stamps.length - 1 < 0 ? 0 : stamps.length - 1,
+          (i) => !stamps[i].isBefore(stamps[i + 1]),
+        ).every((ok) => ok),
+      );
+
+      // NOT "every row resolves to a kind" — that is a tautology (unknown is
+      // defined as a null current_version_at), so it could never fail. The real
+      // risk is prod dropping `current_version_at` from live rows, which would
+      // silently turn every badge in the feed into nothing at all. Per the
+      // contract that field is null only on a revoked document.
+      final unclassifiable = feed.documents
+          .where((d) => !d.isRevoked && d.currentVersionAt == null)
+          .length;
+      final kinds = feed.documents.map((d) => d.changeKind).toSet();
+      _check(
+        'live rows carry current_version_at (only revoked rows may omit it)',
+        unclassifiable == 0,
+        unclassifiable > 0
+            ? '$unclassifiable live rows would badge as unknown'
+            : kinds.map((k) => k.name).join(', '),
+      );
+
+      // Replay this walk's cursor under the DEFAULT ordering. The contract says
+      // this must be rejected; if it ever silently succeeds, the client's
+      // separate-state design is guarding against something that no longer
+      // exists and the change should be noticed here first.
+      final cursor = feed.nextCursor;
+      if (cursor == null || cursor.isEmpty) {
+        stdout.writeln(
+          '  ~ corpus fits in one page; cursor rule not exercised',
+        );
+      } else {
+        final replay = await dio.get(
+          '/admin/documents',
+          queryParameters: {'limit': 5, 'cursor': cursor},
+          options: auth,
+        );
+        _check(
+          'an updated-ordered cursor is REJECTED under the default ordering',
+          replay.statusCode == 400 &&
+              ApiError.fromResponse(replay.statusCode, replay.data).code ==
+                  ErrorCode.badCursor,
+          'HTTP ${replay.statusCode}',
+        );
+      }
+    } catch (e) {
+      _check('change feed parses', false, '$e');
     }
 
     // Read-only halves of the link graph. The backfill sweep and the three slug

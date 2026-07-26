@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../api/api.dart';
+import '../core/changes.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/links.dart';
@@ -140,11 +142,7 @@ class LinkStateBadge extends StatelessWidget {
         PillTone.honey,
         Icons.subdirectory_arrow_right,
       ),
-      LinkState.retired => (
-        l10n.linkStateRetired,
-        PillTone.red,
-        Icons.block,
-      ),
+      LinkState.retired => (l10n.linkStateRetired, PillTone.red, Icons.block),
       LinkState.revoked => (
         l10n.revokedUpper,
         PillTone.red,
@@ -162,6 +160,64 @@ class LinkStateBadge extends StatelessWidget {
       ),
     };
     return Pill(label, tone: tone, icon: icon, small: small);
+  }
+}
+
+/// Names *what kind* of change a change-feed row is reporting, derived from the
+/// row itself via [DocumentChange.changeKind].
+///
+/// **Clay** for a reclassification — the accent, because a change that left no
+/// version behind is the one thing this feed can tell the operator that no other
+/// surface in the app can — and neutral for a content write, labelled `NEW
+/// VERSION` rather than "rewritten" because a first authoring lands here too and
+/// its own `current_ver` of 1 would contradict the stronger word.
+///
+/// Two of the four kinds render **nothing at all**:
+///
+///  * [ChangeKind.unknown] — the row carries no `current_version_at` to compare
+///    against, so a badge reading "UNKNOWN" would dress the absence of
+///    information up as a finding; the row's timestamp still says when it
+///    changed. (The deliberate difference from [LinkStateBadge], whose `unknown`
+///    is a real server-sent state a newer backend added, and so worth showing.)
+///  * [ChangeKind.revoked] — correct in the model, redundant on screen. Every
+///    surface that shows a revoked document already carries the red `REVOKED`
+///    pill, `DocFeedCard` included, so emitting it here too would print the same
+///    pill twice ~8px apart on every revoked row — and the contract guarantees
+///    revoked documents *do* appear in this feed. The derivation keeps the kind
+///    because it is the honest answer; only the badge declines to repeat it.
+class ChangeKindBadge extends StatelessWidget {
+  const ChangeKindBadge({super.key, required this.doc, this.small = true});
+
+  final DocumentListing doc;
+  final bool small;
+
+  /// Whether this badge renders anything for [doc] — callers use it to decide
+  /// whether to lay out a spacer beside it.
+  static bool showsFor(DocumentListing doc) => switch (doc.changeKind) {
+    ChangeKind.classification || ChangeKind.content => true,
+    ChangeKind.revoked || ChangeKind.unknown => false,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final (String label, PillTone tone, IconData icon)? spec = switch (doc
+        .changeKind) {
+      ChangeKind.classification => (
+        l10n.changeKindClassification,
+        PillTone.clay,
+        Icons.sell_outlined,
+      ),
+      ChangeKind.content => (
+        l10n.changeKindContent,
+        PillTone.neutral,
+        Icons.edit_outlined,
+      ),
+      // Both render nothing — see the class doc for why they differ in kind.
+      ChangeKind.revoked || ChangeKind.unknown => null,
+    };
+    if (spec == null) return const SizedBox.shrink();
+    return Pill(spec.$1, tone: spec.$2, icon: spec.$3, small: small);
   }
 }
 

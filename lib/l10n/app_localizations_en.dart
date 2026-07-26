@@ -345,6 +345,63 @@ class AppLocalizationsEn extends AppLocalizations {
       'An orphan isn\'t an error — a document only ever shared by URL is a perfectly good one. This is a curation worklist.';
 
   @override
+  String get changeFeed => 'Recent changes';
+
+  @override
+  String get changeFeedSubtitle => 'What moved, including retags and renames';
+
+  @override
+  String get changeFeedNote =>
+      'Reclassifying a document — retagging, renaming, changing visibility or status, publishing — never writes a new version, so this is the only place those changes show up.';
+
+  @override
+  String get changeFeedEmpty => 'Nothing changed in this window.';
+
+  @override
+  String get changeFeedLoadFailed => 'Couldn\'t load recent changes';
+
+  @override
+  String changeFeedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count documents changed',
+      one: '1 document changed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get changeFeedMore => 'Load more';
+
+  @override
+  String get changeFeedBackfillNote =>
+      'Documents last reclassified before the change feed shipped report their write time instead, so an older retag can read as a content change. The next change to a document corrects it for good.';
+
+  @override
+  String get changeWindowDay => '24 hours';
+
+  @override
+  String get changeWindowWeek => '7 days';
+
+  @override
+  String get changeWindowMonth => '30 days';
+
+  @override
+  String get changeWindowAll => 'All';
+
+  @override
+  String get changeKindContent => 'NEW VERSION';
+
+  @override
+  String get changeKindClassification => 'RECLASSIFIED';
+
+  @override
+  String changedRelative(String when) {
+    return 'Changed $when';
+  }
+
+  @override
   String get linksAction => 'Links';
 
   @override

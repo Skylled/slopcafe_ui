@@ -640,6 +640,96 @@ abstract class AppLocalizations {
   /// **'An orphan isn\'t an error — a document only ever shared by URL is a perfectly good one. This is a curation worklist.'**
   String get orphansHint;
 
+  /// Operate > Documents entry, and the title of the change-feed screen. What moved in the corpus lately.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent changes'**
+  String get changeFeed;
+
+  /// Subtitle under the Recent changes entry in Operate. Names the class of change nothing else in the app surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'What moved, including retags and renames'**
+  String get changeFeedSubtitle;
+
+  /// Standing explanatory note on the change-feed screen. States why the surface exists at all.
+  ///
+  /// In en, this message translates to:
+  /// **'Reclassifying a document — retagging, renaming, changing visibility or status, publishing — never writes a new version, so this is the only place those changes show up.'**
+  String get changeFeedNote;
+
+  /// Empty state when the change feed returns no rows for the selected window.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing changed in this window.'**
+  String get changeFeedEmpty;
+
+  /// Error state when the change-feed request fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load recent changes'**
+  String get changeFeedLoadFailed;
+
+  /// Row count above the change feed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 document changed} other{{count} documents changed}}'**
+  String changeFeedCount(int count);
+
+  /// Button that fetches the next page of the change feed.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get changeFeedMore;
+
+  /// Footnote about the migration-0017 backfill: pre-migration rows took updated_at from the current version's write time, so old classification edits under-report.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents last reclassified before the change feed shipped report their write time instead, so an older retag can read as a content change. The next change to a document corrects it for good.'**
+  String get changeFeedBackfillNote;
+
+  /// Change-feed window preset: the last day.
+  ///
+  /// In en, this message translates to:
+  /// **'24 hours'**
+  String get changeWindowDay;
+
+  /// Change-feed window preset: the last week.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days'**
+  String get changeWindowWeek;
+
+  /// Change-feed window preset: the last month.
+  ///
+  /// In en, this message translates to:
+  /// **'30 days'**
+  String get changeWindowMonth;
+
+  /// Change-feed window preset: no updated_since filter, the whole corpus by change order.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get changeWindowAll;
+
+  /// Badge on a change-feed row whose last change was a content write. Deliberately neutral about WHICH write — a first authoring, an update and a restore all land here, so 'REWRITTEN' would be false on a v1 document.
+  ///
+  /// In en, this message translates to:
+  /// **'NEW VERSION'**
+  String get changeKindContent;
+
+  /// Badge on a change-feed row whose last change was tags/slug/visibility/status/publish — no new version.
+  ///
+  /// In en, this message translates to:
+  /// **'RECLASSIFIED'**
+  String get changeKindClassification;
+
+  /// Meta line on a change-feed row: when the document last changed, relatively.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed {when}'**
+  String changedRelative(String when);
+
   /// Reader more-sheet row that opens the document's link-graph neighborhood.
   ///
   /// In en, this message translates to:

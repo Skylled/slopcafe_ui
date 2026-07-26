@@ -26,6 +26,7 @@ import '../widgets/sheets.dart';
 import '../widgets/slug_repair_sheet.dart';
 import '../widgets/stat.dart';
 import '../widgets/toast.dart';
+import 'changes_screen.dart';
 import 'compose_screen.dart';
 import 'orphans_screen.dart';
 import 'reader_screen.dart';
@@ -153,6 +154,18 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
       context,
       builder: (_) => _LinkGraphSheet(ref: ref, host: context),
     );
+  }
+
+  // -------------------------------------------------------------------------
+  // Documents: the corpus change feed (GET /admin/documents?order=updated).
+  // A pushed screen rather than a sheet — it is a browse/triage surface with its
+  // own pagination, and it reads its own walk so its `updated`-ordered cursor
+  // can never meet the `created`-ordered one the shared document list holds.
+  // -------------------------------------------------------------------------
+  void _openChanges() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const ChangesScreen()));
   }
 
   // -------------------------------------------------------------------------
@@ -547,6 +560,43 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
                       const SizedBox(height: 2),
                       Text(
                         l10n.searchIndexSubtitle,
+                        style: AppText.small.copyWith(color: c.textFaint),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, size: 20, color: c.textFaint),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        // The corpus change feed (order=updated) — the only surface that reports
+        // classification-only edits, which write no version.
+        PressCard(
+          onPress: _openChanges,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: c.surface2,
+              border: Border.all(color: c.lineSoft),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.history, size: 18, color: c.textDim),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.changeFeed,
+                        style: AppText.titleSm.copyWith(color: c.text),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.changeFeedSubtitle,
                         style: AppText.small.copyWith(color: c.textFaint),
                       ),
                     ],
@@ -2589,7 +2639,10 @@ class _LinkGraphSheetState extends State<_LinkGraphSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.linkGraphBody, style: AppText.body.copyWith(color: c.textDim)),
+          Text(
+            l10n.linkGraphBody,
+            style: AppText.body.copyWith(color: c.textDim),
+          ),
           const SizedBox(height: 18),
           if (_busy)
             Container(
