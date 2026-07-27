@@ -239,6 +239,32 @@ barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dar
 
 ---
 
+### 7. Launcher icons (`assets/icon/`, `tool/gen_*_icon*.dart`)
+
+The source art is **[assets/icon/app_icon.png](file:///Users/kyle/Repos/slopcafe_ui/assets/icon/app_icon.png)** — a 1254px full-bleed design (the cup on a flat `#65381D` field). Every platform icon derives from it, but the two desktop/mobile platforms need **opposite** treatments, and that asymmetry is the whole reason there are two generator scripts:
+
+* **Android masks for you.** The launcher applies its own shape, so the icon must bleed edge-to-edge and keep the subject inside the adaptive safe zone. **[tool/gen_adaptive_foreground.dart](file:///Users/kyle/Repos/slopcafe_ui/tool/gen_adaptive_foreground.dart)** lifts the cup out of the source and re-seats it, pre-scaled, into that zone; `flutter_launcher_icons` (configured in `pubspec.yaml`) then emits the mipmaps.
+* **macOS masks nothing.** Whatever shape the PNG is, that is the shape in the Dock — a full-bleed square lands as a hard-cornered square wedged between rounded neighbours. **[tool/gen_macos_icon.dart](file:///Users/kyle/Repos/slopcafe_ui/tool/gen_macos_icon.dart)** therefore seats the art in Apple's icon grid itself and writes `macos/Runner/Assets.xcassets/AppIcon.appiconset/` **directly**; `flutter_launcher_icons` is set to `macos: generate: false` so it keeps its hands off.
+
+Regenerate after changing the source art:
+
+```
+dart run tool/gen_adaptive_foreground.dart   # source art -> Android foreground
+dart run flutter_launcher_icons              # foreground  -> Android mipmaps
+dart run tool/gen_macos_icon.dart            # source art -> the macOS appiconset
+```
+
+**Why the macOS generator exists rather than a pre-shaped source image.** `flutter_launcher_icons` can only downscale a single master, and Apple's grid is not one ratio at every size. Its constants were measured off the system icons in `/System/Applications` (Podcasts / Reminders / App Store / Music / Notes all share one exact silhouette), not guessed:
+
+* **Body ratio changes with the slot.** 128px and up put an 824px body on a 1024px canvas (~80.5%), but the 16/32/64px canvases use **7/8** — a proportional margin would burn pixels an icon that small cannot spare.
+* **The margin is a whole number of pixels**, so the straight edges land on the pixel grid instead of straddling it. Visible at 128px, where the ratio wants 12.5 and Apple ships 12 — a **104px** body, not 103.
+* **The corner is a continuous (G2) squircle, not a circular arc**: a cubic Bézier easing off the straight edge, a circular arc through the middle of the turn, then the mirrored Bézier. `kSmoothing` trades arc for Bézier (0 degenerates to an ordinary rounded rect). Fitted by rasterising candidates and diffing binary silhouettes against Apple's icons — the error floor is a plateau over **0.53..0.61** at 0.26px RMS on a 206px body, and the same sweep independently recovered the template radius (**185.4/824**).
+* **The drop shadow is part of the art**, since macOS adds none: ~30% black, Gaussian sigma 12, pushed 11px down at 1024px, fitted to the alpha falloff around the system icons.
+
+Each slot is rendered at its native size rather than downscaled from a master — at 16px the squircle is only ~3px of curve, and resampling that out of a 1024px alpha channel smears a rim that native supersampling resolves cleanly. Verified end-to-end against Apple's own icons: **exact** at 16 and 32px, 0.196px RMS at 128, 0.296px at 256.
+
+---
+
 ## 🔗 External Integration Dependencies
 
 * **Canonical OpenAPI spec (machine source of truth)**:
