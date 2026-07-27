@@ -30,6 +30,7 @@ import 'changes_screen.dart';
 import 'compose_screen.dart';
 import 'orphans_screen.dart';
 import 'reader_screen.dart';
+import 'review_queue_screen.dart';
 
 /// Operate — "The Pass" (back of house). The single most feature-dense screen:
 /// fleet/document statistics, R2 storage, an agent kitchen (mint/keys/OAuth/kill)
@@ -166,6 +167,22 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
     Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => const ChangesScreen()));
+  }
+
+  // -------------------------------------------------------------------------
+  // Documents: the review queue — public documents the 2.0.0 publication gate
+  // is holding back, and the two-pane comparison that decides each one.
+  //
+  // A pushed screen for the same reason the change feed is one: it is a triage
+  // surface with its own corpus sweep, not an action menu. It sweeps rather than
+  // filtering the shared document list because the contract has no server-side
+  // predicate for "public and published_ver != current_ver", and a queue built
+  // from whatever pages happen to be loaded would under-report silently.
+  // -------------------------------------------------------------------------
+  void _openReviewQueue() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const ReviewQueueScreen()));
   }
 
   // -------------------------------------------------------------------------
@@ -533,6 +550,50 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
           icon: Icons.edit_note,
           expand: true,
           onPressed: _openCompose,
+        ),
+        const SizedBox(height: 10),
+        // The publication gate's worklist. First among the four entries because
+        // it is the only one with a backlog: the other three are maintenance the
+        // operator chooses to run, this one is work waiting on them.
+        //
+        // Deliberately carries no pending count. The honest number needs a full
+        // corpus sweep, and the only figure available here is a lower bound over
+        // whatever pages the shared list happens to hold — which would sit a few
+        // pixels above the very rows whose NOT LIVE badges contradict it. The
+        // queue screen is the surface that can claim a number.
+        PressCard(
+          onPress: _openReviewQueue,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: c.surface2,
+              border: Border.all(color: c.lineSoft),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.rate_review_outlined, size: 18, color: c.textDim),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.reviewQueue,
+                        style: AppText.titleSm.copyWith(color: c.text),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.reviewQueueSubtitle,
+                        style: AppText.small.copyWith(color: c.textFaint),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, size: 20, color: c.textFaint),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 10),
         // Semantic-search index management (vector backfill).

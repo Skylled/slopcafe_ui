@@ -730,6 +730,144 @@ abstract class AppLocalizations {
   /// **'Changed {when}'**
   String changedRelative(String when);
 
+  /// Operate > Documents entry, and the title of the review-queue screen: public documents whose newest version is waiting for the operator to publish it.
+  ///
+  /// In en, this message translates to:
+  /// **'Review queue'**
+  String get reviewQueue;
+
+  /// Subtitle on the Operate > Documents 'Review queue' entry row.
+  ///
+  /// In en, this message translates to:
+  /// **'Public documents waiting to go live'**
+  String get reviewQueueSubtitle;
+
+  /// Standing explanatory note at the top of the review queue. States why the surface exists — the 2.0.0 publication gate — because a queued document looks perfectly healthy on every other screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Agents can write to a public document but can\'t publish it. Everything here is serving an older version to readers until you approve the new one.'**
+  String get reviewQueueNote;
+
+  /// Empty state for the review queue, shown only after a completed sweep found nothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is waiting — every public document is serving its newest version.'**
+  String get reviewQueueEmpty;
+
+  /// Error state when the review-queue sweep fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t sweep the corpus'**
+  String get reviewQueueLoadFailed;
+
+  /// Length of the review queue, shown above the rows.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing waiting} =1{1 document waiting} other{{count} documents waiting}}'**
+  String reviewQueueCount(int count);
+
+  /// How many corpus rows the sweep examined, shown beside the queue length. The queue's size only means something next to the size of the corpus it came from.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 document scanned} other{{count} scanned}}'**
+  String reviewQueueScanned(int count);
+
+  /// Progress line under the rows while the sweep is still walking the corpus. Rows already found stay usable in the meantime.
+  ///
+  /// In en, this message translates to:
+  /// **'Still sweeping — {count} scanned'**
+  String reviewQueueSweeping(int count);
+
+  /// Warning when the sweep hit its page backstop. Deliberately loud: a truncated review queue that reads as 'all caught up' hides work the operator is accountable for.
+  ///
+  /// In en, this message translates to:
+  /// **'This sweep stopped before the end of the corpus, so the queue may be incomplete. Pull to refresh.'**
+  String get reviewQueueIncomplete;
+
+  /// Footnote under the review queue. Two things the queue cannot say for itself: declining is done by doing nothing, and a document with a null published_ver serves its head and so never enters the queue.
+  ///
+  /// In en, this message translates to:
+  /// **'There is nothing to reject — leaving a document here keeps readers on the version they already have. A public document that has never been published isn\'t gated at all and won\'t appear.'**
+  String get reviewQueueFootnote;
+
+  /// Pill on a review-queue row: the version readers are served now, and the version they would be served after approval.
+  ///
+  /// In en, this message translates to:
+  /// **'v{live} → v{head}'**
+  String reviewVersionGap(String live, String head);
+
+  /// Meta line on a review-queue row when the number of versions ahead is unknown: when the pending work was written, relatively.
+  ///
+  /// In en, this message translates to:
+  /// **'Written {when}'**
+  String reviewPendingSince(String when);
+
+  /// Meta line on a review-queue row: how many version numbers separate the head from the published version, and when the pending work was written.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 version ahead · written {when}} other{{count} versions ahead · written {when}}}'**
+  String reviewPendingSinceAhead(int count, String when);
+
+  /// Eyebrow above the document title on the two-pane review screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Under review'**
+  String get reviewEyebrow;
+
+  /// Review screen tab showing the version readers are served today. 'Live' means published — what anyone opening the public URL receives.
+  ///
+  /// In en, this message translates to:
+  /// **'Live v{version}'**
+  String reviewTabLive(int version);
+
+  /// Review screen tab showing the document's newest version, which is being withheld from readers until it is published.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest v{version}'**
+  String reviewTabLatest(int version);
+
+  /// Tooltip on the review screen's action that opens the full Reader, where the rest of a document's operator actions live.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in reader'**
+  String get reviewOpenInReader;
+
+  /// Toast when a link inside a review pane is tapped. Following it would replace the pane and destroy the comparison, so navigation is refused here; the Reader owns link traversal.
+  ///
+  /// In en, this message translates to:
+  /// **'Links are inert while reviewing'**
+  String get reviewLinksInert;
+
+  /// Rendered inside a review pane whose version failed to fetch. The other pane is unaffected.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load v{version}'**
+  String reviewPaneLoadFailed(int version);
+
+  /// Banner when x-doc-current-version reports a version ahead of the one under review. States the safety property plainly: the screen publishes what it rendered, never 'the latest'.
+  ///
+  /// In en, this message translates to:
+  /// **'v{written} was written while you were reviewing. Approving still publishes v{reviewing} — the version on screen. Reopen to review the newer one.'**
+  String reviewHeadMovedNote(int written, int reviewing);
+
+  /// Note when the published and current source hashes match. Deliberately says 'source' rather than 'output' — the two versions can have been run through different sanitizer releases.
+  ///
+  /// In en, this message translates to:
+  /// **'Both versions were written from identical source. Approving changes which version readers get, not what it says.'**
+  String get reviewIdenticalSourceNote;
+
+  /// Line above the review screen's approve button, restating the consequence in terms of both version numbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Readers are served v{live}. Approving hands them v{latest} instead.'**
+  String reviewApproveHint(int live, int latest);
+
+  /// The review screen's primary action, naming the exact version it will publish — the one rendered in the Latest pane, not whatever is current at the moment of the tap.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish v{version}'**
+  String reviewPublishCta(int version);
+
   /// Reader more-sheet row that opens the document's link-graph neighborhood.
   ///
   /// In en, this message translates to:

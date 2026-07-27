@@ -402,6 +402,123 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get reviewQueue => 'Review queue';
+
+  @override
+  String get reviewQueueSubtitle => 'Public documents waiting to go live';
+
+  @override
+  String get reviewQueueNote =>
+      'Agents can write to a public document but can\'t publish it. Everything here is serving an older version to readers until you approve the new one.';
+
+  @override
+  String get reviewQueueEmpty =>
+      'Nothing is waiting — every public document is serving its newest version.';
+
+  @override
+  String get reviewQueueLoadFailed => 'Couldn\'t sweep the corpus';
+
+  @override
+  String reviewQueueCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count documents waiting',
+      one: '1 document waiting',
+      zero: 'Nothing waiting',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reviewQueueScanned(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count scanned',
+      one: '1 document scanned',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reviewQueueSweeping(int count) {
+    return 'Still sweeping — $count scanned';
+  }
+
+  @override
+  String get reviewQueueIncomplete =>
+      'This sweep stopped before the end of the corpus, so the queue may be incomplete. Pull to refresh.';
+
+  @override
+  String get reviewQueueFootnote =>
+      'There is nothing to reject — leaving a document here keeps readers on the version they already have. A public document that has never been published isn\'t gated at all and won\'t appear.';
+
+  @override
+  String reviewVersionGap(String live, String head) {
+    return 'v$live → v$head';
+  }
+
+  @override
+  String reviewPendingSince(String when) {
+    return 'Written $when';
+  }
+
+  @override
+  String reviewPendingSinceAhead(int count, String when) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count versions ahead · written $when',
+      one: '1 version ahead · written $when',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reviewEyebrow => 'Under review';
+
+  @override
+  String reviewTabLive(int version) {
+    return 'Live v$version';
+  }
+
+  @override
+  String reviewTabLatest(int version) {
+    return 'Latest v$version';
+  }
+
+  @override
+  String get reviewOpenInReader => 'Open in reader';
+
+  @override
+  String get reviewLinksInert => 'Links are inert while reviewing';
+
+  @override
+  String reviewPaneLoadFailed(int version) {
+    return 'Couldn\'t load v$version';
+  }
+
+  @override
+  String reviewHeadMovedNote(int written, int reviewing) {
+    return 'v$written was written while you were reviewing. Approving still publishes v$reviewing — the version on screen. Reopen to review the newer one.';
+  }
+
+  @override
+  String get reviewIdenticalSourceNote =>
+      'Both versions were written from identical source. Approving changes which version readers get, not what it says.';
+
+  @override
+  String reviewApproveHint(int live, int latest) {
+    return 'Readers are served v$live. Approving hands them v$latest instead.';
+  }
+
+  @override
+  String reviewPublishCta(int version) {
+    return 'Publish v$version';
+  }
+
+  @override
   String get linksAction => 'Links';
 
   @override
