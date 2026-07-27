@@ -26,6 +26,7 @@ import 'package:slopcafe_ui/api/api.dart';
 import 'package:slopcafe_ui/core/changes.dart';
 import 'package:slopcafe_ui/core/links.dart';
 import 'package:slopcafe_ui/core/publication.dart';
+import 'package:slopcafe_ui/core/review.dart';
 
 int _failures = 0;
 
@@ -456,6 +457,85 @@ Future<void> main() async {
       }
     } catch (e) {
       _check('change feed parses', false, '$e');
+    }
+
+    // Contract 2.2.0's review-queue filter. Read-only, so safe against prod.
+    //
+    // The valuable check is the last one. The server defines `pending` as
+    // `published_ver IS NOT current_ver`, and NULL is distinct from any version
+    // number, so a public document that was NEVER promoted should satisfy it —
+    // but such a document is not gated at all (by the 2.0.0 serving rule it
+    // already serves its head), so it must not reach the queue. The spec's
+    // wording leaves it ambiguous whether the backend special-cases this. Rather
+    // than assert one reading, this REPORTS how many rows the client filter
+    // drops, which answers the question against live data every time it runs.
+    stdout.writeln(
+      '\nLive authenticated review queue '
+      '(?visibility=public&publication=pending):',
+    );
+    try {
+      final res = await dio.get(
+        '/admin/documents',
+        queryParameters: {
+          'limit': 200,
+          'visibility': VisibilityFilter.public.wire,
+          'publication': PublicationFilter.pending.wire,
+          'order': DocumentOrder.updated.wire,
+        },
+        options: auth,
+      );
+      _check('HTTP 200', res.statusCode == 200, '${res.statusCode}');
+      final page = ListDocumentsResponse.fromJson(
+        Map<String, dynamic>.from(res.data as Map),
+      );
+      _check('parsed ${page.documents.length} candidate rows', true);
+
+      // The filter's own guarantees, asserted rather than assumed.
+      _check(
+        'every row is public',
+        page.documents.every((d) => d.visibility == 'public'),
+      );
+      _check(
+        'no revoked row matches (revoke nulls both pointers)',
+        page.documents.every((d) => !d.isRevoked),
+      );
+      _check(
+        'no row is already fully published',
+        page.documents.every((d) => d.publishedVer != d.currentVer),
+      );
+
+      final queue = reviewQueueFrom(page.documents);
+      final dropped = page.documents.length - queue.length;
+      final neverPromoted = page.documents
+          .where((d) => !d.isRevoked && d.publishedVer == null)
+          .length;
+      stdout.writeln(
+        '  ~ client filter keeps ${queue.length} of ${page.documents.length}'
+        '${dropped > 0 ? ' (dropped $dropped; $neverPromoted never promoted)' : ''}',
+      );
+      _check(
+        'every queued row has proven withheld work',
+        queue.every((d) => d.isAwaitingReview),
+      );
+
+      // Gotcha #3: an unrecognised value is a plain 400 bad_request, not a
+      // dedicated code and not a silent fallback to unfiltered. If it ever
+      // degraded to the latter, the queue would quietly become the whole
+      // corpus again and nothing else here would notice.
+      final bogus = await dio.get(
+        '/admin/documents',
+        queryParameters: {'limit': 1, 'publication': 'nonsense'},
+        options: auth,
+      );
+      _check(
+        'an unknown publication value is REJECTED, not ignored',
+        bogus.statusCode == 400 &&
+            ApiError.fromResponse(bogus.statusCode, bogus.data).code ==
+                ErrorCode.badRequest,
+        'HTTP ${bogus.statusCode}',
+      );
+    } catch (e) {
+      _check('review queue parses', false, '$e');
     }
 
     // Read-only halves of the link graph. The backfill sweep and the three slug

@@ -231,6 +231,50 @@ void main() {
       expect(reviewQueueFrom(const <DocumentListing>[]), isEmpty);
     });
   });
+
+  // Contract 2.2.0 moved the heavy lifting server-side. These pin the parts the
+  // client still owns — the wire strings it sends, and the one population the
+  // server's predicate admits that this screen must not show.
+  group('2.2.0 server-side filter', () {
+    // An unrecognised value for either filter is a hard 400 bad_request, never
+    // a silent fallback to unfiltered, so a typo would fail the whole screen.
+    // Same reason DocumentOrder's strings are pinned.
+    test('filter wire strings match the contract', () {
+      expect(VisibilityFilter.public.wire, 'public');
+      expect(VisibilityFilter.private.wire, 'private');
+      expect(PublicationFilter.pending.wire, 'pending');
+      expect(PublicationFilter.current.wire, 'current');
+    });
+
+    // The load-bearing one. The server defines `pending` as
+    // `published_ver IS NOT current_ver`, and NULL is distinct from any number,
+    // so a public document that was NEVER promoted satisfies it. That document
+    // is not gated — by the 2.0.0 serving rule it already serves its head — so
+    // it has no withheld work and must not appear in the queue. Without the
+    // client filter it would, claiming readers are on something older when they
+    // are on the newest thing there is.
+    test('a never-promoted public row is dropped even though the server\'s '
+        'pending predicate admits it', () {
+      final serverResult = [
+        _row(publicId: 'gatedddddddddddddddddd', currentVer: 8, publishedVer: 4),
+        _row(publicId: 'neverpromotedddddddddd', currentVer: 8, publishedVer: null),
+      ];
+      final queue = reviewQueueFrom(serverResult);
+      expect(queue.map((d) => d.publicId), ['gatedddddddddddddddddd']);
+    });
+
+    // Revoked rows match neither filter value server-side (revoke nulls both
+    // pointers), but the client term is independent of where rows came from —
+    // a hand-assembled list or a future caller that omits the filter still must
+    // not produce an unreviewable entry.
+    test('a revoked row is dropped independently of the server filter', () {
+      final queue = reviewQueueFrom([
+        _row(publicId: 'revokedddddddddddddddd', revokedAt: DateTime(2026, 6, 10)),
+        _row(publicId: 'gatedddddddddddddddddd'),
+      ]);
+      expect(queue.map((d) => d.publicId), ['gatedddddddddddddddddd']);
+    });
+  });
 }
 
 /// Exposes the underlying gate predicate so the revoke test can assert that the

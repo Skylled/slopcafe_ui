@@ -766,22 +766,10 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{Nothing waiting} =1{1 document waiting} other{{count} documents waiting}}'**
   String reviewQueueCount(int count);
 
-  /// How many corpus rows the sweep examined, shown beside the queue length. The queue's size only means something next to the size of the corpus it came from.
+  /// Warning when the walk hit its page backstop. Should be unreachable since contract 2.2.0 filters server-side, but kept and kept loud: a truncated review queue that reads as 'all caught up' hides work the operator is accountable for.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 document scanned} other{{count} scanned}}'**
-  String reviewQueueScanned(int count);
-
-  /// Progress line under the rows while the sweep is still walking the corpus. Rows already found stay usable in the meantime.
-  ///
-  /// In en, this message translates to:
-  /// **'Still sweeping — {count} scanned'**
-  String reviewQueueSweeping(int count);
-
-  /// Warning when the sweep hit its page backstop. Deliberately loud: a truncated review queue that reads as 'all caught up' hides work the operator is accountable for.
-  ///
-  /// In en, this message translates to:
-  /// **'This sweep stopped before the end of the corpus, so the queue may be incomplete. Pull to refresh.'**
+  /// **'This list stopped before the end of the queue, so it may be incomplete. Pull to refresh.'**
   String get reviewQueueIncomplete;
 
   /// Footnote under the review queue. Two things the queue cannot say for itself: declining is done by doing nothing, and a document with a null published_ver serves its head and so never enters the queue.

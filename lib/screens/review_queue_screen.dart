@@ -96,29 +96,22 @@ class _ReviewQueueScreenState extends ConsumerState<ReviewQueueScreen> {
               // other surface has no obvious reason to exist.
               _note(c, l10n.reviewQueueNote),
               const SizedBox(height: 14),
+              // Just the count now. It used to be paired with "N scanned",
+              // which existed to contextualise "0 waiting" against the size of
+              // the corpus it was drawn from. Since 2.2.0 the server returns
+              // the queue itself rather than everything, so there is no corpus
+              // figure to report and none is needed: "nothing waiting" is now
+              // the server's own answer, not an inference from a sweep.
               if (docs.isNotEmpty || state.hasLoaded)
                 Padding(
                   padding: const EdgeInsets.only(left: 2, bottom: 12),
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          l10n.reviewQueueCount(docs.length),
-                          overflow: TextOverflow.ellipsis,
-                          style: AppText.small.copyWith(
-                            color: c.textFaint,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      // The queue's length only means something beside the size
-                      // of the corpus it was drawn from.
-                      const MetaDot(),
-                      Text(
-                        l10n.reviewQueueScanned(state.scanned),
-                        style: AppText.small.copyWith(color: c.textFaint),
-                      ),
-                    ],
+                  child: Text(
+                    l10n.reviewQueueCount(docs.length),
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.small.copyWith(
+                      color: c.textFaint,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               // A sweep that stopped at the page backstop is not an answer. Say
@@ -159,28 +152,21 @@ class _ReviewQueueScreenState extends ConsumerState<ReviewQueueScreen> {
                       ),
                     ),
                   ),
-                // The sweep keeps running under rows that have already landed,
-                // so the operator can start reviewing the top of the queue
-                // while the tail of the corpus is still being walked.
+                // Only ever seen on a queue long enough to paginate, which the
+                // server-side filter makes rare — the first page holds 200
+                // pending documents. Kept because the rows above are already
+                // usable while a second page is in flight.
                 if (state.isLoading) ...[
                   const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 13,
-                        height: 13,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: c.clay,
-                        ),
+                  Center(
+                    child: SizedBox(
+                      width: 15,
+                      height: 15,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: c.clay,
                       ),
-                      const SizedBox(width: 9),
-                      Text(
-                        l10n.reviewQueueSweeping(state.scanned),
-                        style: AppText.small.copyWith(color: c.textFaint),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
                 // A failure after rows are on screen keeps the rows and appends

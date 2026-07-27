@@ -11,17 +11,69 @@
 /// this module is hermetic — no Flutter imports, no `dio`, no providers — so the
 /// rules below are testable without a widget tree or a network.
 ///
-/// **There is no server-side predicate for this queue.** `GET /admin/documents`
-/// filters on `tag`, `slug` and `status`, and orders by `created` or `updated`;
-/// it has no `visibility` filter and nothing that compares `published_ver`
-/// against `current_ver`. The queue is therefore necessarily a client-side
-/// filter over a walk of the corpus, which is why [reviewQueueFrom] takes rows
-/// rather than a query, and why the provider that feeds it has to sweep to
-/// exhaustion before it can claim the queue is complete.
+/// **Contract 2.2.0 added the server-side predicate this queue wants**:
+/// `GET /admin/documents?visibility=public&publication=pending` (migrations 0011
+/// and 0018). The provider no longer walks the corpus — it asks for the queue.
+///
+/// [reviewQueueFrom] survives that change and is still applied to the result,
+/// which is deliberate rather than leftover. The server's `pending` is defined
+/// as `published_ver IS NOT current_ver`, and that is **broader** than this
+/// screen's question in one specific way: a NULL `published_ver` is distinct
+/// from any version number, so a public document that was *never* promoted
+/// satisfies the server's predicate. Such a document is not gated at all — by
+/// the 2.0.0 serving rule it already serves its head to everyone — so it has no
+/// withheld work to review and [DocumentReview.isAwaitingReview] excludes it.
+/// (The spec's own wording is ambiguous on whether the backend special-cases
+/// this for public documents; the client is correct either way, which is the
+/// point of keeping the check.)
+///
+/// So the division of labour is: the **server narrows the fetch** from the whole
+/// corpus to a handful of candidates, and the **client keeps the semantics**.
+/// The filter costs one traversal of an already-small list and makes the screen
+/// independent of how the backend chooses to read a null pointer.
 library;
 
 import '../api/api.dart';
 import 'publication.dart';
+
+/// The `?visibility=` filter on `GET /admin/documents` (migration 0011).
+///
+/// The wire strings are pinned in a test for the same reason [DocumentOrder]'s
+/// are: an unrecognised value is a hard `400 bad_request`, never a silent
+/// fallback to unfiltered, so a typo here would fail the whole screen rather
+/// than quietly widen it.
+enum VisibilityFilter {
+  public,
+  private;
+
+  String get wire => switch (this) {
+    VisibilityFilter.public => 'public',
+    VisibilityFilter.private => 'private',
+  };
+}
+
+/// The `?publication=` filter on `GET /admin/documents` (migration 0018).
+///
+/// `pending` is `published_ver IS NOT current_ver` — the document holds bytes
+/// its published pointer does not name. `current` is the complement among
+/// non-revoked rows: promoting would be a no-op.
+///
+/// **Revoked documents match neither value**, because revoke nulls both
+/// pointers and the comparison stops being meaningful. That is a filter
+/// property, not a client rule, so it does not replace
+/// [DocumentReview.isAwaitingReview]'s own `!isRevoked` term — that term exists
+/// to keep an unrenderable document out of the queue no matter where the rows
+/// came from, including a hand-assembled list or a future caller that does not
+/// pass this filter.
+enum PublicationFilter {
+  pending,
+  current;
+
+  String get wire => switch (this) {
+    PublicationFilter.pending => 'pending',
+    PublicationFilter.current => 'current',
+  };
+}
 
 /// Which of a queued document's two versions a review pane is showing.
 ///
@@ -125,6 +177,14 @@ extension DocumentReview on DocumentListing {
 ///
 /// Filters to [DocumentReview.isAwaitingReview], de-duplicates on `public_id`,
 /// and sorts most-recent-pending-work first.
+///
+/// Since 2.2.0 the rows handed here are already server-filtered, so this is no
+/// longer doing the heavy lifting — but it is not redundant. It still excludes
+/// the never-promoted public documents the server's broader `pending` predicate
+/// admits (see the library comment), still guarantees the ordering the screen
+/// renders, and still holds the line if a caller ever assembles rows some other
+/// way. Taking rows rather than a query is what makes it survive a contract
+/// change like this one at all.
 ///
 /// **Why newest-first rather than longest-waiting-first.** A queue argues for
 /// FIFO, but every list in this app is newest-first and an operator who opens

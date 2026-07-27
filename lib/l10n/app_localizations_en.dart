@@ -431,24 +431,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String reviewQueueScanned(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count scanned',
-      one: '1 document scanned',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String reviewQueueSweeping(int count) {
-    return 'Still sweeping — $count scanned';
-  }
-
-  @override
   String get reviewQueueIncomplete =>
-      'This sweep stopped before the end of the corpus, so the queue may be incomplete. Pull to refresh.';
+      'This list stopped before the end of the queue, so it may be incomplete. Pull to refresh.';
 
   @override
   String get reviewQueueFootnote =>

@@ -155,8 +155,9 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
     * `ReviewSide` — `live` (`published_ver`) | `latest` (`current_ver`), the two panes. Both resolve through the **same** pinned route `/d/:id/v/:n/raw`, including the live side that `/d/:id/raw` would also have served: comparing a pinned read against a serve-the-published-version read would compare two code paths, and any difference on screen would be ambiguous between "the content changed" and "the route differs".
     * `SourceComparison` — `identical` | `differs` | `unknown`, derived from the `current_source_sha256`/`published_source_sha256` pair already on every listing row, so it costs no extra request. Three-valued on purpose: a pre-retention version carries a null hash, and "cannot tell" must not collapse into either answer. `identical` says the two versions were written from the same **source** — deliberately not "render the same", since the two can have been run through different sanitizer releases.
     * `extension DocumentReview on DocumentListing` — `isAwaitingReview`, `pendingSince`, `versionsAhead`, `versionFor(side)`, `sourceComparison`. `isAwaitingReview` is `hasUnpublishedWork` **plus `!isRevoked`**, and that extra term is load-bearing rather than defensive: a queue entry promises two *renderable* versions and a revoked document's byte path is gone (`/d/:id/raw` answers 404/410), so queueing one offers a review that cannot be performed. `pendingSince` reads `current_version_at` — the content clock, i.e. when the head moved ahead of the pointer — and falls back to `updated_at` only when there is none, because `updated_at` also moves on a retag or a promote and would misdate the wait. `versionsAhead` is plain arithmetic on the two numbers and says so; it `clamp`s at 0 rather than trusting that versions only count upwards.
-    * `reviewQueueFrom(rows)` — filter + de-duplicate on `public_id` + sort **most-recent-pending-work first**. Newest-first rather than FIFO because every list in the app is newest-first and an operator opening the queue is nearly always reacting to a burst an agent just wrote; nothing is starved either way, since the queue is exhaustive and states its full length. De-duplication is not theoretical: a document written *during* the sweep can be delivered on two pages of an `updated`-ordered walk as its position shifts.
-  * **There is no server-side predicate for this queue** — `GET /admin/documents` filters on `tag`/`slug`/`status` and orders by `created`/`updated`, with no `visibility` filter and nothing comparing `published_ver` to `current_ver`. The whole feature is therefore a client-side filter over a full corpus walk, which is why this file takes rows rather than a query.
+    * `reviewQueueFrom(rows)` — filter + de-duplicate on `public_id` + sort **most-recent-pending-work first**. Newest-first rather than FIFO because every list in the app is newest-first and an operator opening the queue is nearly always reacting to a burst an agent just wrote; nothing is starved either way, since the queue is exhaustive and states its full length. De-duplication is not theoretical: a document written *during* the walk can be delivered on two pages of an `updated`-ordered fetch as its position shifts.
+    * `VisibilityFilter` (`public`|`private`) and `PublicationFilter` (`pending`|`current`) — contract **2.2.0**'s query-param wire values, pinned in a test for the same reason `DocumentOrder`'s are: an unrecognised value is a hard `400 bad_request`, never a silent fallback to unfiltered, so a typo would fail the whole screen rather than quietly widen it.
+  * **Since 2.2.0 the server has the predicate** (`?visibility=public&publication=pending`), so this file no longer does the heavy lifting — but `reviewQueueFrom` is still applied to the result and is **not** vestigial. The server's `pending` is `published_ver IS NOT current_ver`, and NULL is distinct from any number, so a **never-promoted public document** satisfies it while being *not gated at all* (by the 2.0.0 serving rule it already serves its head). `isAwaitingReview` excludes those. The spec is ambiguous about whether the backend special-cases this for public rows, and the client is right either way — which is the point. Taking rows rather than a query is also what let this file survive the 2.2.0 change untouched in its substance.
   * Covered by [test/review_queue_test.dart](file:///Users/kyle/Repos/slopcafe_ui/test/review_queue_test.dart) (hermetic — rows built as `DocumentListing` values): the admission matrix incl. a revoked row constructed to defeat the *incidental* exclusion, both clocks, the negative-gap clamp, the three-valued source comparison, and the ordering + de-dup rules.
 * **[lib/core/theme.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/theme.dart)**
   * Assembles the Cortado `ThemeData` (light + dark) from the design tokens: maps the palette onto a Material `ColorScheme` AND registers the raw token set as a `ThemeExtension`, plus component themes (cards, inputs, buttons, sheets).
@@ -210,12 +211,14 @@ barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dar
   * De-duplicates on `public_id` across pages, because `updated_since` is **inclusive** by contract (the boundary row is re-delivered on purpose so a resuming consumer can't skip one at a shared millisecond).
   * Deliberately **no offline fallback and no write to the offline cache**, unlike `documentsListProvider`. The feed's whole claim is "this is what moved recently", which the cached listing cannot answer — it is a snapshot with no record of when anything changed relative to a window — and writing a recently-*changed* slice into `documents_list.json` would corrupt the newest-created page the app falls back to offline.
 * **[lib/providers/review_provider.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/providers/review_provider.dart)**
-  * `ReviewQueueNotifier` / `reviewQueueProvider` — one **sweep** of `GET /admin/documents?order=updated`, filtered client-side to the documents the publication gate is holding back. `ReviewQueueState` carries `documents` / `scanned` / `isLoading` / `hasLoaded` / `isComplete` / error, and like `ChangeFeedState` it has **no `copyWith`** — every construction lists its fields, so an omitted one silently resets.
-  * **A sweep, not a page.** The change feed has a Load-more button because a change feed has a natural "that's enough" point; a review queue does not — one that stops early hides work the operator is accountable for publishing. So it walks to exhaustion at `limit=200`, publishes progress **after every page** (the operator reviews the top of the queue while the tail is still being walked), and reports `scanned` beside the queue length, because "0 waiting" out of 4 scanned is a very different claim from "0 waiting" out of 4000. A 1000-page backstop (the same guard `backfillVectors` uses) clears `isComplete` rather than passing a truncated sweep off as a finished one, and the screen says so loudly.
-  * **Separate state from both `DocumentsListState` and `ChangeFeedState`** for the change feed's two reasons — an `updated`-ordered cursor must never meet the `created`-ordered one, and a gate-filtered slice must never reach `documents_list.json` — plus its own third: it is a sweep rather than a page.
+  * `ReviewQueueNotifier` / `reviewQueueProvider` — reads the queue via contract **2.2.0**'s filter: `GET /admin/documents?visibility=public&publication=pending&order=updated`. `ReviewQueueState` carries `documents` / `isLoading` / `hasLoaded` / `isComplete` / error, and like `ChangeFeedState` it has **no `copyWith`** — every construction lists its fields, so an omitted one silently resets.
+  * **It was a full corpus sweep until 2.2.0**, because no server-side predicate existed. Now the rows crossing the wire are proportional to the *queue* rather than the corpus, and `limit=200` makes it a single request in every realistic case. It still walks to exhaustion rather than offering a Load-more button: the change feed has a natural "that's enough" point and a review queue does not, since one that stops early hides work somebody is accountable for.
+  * **`visibility=public` is not optional decoration.** `publication=pending` alone also matches private drafts that were never published — documents with no reader to withhold anything from. The pair is the queue; either half alone is not.
+  * **`scanned` is gone** with the sweep. It existed to contextualise "0 waiting" against the size of the corpus it was drawn from; the server now answers the question directly, so there is no corpus figure to report and none is needed. **`isComplete` and the `_maxPages` backstop were kept** (now 50 pages = 10k *already-pending* documents) even though tripping them should be unreachable — the cost is nothing while they hold, and a review queue that truncates in silence reads as "all caught up" while hiding work.
+  * **Separate state from both `DocumentsListState` and `ChangeFeedState`** for the change feed's two reasons — an `updated`-ordered cursor must never meet the `created`-ordered one, and a gate-filtered slice must never reach `documents_list.json` — plus its own third: this walk carries filters the others do not, and the server does not encode filters in the cursor, so a cursor swapped between them would silently return the wrong population rather than erroring.
   * `order=updated` rather than the default: the interesting rows (just-rewritten documents) land on the first page, and the walk's ordering matches the queue's own sort key, so rows arrive roughly sorted and the list stops reshuffling as pages land. **No `updated_since`** — a document rewritten last year and never approved is still waiting, so narrowing the walk would trade completeness on the one surface that cannot afford it.
-  * Generation token like the change feed, but it matters more here: a sweep is a *loop* of awaits, so an abandoned one has many chances to commit. Every write is gated and the loop itself breaks on a generation change.
-  * `resolve(publicId, publishedVer)` — a local edit that drops a row after a successful publish, taking the **canonical** `published_ver` off the `PromoteResponse` so the row is re-evaluated rather than assumed resolved (promoting v6 of a document whose head is v8 leaves it in the queue). A re-sweep instead would be the expensive half of this provider run to learn one row's new number — and it would reshuffle the queue mid-review, since a promote stamps `updated_at`. No offline fallback and no cache write, for the change feed's reason: the queue's claim is "these are waiting *right now*", and a stale one would have the operator approving against numbers that have moved.
+  * Generation token like the change feed, but it matters more here: this is a *loop* of awaits, so an abandoned walk has many chances to commit. Every write is gated and the loop itself breaks on a generation change.
+  * `resolve(publicId, publishedVer)` — a local edit that drops a row after a successful publish, taking the **canonical** `published_ver` off the `PromoteResponse` so the row is re-evaluated rather than assumed resolved (promoting v6 of a document whose head is v8 leaves it in the queue). A re-read instead would cost a round trip to learn one row's new number — and would reshuffle the queue under an operator working through it, since a promote stamps `updated_at`. No offline fallback and no cache write, for the change feed's reason: the queue's claim is "these are waiting *right now*", and a stale one would have the operator approving against numbers that have moved.
 * **[lib/providers/health_provider.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/providers/health_provider.dart)**
   * `healthProvider` (`Notifier<HealthState>`) — the best-effort `/healthz` snapshot (sanitizer version + R2 storage cap/used) shown on the Operate stat grid + storage bar. Was Operate-local widget state; **lifted into a provider** so the shared pull-to-refresh can reload it from either home tab. `load()` is best-effort (a failure keeps the last snapshot; the opportunistic `storage_used_bytes`/`storage_bytes_used` field isn't in the contract).
 * **[lib/providers/refresh.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/providers/refresh.dart)**
@@ -228,7 +231,7 @@ barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dar
   * Autofocus query field, debounced live results via `documentSearchProvider` (with local cached fallback), relevance bars, matched-field pills (deprecated hits also carry the `DEPRECATED` badge, and hits with unpublished work the `NotLiveBadge` — search indexes `current_ver`, so a snippet can quote text no reader has been served yet), and highlighted snippets. Suggestion chips when idle. A **segmented Hybrid/Keyword/Semantic mode selector** (`_SearchModeSelector`, styled like `PillTone.solid`) appears beneath the field while a query is active and drives `SearchQueryParams.mode`. Semantic-only hits surface as a `SEMANTIC` matched-field pill and an **un-bracketed** snippet (the backend deliberately omits the `[term]` brackets to signal "concept match, not term match"); the snippet parser already renders an un-bracketed string as plain text, and the relevance bar normalizes against the in-set max score (so the per-mode score scales — fused RRF / negated BM25 / cosine — stay comparable within a result set).
 * **[lib/screens/operate_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/operate_screen.dart)** — Operate ("The Pass") tab.
   * Fleet stat grid + R2 storage bar; a "Kitchen" segment (agent rows → an agent bottom-sheet with keys, mint key, OAuth client, kill; plus mint-agent and unbound-OAuth flows). The agent sheet's key list buckets on `AgentKey.isActive`: live keys (neither revoked nor expired) get the revoke action and, if they carry a future TTL, an "Expires …" sub-label; everything else falls into a single **INACTIVE** audit section where each `_KeyRow` shows the right tombstone pill — red **REVOKED** or neutral **EXPIRED** (a lapsed-but-un-revoked short-lived publish credential) and a "Documents" segment (an **"Author a document"** CTA that pushes the compose screen, a **"Search index"** entry that opens the vector-backfill sheet (`_BackfillSheet` — index-new vs rebuild, each confirmed), the admin doc list with include-revoked, a three-way **lifecycle filter** (`_StatusFilterSegmented`: All/Active/Deprecated — client-side over the loaded provider pages, like include-revoked) and a `DEPRECATED` badge on deprecated rows, + a per-doc actions sheet: visibility/**publish**/**status**/slug/tags/revoke — the status row toggles Mark deprecated (via the shared `showDeprecateSheet`, optional `superseded_by` target) / Mark active (plain confirm; the pointer clears server-side)). After authoring it surfaces the outcome (incl. any sanitizer adjustments) via toast. The `/healthz` metrics come from `healthProvider` (no longer Operate-local state). **Pull-to-refresh** (a `RefreshIndicator` over the `ListView`) runs the shared `refreshFleetData` — the same full reload as a Library pull.
-  * **Review queue.** A **"Review queue"** entry leads the Documents segment's four entries, above "Search index", and pushes `ReviewQueueScreen`. First because it is the only one of the four with a **backlog** — the other three are maintenance the operator chooses to run, this one is work waiting on them. It deliberately carries **no pending count**: the honest number needs a full corpus sweep, and the only figure available on Operate is a lower bound over whatever pages the shared list happens to hold, which would sit a few pixels above the very rows whose `NOT LIVE` badges contradict it.
+  * **Review queue.** A **"Review queue"** entry leads the Documents segment's four entries, above "Search index", and pushes `ReviewQueueScreen`. First because it is the only one of the four with a **backlog** — the other three are maintenance the operator chooses to run, this one is work waiting on them. It deliberately carries **no pending count**. That was once because an honest number required a full corpus sweep; since 2.2.0 it would only cost one filtered request, so the reason is now purely that the only figure cheaply available *on this screen* is a lower bound over whatever pages the shared list happens to hold — which would sit a few pixels above the very rows whose `NOT LIVE` badges contradict it. A real count here would mean this tab issuing the queue's own query on every Operate build, which is a worse trade than one tap.
   * **Change feed.** A **"Recent changes"** entry sits between "Search index" and "Link graph" in the Documents segment and pushes `ChangesScreen`. A pushed screen rather than a sheet (unlike its two neighbours): it is a browse/triage surface with its own pagination, not an action menu — and reading its own walk is what keeps its `updated`-ordered cursor away from the `created`-ordered one `documentsListProvider` holds.
   * **Link graph.** A single **"Link graph"** entry sits beside "Search index" in the Documents segment and opens `_LinkGraphSheet` — one entry rather than three, because the three are one subsystem and only the first is an action on its own: **Rebuild link graph** (the backfill sweep; confirmed, but `danger: false` — unlike the vector rebuild this is the *cheap* option and the copy says so, while still confirming because it rewrites rows across the whole corpus), **Orphans** (pushes `OrphansScreen`) and **Retired names** (opens the shared slug-repair sheet). The result toast reports `updated`/`links`, or the re-run warning when `hasUnreadable`.
   * **Publication gate (2.0.0).** Admin rows carry the honey `NOT LIVE` pill whenever `hasUnpublishedWork` holds — honey like `DEPRECATED` (a caution about how the document is *served*), never the red of a revoked kill. The actions sheet leads with **Publish**, because it is the only action in there that changes what a reader is handed and it is what the row's marker sent the operator in to do; its header shows the head pill (`v7`) beside a `Live v5` pill (honey while the gate holds work back, and omitted entirely on a private document, which serves nobody), with a plain-language note underneath. The Pass publishes the **current** version and nothing else — picking an arbitrary version is a rollback, needs the history's dates/authors/`source_present` to be made safely, and the Reader already owns that surface; here the two numbers on the row have already said what would change. The action is offered whenever there is a head that isn't already published (including on private documents, which stages the choice), confirmed like a write even though promote isn't one, and the confirm sheet appends a lock-icon caveat on a private document so "everyone will see v4" isn't left to imply the door is already open. Toast reports `PromoteResponse.published_ver` (canonical) and maps `ErrorCode.versionNotFound` to "that version no longer exists", which tells the operator to reopen the list in a way a generic failure does not.
@@ -243,9 +246,9 @@ barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dar
   * Two pieces of copy are load-bearing and **always visible — outside every branch of the render, including the empty and error states**: the honey note that reclassification never writes a version (the reason the screen exists at all — without it the feed reads as a redundant re-sort of the Library), and a footnote about the migration-0017 backfill, which took `updated_at` from the current version's write time for pre-migration rows, so an *older* retag reads as a content change until the document is next touched. The empty result is where the second one matters most: an operator who picks a short window, sees "nothing changed", and knows they retagged something last month needs to be told why it isn't here.
 * **[lib/screens/review_queue_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/review_queue_screen.dart)** — pushed **Review queue**, reached from Operate › Documents. Every public document whose head the publication gate is withholding from readers.
   * The same `DocFeedCard` plates as every other list, with a meta line above each carrying a honey `v4 → v8` mono pill and "N versions ahead · written &lt;rel&gt;". The card's own `NotLiveBadge` is redundant here (every row has one by definition) but is deliberately **not** special-cased away: it is the marker the operator followed in from the Library, and suppressing it only on this screen would break that thread.
-  * **Reads its own sweep rather than filtering `documentsListProvider`.** The shared list is paginated and the app holds only the pages somebody happened to scroll, so filtering it would make the queue a function of scroll depth — worse than no queue, because it would read "all caught up" while holding work back. The contract has no server-side predicate (see `lib/core/review.dart`), so completeness has to be bought with a full sweep.
+  * **Reads its own query rather than filtering `documentsListProvider`.** The shared list is paginated and the app holds only the pages somebody happened to scroll, so filtering it would make the queue a function of scroll depth — worse than no queue, because it would read "all caught up" while holding work back. Since 2.2.0 the server answers the question directly (`?visibility=public&publication=pending`); the client filter still runs over the result, for the never-promoted reason in `lib/core/review.dart`.
   * Two pieces of copy are load-bearing and **always visible, outside every branch**: the standing note that agents can write to a public document but cannot publish it (without it a list of documents that look healthy everywhere else has no visible reason to exist), and a footnote stating the two things the queue cannot say for itself — **there is nothing to reject** (leaving a document here *is* declining, and keeps readers where they are), and a public document that has never been published isn't gated at all and so never appears. The empty state is where the second matters most.
-  * A truncated sweep gets its own red warning tile; a failure *after* rows have landed keeps the rows and appends the error rather than replacing a partial answer.
+  * A truncated walk still gets its own red warning tile (unreachable in practice since 2.2.0, kept because silent truncation is the one failure this screen must never have); a failure *after* rows have landed keeps the rows and appends the error rather than replacing a partial answer.
 * **[lib/screens/review_screen.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/review_screen.dart)** — the pushed **two-pane review** surface: what readers are served today against what they would get if the operator approved.
   * **Two `WebViewController`s, not one driven back and forth**, swapped by an `IndexedStack`. The controller owns the underlying platform WebView (`WebViewWidget` only displays it) and `IndexedStack` lays out every child unlike `Offstage`, so both sides load concurrently on open and the hidden one stays alive and scrolled. That costs a second platform view for one pushed route and buys three things a single-WebView switcher cannot have: **each pane keeps its scroll offset** (the point of the switcher is flipping between the same passage in two versions — a shared WebView lands back at the top every time, which makes the interaction useless past the first screenful), **a flip costs nothing** (no request, no `loadHtmlString`, no re-layout of untrusted HTML), and **failures stay local** (a version whose bytes are gone leaves its own pane showing the error while the other still renders).
   * **Both panes read `/d/:id/v/:n/raw`**, the live side included — see the `ReviewSide` note under `lib/core/review.dart` for why the symmetric route matters.
@@ -295,7 +298,7 @@ Each slot is rendered at its native size rather than downscaled from a master �
 ## 🔗 External Integration Dependencies
 
 * **Canonical OpenAPI spec (machine source of truth)**:
-  * Served live at **[https://slopcafe.com/openapi.json](https://slopcafe.com/openapi.json)** — OpenAPI **3.1.0**, `info.version` tracked in `tool/CONTRACT_VERSION` (currently **2.0.0**). The app's models + `ErrorCode` are generated from a pinned copy at `tool/openapi.json`. See the **API layer** section below.
+  * Served live at **[https://slopcafe.com/openapi.json](https://slopcafe.com/openapi.json)** — OpenAPI **3.1.0**, `info.version` tracked in `tool/CONTRACT_VERSION` (currently **2.2.0**). The app's models + `ErrorCode` are generated from a pinned copy at `tool/openapi.json`. See the **API layer** section below.
 * **Canonical HTTP API Reference (human reference)**:
   * **Document Slug**: `slopcafe-http-api`
   * **URL**: [https://slopcafe.com/s/slopcafe-http-api](https://slopcafe.com/s/slopcafe-http-api)
@@ -379,7 +382,42 @@ code-first API-contract effort).
   `RestoreResponse`, `ReadTextResponse` and the link-graph schemas; no generator
   config change was needed (`SourceFormat` is a `$ref`'d string enum reached
   through `VersionListing`, and the existing `_stringEnumSchemas` handling
-  covered it).
+  covered it). The next re-pin is **2.0.0 → 2.2.0**, the first hop under the
+  restored strict semver (2.0.0 froze 2026-07-25), and it is **MINOR — additive
+  only, nothing breaking**. Three things landed:
+  * **The review-queue filters**: `visibility` (`public`|`private`, migration
+    0011) and `publication` (`pending`|`current`, migration 0018) on
+    `GET /admin/documents`. Both are **query params**, so the generator emits
+    nothing for them and the whole adoption is hand-written consumer code — see
+    the review-queue bullet below for what they mean and the one place the
+    server's predicate is wider than the client's question.
+  * **`unchanged` (required `bool`) on `WriteResponse` AND `RestoreResponse`.**
+    This is the part worth reading twice, because it is easy to file under
+    "additive" and miss: it reports that **the backend now collapses no-op
+    writes**. A re-write whose source bytes, title, description, tags and slug
+    all match what the document already holds stores nothing, and `version` then
+    names the version that was *already there* rather than a new one. The field
+    is required and non-nullable, so the generated classes gained a required
+    constructor arg — harmless here only because nothing in the repo hand-builds
+    either response.
+    * Consequence the app has **not** yet acted on: `restoreVersion` reports
+      "Restored as v\<n\>" off `RestoreResponse.version`. Restoring a version
+      whose source is byte-identical to the current head now collapses, so that
+      toast can name the existing head and claim a restore that did not happen.
+      `RestoreResponse.unchanged` is exactly the signal needed to say so
+      instead. Authoring is unaffected (`POST /admin/documents` is a new
+      document, never a no-op, per the field's own description).
+    * It also makes the review queue *cleaner* for free: an agent re-pushing an
+      unchanged file on a timer no longer inflates the version history, so it no
+      longer manufactures queue entries whose two versions differ only by
+      number. `SourceComparison.identical` should now be rare rather than
+      routine.
+  * No path, error-code or other schema changes: 33 discriminants before and
+    after, no added/removed paths, and `WriteResponse`/`RestoreResponse` are the
+    only two schemas whose bytes moved at all (verified by normalized JSON diff
+    against the pinned copy rather than taken on trust — the hand-off note for
+    this bump described it as "no response shape changed", which the bytes
+    contradict).
   ```sh
   curl -s https://slopcafe.com/openapi.json -o tool/openapi.json
   # update tool/CONTRACT_VERSION if info.version changed
@@ -501,27 +539,40 @@ code-first API-contract effort).
     `lib/providers/review_provider.dart` (`ReviewQueueNotifier`),
     `ReviewQueueScreen`, `ReviewScreen`, and Operate's "Review queue" entry.
     Each is documented in its own map entry above.
-    * **The one contract fact that shapes all of it:** there is no server-side
-      predicate for "public and `published_ver != current_ver`".
-      `GET /admin/documents` takes `tag` / `slug` / `status` / `order` /
-      `updated_since` and nothing else — no `visibility` filter, nothing
-      comparing the two version columns. So the queue is necessarily a
-      client-side filter over a **full** corpus walk, and every design decision
-      downstream (a sweep rather than a page, `scanned` reported beside the
-      queue length, `isComplete` cleared rather than a quiet truncation) follows
-      from having to buy completeness that way.
-    * **The sweep is knowingly temporary, and a ticket is filed upstream**
-      (2026-07-27) to add the missing filter to `GET /admin/documents`. It is
-      accepted for now because the corpus is small — ~91 rows sweeps in about a
-      second — but the cost is linear in corpus size and this is the first thing
-      here that will hurt. **When the filter lands, `ReviewQueueNotifier` is the
-      only thing that has to change:** `reviewQueueFrom` filters rows rather than
-      queries, so it stays correct either way and should be kept as the
-      client-side backstop while the server narrows what arrives. Revisit at the
-      same time — `ReviewQueueState.scanned` / `isComplete`, the queue screen's
-      "N scanned" line and its red truncation warning, and the `_maxPages`
-      backstop all exist purely to keep an *exhaustive sweep* honest, and become
-      noise once the server can answer the question directly.
+    * **The corpus sweep is gone (contract 2.2.0).** `GET /admin/documents`
+      gained `visibility` (`public`|`private`, migration 0011) and `publication`
+      (`pending`|`current`, migration 0018), so the queue is now one filtered
+      query — `?visibility=public&publication=pending&order=updated` — and the
+      rows crossing the wire are proportional to the *queue*, not the corpus.
+      Both compose with the existing `tag`/`slug`/`status`/`updated_since`
+      filters and with the cursor. An unknown value for either is a plain
+      **`400 bad_request`**, not a dedicated code and not a silent fallback to
+      unfiltered, which is why the wire strings live in tested enums
+      (`VisibilityFilter`/`PublicationFilter` in `lib/core/review.dart`)
+      alongside `DocumentOrder`'s.
+    * **`reviewQueueFrom` is still applied to the result, and that is
+      deliberate.** The server's `pending` is `published_ver IS NOT
+      current_ver`, and NULL is distinct from any version number, so a public
+      document that was **never promoted** satisfies the server's predicate —
+      while being *not gated at all*, since by the 2.0.0 serving rule it already
+      serves its head to everyone. Rendering the server's answer raw would put
+      such a document in the queue claiming readers are on something older when
+      they are on the newest thing that exists. The spec's own wording is
+      ambiguous about whether the backend special-cases this for public rows
+      (`publication`'s description notes the never-published overlap only for
+      *private* docs), and the client is correct under either reading, which is
+      the point of keeping the check. `tool/smoke_test.dart` reports how many
+      rows the client filter drops on every authenticated run, so live data
+      answers the question continuously rather than the prose being trusted.
+      **The division of labour: the server narrows the fetch, the client keeps
+      the semantics.**
+    * Two smaller filter properties, both asserted in the smoke test rather than
+      assumed: **revoked documents match neither `publication` value** (revoke
+      nulls both pointers), and no returned row is already fully published. The
+      revoke property does *not* replace
+      `DocumentReview.isAwaitingReview`'s own `!isRevoked` term — that term
+      exists to keep an unrenderable document out of the queue wherever the rows
+      came from, including a caller that never passed the filter.
     * **Reviewing is a read of the byte path, not of the admin surface.** The
       admin list and search still report `current_ver` by design, so they can
       describe bytes nobody has been served; the two panes deliberately go to
@@ -702,6 +753,17 @@ code-first API-contract effort).
   pagination design guards against were ever disarmed server-side). The
   backfill sweep and the three slug mutators are deliberately **not**
   exercised: this script runs against prod and every one of them writes.
+  Since **2.2.0** the authenticated leg also exercises the **review-queue
+  filter** (`?visibility=public&publication=pending`), asserting the filter's own
+  guarantees — every row public, no revoked row, none already fully published —
+  and that an unknown `publication` value is **rejected** with `400 bad_request`
+  rather than silently ignored (a degrade to unfiltered would quietly turn the
+  queue back into the whole corpus, and nothing else would notice). It also
+  *reports* how many rows `reviewQueueFrom` drops and how many of those were
+  never promoted, which answers against live data the one thing the spec's
+  prose leaves ambiguous: whether the server's `pending` admits never-promoted
+  public documents. Deliberately a report rather than an assertion — both
+  readings are contract-legal, and the client is correct under either.
 
 ---
 
