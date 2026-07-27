@@ -759,11 +759,20 @@ code-first API-contract effort).
   and that an unknown `publication` value is **rejected** with `400 bad_request`
   rather than silently ignored (a degrade to unfiltered would quietly turn the
   queue back into the whole corpus, and nothing else would notice). It also
-  *reports* how many rows `reviewQueueFrom` drops and how many of those were
-  never promoted, which answers against live data the one thing the spec's
-  prose leaves ambiguous: whether the server's `pending` admits never-promoted
-  public documents. Deliberately a report rather than an assertion — both
-  readings are contract-legal, and the client is correct under either.
+  settles against live data the one thing the spec's prose leaves ambiguous —
+  whether the server's `pending` admits **never-promoted** public documents — and
+  it does so **discriminatingly**: it fetches every public document to establish
+  whether the deciding case exists at all before drawing any conclusion, because
+  "the client filter dropped nothing" is equally consistent with the server
+  excluding such rows and with the corpus containing none. It prints one of three
+  verdicts (`ANSWERED: DOES admit` / `ANSWERED: excludes` / `INCONCLUSIVE: no
+  never-promoted public document exists`) rather than a bare count that a clean
+  run could be mistaken for evidence. The first run against prod (2026-07-27,
+  4 pending of 8 public) came back **INCONCLUSIVE** — the corpus had no
+  never-promoted public document to test with. Deliberately a report rather than
+  an assertion, since both readings are contract-legal; the hard assertion beside
+  it is the invariant that holds either way — no row lacking a `published_ver`
+  ever reaches the queue.
 
 ---
 

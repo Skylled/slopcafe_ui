@@ -505,17 +505,70 @@ Future<void> main() async {
       );
 
       final queue = reviewQueueFrom(page.documents);
-      final dropped = page.documents.length - queue.length;
-      final neverPromoted = page.documents
-          .where((d) => !d.isRevoked && d.publishedVer == null)
-          .length;
-      stdout.writeln(
-        '  ~ client filter keeps ${queue.length} of ${page.documents.length}'
-        '${dropped > 0 ? ' (dropped $dropped; $neverPromoted never promoted)' : ''}',
-      );
       _check(
         'every queued row has proven withheld work',
         queue.every((d) => d.isAwaitingReview),
+      );
+
+      // Does the server's `pending` admit a NEVER-PROMOTED public document?
+      //
+      // "the client filter dropped nothing" cannot answer this on its own: it
+      // is equally consistent with the server excluding such rows and with the
+      // corpus simply not containing any. So fetch every public document and
+      // find out whether the discriminating case even exists before drawing a
+      // conclusion from its absence.
+      final allPublicRes = await dio.get(
+        '/admin/documents',
+        queryParameters: {
+          'limit': 200,
+          'visibility': VisibilityFilter.public.wire,
+        },
+        options: auth,
+      );
+      final allPublic = ListDocumentsResponse.fromJson(
+        Map<String, dynamic>.from(allPublicRes.data as Map),
+      ).documents;
+      final neverPromoted = allPublic
+          .where((d) => !d.isRevoked && d.publishedVer == null)
+          .toList();
+      final pendingIds = page.documents.map((d) => d.publicId).toSet();
+      final neverPromotedInPending = neverPromoted
+          .where((d) => pendingIds.contains(d.publicId))
+          .length;
+
+      stdout.writeln(
+        '  ~ ${allPublic.length} public docs; ${neverPromoted.length} never '
+        'promoted; client filter keeps ${queue.length} of '
+        '${page.documents.length} pending rows',
+      );
+      if (neverPromoted.isEmpty) {
+        // Not a failure — there is simply nothing in the corpus that could tell
+        // the two readings apart today. Said out loud so a clean run is never
+        // mistaken for evidence that the client filter is redundant.
+        stdout.writeln(
+          '  ~ INCONCLUSIVE: no never-promoted public document exists, so this '
+          'run cannot tell whether the server\'s `pending` would admit one. '
+          'The client filter stays either way.',
+        );
+      } else if (neverPromotedInPending > 0) {
+        stdout.writeln(
+          '  ~ ANSWERED: the server\'s `pending` DOES admit never-promoted '
+          'public docs ($neverPromotedInPending of ${neverPromoted.length} '
+          'present in the result). The client filter is LOAD-BEARING — without '
+          'it the queue would show ungated documents.',
+        );
+      } else {
+        stdout.writeln(
+          '  ~ ANSWERED: the server excludes never-promoted public docs '
+          '(${neverPromoted.length} exist, none returned). The client filter is '
+          'belt-and-braces here, and still correct.',
+        );
+      }
+      // Whichever way that fell, this must hold: a document the gate is not
+      // withholding anything on must never reach the queue.
+      _check(
+        'no never-promoted public document reaches the queue',
+        queue.every((d) => d.publishedVer != null),
       );
 
       // Gotcha #3: an unrecognised value is a plain 400 bad_request, not a
