@@ -41,6 +41,10 @@ screen. See [GEMINI.md](GEMINI.md) for the full codebase map.
   - Single-transaction agent registration and initial secret key minting.
   - Multi-key rotation (minting additional keys, revoking specific active keys).
   - Pinned OAuth 2.1 + PKCE client credentials registration and decommissioning.
+- **Inbound web links (Android)**:
+  - Tapping a `https://slopcafe.com/d/<id>` or `/s/<slug>` link anywhere on the device opens it in the app's Reader instead of a browser — including **private** documents, which resolve through the operator's own token.
+  - Deliberately mobile-only; on macOS a web link belongs in the browser.
+  - Requires an `assetlinks.json` on the web host to skip the browser. Setup and domain configuration: [docs/deep-links.md](docs/deep-links.md).
 - **Security & Connection System**:
   - Double-probe verification (smoke check `GET /healthz` + authenticated probe `GET /admin/agents`).
   - Cross-screen authorization interception forcing immediate re-authentication on `401 Unauthorized` token rejection.

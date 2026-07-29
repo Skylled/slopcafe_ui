@@ -27,6 +27,39 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+
+            <!-- Android App Links: web links to the deployment's own document
+                 URLs open the Reader instead of a browser.
+
+                 android:autoVerify="true" is what removes the disambiguation
+                 chooser, and it is not free — at install time Android fetches
+                 https://${deepLinkHost}/.well-known/assetlinks.json and only
+                 honours this filter if that file names this package and this
+                 build's signing certificate. Until it does, the links still
+                 work; they just open in a browser. See docs/deep-links.md.
+
+                 The pathPrefix tuples are the point of the whole filter being
+                 narrow: only /d/ and /s/ are claimed, so every other page on
+                 the origin — the rendered site, /openapi.json, the root — stays
+                 with the browser rather than being swallowed by an operator
+                 console that has nothing to show for it.
+
+                 http is claimed alongside https because letting an unencrypted
+                 link escape to a browser is strictly worse than opening it
+                 here: the app then talks to its own configured (https) Base
+                 URL regardless of the scheme it was handed.
+
+                 ${deepLinkHost} is substituted from app/build.gradle.kts, which
+                 is where an adopter changes the domain. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="${deepLinkHost}" android:pathPrefix="/d/"/>
+                <data android:scheme="https" android:host="${deepLinkHost}" android:pathPrefix="/s/"/>
+                <data android:scheme="http" android:host="${deepLinkHost}" android:pathPrefix="/d/"/>
+                <data android:scheme="http" android:host="${deepLinkHost}" android:pathPrefix="/s/"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

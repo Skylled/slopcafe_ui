@@ -1549,6 +1549,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clearSecureStorageButton => 'Clear Secure Storage';
 
   @override
+  String get deepLinkUnresolved =>
+      'That link doesn\'t lead to a document on this deployment.';
+
+  @override
   String get relativeToday => 'today';
 
   @override

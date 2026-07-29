@@ -380,6 +380,105 @@ class DocumentsListNotifier extends Notifier<DocumentsListState> {
     return fresh;
   }
 
+  /// Resolve a raw addressed name — a `/d/<public_id>` or `/s/<slug>` — to the
+  /// listing row the Reader needs to open it.
+  ///
+  /// This is the shared landing point for every *late-bound* reference into the
+  /// corpus: a link tapped inside the Reader's WebView, an outbound edge in the
+  /// link graph, and an inbound web link from outside the app entirely
+  /// (`lib/core/deep_link.dart`). All three arrive holding a name rather than a
+  /// document, which is precisely what the link graph's late-binding rule says
+  /// they must.
+  ///
+  /// Resolution walks three tiers, cheapest first:
+  ///
+  /// 1. The already-loaded list — free, and the common case for a corpus the
+  ///    operator has been browsing.
+  /// 2. `GET /admin/documents?slug=` / `GET /admin/documents/:id` — the
+  ///    canonical record. Note this is the *admin* surface, so a **private**
+  ///    target resolves too: a link that would 404 for an anonymous visitor
+  ///    still opens for the operator, which is the whole point of resolving
+  ///    here rather than handing the URL to a browser.
+  /// 3. For a `public_id` only, a synthesised placeholder row.
+  ///
+  /// That third tier is not a fallback for tidiness. A `public_id` is an
+  /// immutable capability, so a lookup failing on one means we could not *ask*
+  /// — offline, or a token the deployment rejected — far more often than it
+  /// means the document is gone. Opening the Reader on a placeholder lets its
+  /// own byte-path fetch produce the real answer, including the offline-cached
+  /// body it may already hold and the honest "revoked"/"not found" page when
+  /// the server does reply. Returning null there would dead-end a link that
+  /// works. A `slug` gets no such placeholder, because a name that resolved to
+  /// nothing is a name with nothing behind it — there is no id to fetch bytes
+  /// with, so there would be nothing for the Reader to do.
+  ///
+  /// The placeholder's `updatedAt` borrows the same synthesised "now" as
+  /// `createdAt`: a record we invented has never been touched, and claiming any
+  /// other timestamp would be a fabrication the chrome would then display.
+  ///
+  /// Returns null when nothing could be resolved, and never throws — every
+  /// caller is a navigation gesture, and a network blip should cost the tap,
+  /// not the screen.
+  Future<DocumentListing?> resolveListing({
+    String? publicId,
+    String? slug,
+  }) async {
+    if (publicId != null) {
+      for (final doc in state.documents) {
+        if (doc.publicId == publicId) return doc;
+      }
+    }
+    if (slug != null) {
+      for (final doc in state.documents) {
+        if (doc.slug == slug) return doc;
+      }
+    }
+
+    final dio = ref.read(dioProvider);
+
+    if (slug != null) {
+      try {
+        final response = await dio.get(
+          '/admin/documents',
+          queryParameters: {'slug': slug},
+        );
+        final docs = ListDocumentsResponse.fromJson(
+          response.data as Map<String, dynamic>,
+        ).documents;
+        if (docs.isNotEmpty) return docs.first;
+      } catch (_) {
+        // Fall through to the public_id tiers below.
+      }
+    }
+
+    if (publicId != null) {
+      try {
+        final response = await dio.get('/admin/documents/$publicId');
+        if (response.statusCode == 200) {
+          return DocumentListing.fromJson(
+            response.data as Map<String, dynamic>,
+          );
+        }
+      } catch (_) {
+        // Fall through to the placeholder below.
+      }
+
+      final now = DateTime.now();
+      return DocumentListing(
+        publicId: publicId,
+        createdAt: now,
+        updatedAt: now,
+        createdByKind: 'agent',
+        tags: [],
+        status: 'active',
+        title: publicId,
+        visibility: 'private',
+      );
+    }
+
+    return null;
+  }
+
   /// Author a brand-new document as the operator principal via
   /// `POST /admin/documents` (the new authoring surface).
   ///

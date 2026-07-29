@@ -137,72 +137,21 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     await _loadHtmlIntoWebview(force: force);
   }
 
+  /// Resolve a `/d/` or `/s/` name to a listing row.
+  ///
+  /// Delegates to [DocumentsListNotifier.resolveListing], which is the shared
+  /// landing point for every late-bound reference into the corpus — this
+  /// screen's WebView link taps and link-graph rows, and inbound web links from
+  /// outside the app (see `lib/core/deep_link.dart`). Keeping one
+  /// implementation is what makes "a tapped link and a tapped notification open
+  /// the same document the same way" true rather than coincidental.
   Future<DocumentListing?> _resolveDocumentListing(
     String? publicId,
     String? slug,
-  ) async {
-    final docsList = ref.read(documentsListProvider).documents;
-    if (publicId != null) {
-      for (final d in docsList) {
-        if (d.publicId == publicId) return d;
-      }
-    }
-    if (slug != null) {
-      for (final d in docsList) {
-        if (d.slug == slug) return d;
-      }
-    }
-
-    final dio = ref.read(dioProvider);
-
-    // Try fetching by slug
-    if (slug != null) {
-      try {
-        final response = await dio.get(
-          '/admin/documents',
-          queryParameters: {'slug': slug},
-        );
-        final docs = ListDocumentsResponse.fromJson(
-          response.data as Map<String, dynamic>,
-        ).documents;
-        if (docs.isNotEmpty) {
-          return docs.first;
-        }
-      } catch (e) {
-        // Fallback
-      }
-    }
-
-    // Try fetching by publicId
-    if (publicId != null) {
-      try {
-        final response = await dio.get('/admin/documents/$publicId');
-        if (response.statusCode == 200) {
-          return DocumentListing.fromJson(
-            response.data as Map<String, dynamic>,
-          );
-        }
-      } catch (e) {
-        // Fallback
-      }
-
-      // Placeholder fallback if not found or unauthorized. We know nothing
-      // about this document's history, so `updatedAt` borrows the same
-      // synthesised "now" as `createdAt` — a record we invented has never been
-      // touched, and claiming any other timestamp would be a fabrication.
-      final now = DateTime.now();
-      return DocumentListing(
-        publicId: publicId,
-        createdAt: now,
-        updatedAt: now,
-        createdByKind: 'agent',
-        tags: [],
-        status: 'active',
-        title: publicId,
-        visibility: 'private',
-      );
-    }
-    return null;
+  ) {
+    return ref
+        .read(documentsListProvider.notifier)
+        .resolveListing(publicId: publicId, slug: slug);
   }
 
   /// Whether [url] is exactly the configured base URL (modulo a trailing

@@ -897,6 +897,11 @@
   "clearSecureStorageBody": "Removes the saved Base URL and Operator Token from this device and resets the connection state.",
   "clearSecureStorageButton": "Clear Secure Storage",
 
+  "deepLinkUnresolved": "That link doesn't lead to a document on this deployment.",
+  "@deepLinkUnresolved": {
+    "description": "Toast shown when a web link tapped outside the app (a /s/<slug> URL) resolves to no document — the slug is unclaimed, retired, or belongs to a different deployment than the one configured."
+  },
+
   "relativeToday": "today",
   "relativeYesterday": "yesterday",
   "relativeDaysAgo": "{days}d ago",

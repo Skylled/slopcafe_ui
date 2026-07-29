@@ -1,15 +1,20 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/api_client.dart';
+import '../core/deep_link.dart';
 import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../l10n/l10n.dart';
+import '../providers/deep_link_provider.dart';
+import '../providers/document_provider.dart';
 import '../providers/refresh.dart';
 import '../widgets/cafe_logo.dart';
 import '../widgets/toast.dart';
 import 'library_screen.dart';
+import 'reader_screen.dart';
 import 'search_screen.dart';
 import 'operate_screen.dart';
 import 'settings_screen.dart';
@@ -34,6 +39,57 @@ class AppShell extends ConsumerStatefulWidget {
 class _AppShellState extends ConsumerState<AppShell> {
   int _index = 0;
   bool _settingsOpen = false;
+
+  /// The inbound web-link subscription — see [_openDeepLink].
+  StreamSubscription<DeepLinkTarget>? _linkSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Subscribing from the shell rather than from the app root is deliberate.
+    // Resolving a link needs a Base URL and an operator token, and the shell is
+    // exactly the widget that does not exist until [RootGate] has both — so a
+    // link that arrives on an unconfigured install waits for setup instead of
+    // failing against a deployment the app has not been pointed at yet. Nothing
+    // is lost in that wait: the platform side holds the launching link until
+    // its first subscriber attaches (see [inboundDeepLinksProvider]).
+    _linkSub = ref.read(inboundDeepLinksProvider).listen(_openDeepLink);
+  }
+
+  @override
+  void dispose() {
+    _linkSub?.cancel();
+    super.dispose();
+  }
+
+  /// Open the document an inbound web link addressed.
+  ///
+  /// The link carries a raw name, so it takes the same resolution path an
+  /// in-WebView tap and a link-graph row take — which also means a **private**
+  /// target opens rather than dead-ending, the one thing a browser could never
+  /// have done with this URL.
+  ///
+  /// The Reader is pushed on top of whatever is on screen rather than replacing
+  /// it: the operator was doing something when the link arrived, and a link tap
+  /// is an excursion they should be able to back out of. A `/d/` link always
+  /// resolves (to a placeholder at worst), so the toast below is in practice
+  /// the `/s/` case — a slug nothing answers to, which is a fact about the
+  /// corpus and worth saying out loud rather than swallowing into a dead tap.
+  Future<void> _openDeepLink(DeepLinkTarget target) async {
+    final doc = await ref
+        .read(documentsListProvider.notifier)
+        .resolveListing(publicId: target.publicId, slug: target.slug);
+
+    if (!mounted) return;
+    if (doc == null) {
+      showToast(context, context.l10n.deepLinkUnresolved, danger: true);
+      return;
+    }
+
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => ReaderScreen(doc: doc)));
+  }
 
   void _openSettings() {
     Navigator.of(

@@ -34,6 +34,10 @@ It communicates with the Slopcafe Backend API to perform fleet management tasks,
   feeding the existing `build_runner` pipeline. The hand-written `lib/models/`
   classes are gone; see **API layer (generated from the OpenAPI contract)** below.
 - **URL Launching**: `url_launcher` for external browser navigation on mobile platforms (Android/iOS).
+- **Inbound web links**: `app_links` — Android App Links, so a tap on a
+  `https://slopcafe.com/d/:id` or `/s/:slug` URL anywhere on the device opens
+  the Reader instead of a browser. **Mobile only by design** (see **Inbound web
+  links** below and [docs/deep-links.md](file:///Users/kyle/Repos/slopcafe_ui/docs/deep-links.md)).
 - **Platform Targets**: macOS, iOS, Android, and Web
 
 ---
@@ -116,6 +120,7 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
 * **[lib/screens/app_shell.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/screens/app_shell.dart)**
   * The three-tab shell: an `IndexedStack` of Library / Search / Operate. **Adaptive**: beneath a floating pill tab bar on compact windows, beside a left side rail (`_SideRail` — logo, tabs, refresh via `refreshFleetData`, Settings shortcut) at width ≥ `AppLayout.railBreakpoint`.
   * Houses the global connection-state listener that intercepts `401 Unauthorized` token rejections and pushes the Settings screen.
+  * Owns the **inbound web-link** subscription (`_openDeepLink`): resolves the link's raw name via `documentsListProvider.resolveListing` and pushes `ReaderScreen` on top of whatever is on screen (a link tap is an excursion the operator should be able to back out of). Subscribing *here* rather than at the app root is deliberate — resolving needs a Base URL and an operator token, and the shell is precisely the widget that doesn't exist until `RootGate` has both, so a link arriving on an unconfigured install waits for setup instead of failing against a deployment the app was never pointed at. Nothing is lost in that wait: the platform side holds the launching link until its first subscriber attaches. See **Inbound web links** below.
 
 ### 2. Core Services
 * **[lib/core/api_client.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/api_client.dart)**
@@ -159,6 +164,12 @@ Below is the directory mapping of the core functionalities within the `lib/` dir
     * `VisibilityFilter` (`public`|`private`) and `PublicationFilter` (`pending`|`current`) — contract **2.2.0**'s query-param wire values, pinned in a test for the same reason `DocumentOrder`'s are: an unrecognised value is a hard `400 bad_request`, never a silent fallback to unfiltered, so a typo would fail the whole screen rather than quietly widen it.
   * **Since 2.2.0 the server has the predicate** (`?visibility=public&publication=pending`), so this file no longer does the heavy lifting — but `reviewQueueFrom` is still applied to the result and is **not** vestigial. The server's `pending` is `published_ver IS NOT current_ver`, and NULL is distinct from any number, so a **never-promoted public document** satisfies it while being *not gated at all* (by the 2.0.0 serving rule it already serves its head). `isAwaitingReview` excludes those. The spec is ambiguous about whether the backend special-cases this for public rows, and the client is right either way — which is the point. Taking rows rather than a query is also what let this file survive the 2.2.0 change untouched in its substance.
   * Covered by [test/review_queue_test.dart](file:///Users/kyle/Repos/slopcafe_ui/test/review_queue_test.dart) (hermetic — rows built as `DocumentListing` values): the admission matrix incl. a revoked row constructed to defeat the *incidental* exclusion, both clocks, the negative-gap clamp, the three-valued source comparison, and the ordering + de-dup rules.
+* **[lib/core/deep_link.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/deep_link.dart)**
+  * The shared vocabulary for **inbound web links** — the fifth hermetic core module beside `publication.dart` / `links.dart` / `changes.dart` / `review.dart` (no Flutter imports, no `dart:io`). One constant, one value type, one pure function:
+    * `kDeepLinkHost` — the public web host this build claims. **The knob an adopter changes.** It is necessarily written twice (Gradle compiles it into the manifest filter that decides whether Android *offers* the app the tap; this constant decides whether the app *accepts* it), so the pair is pinned by a test that reads the literal back out of `android/app/build.gradle.kts`. A mismatch is silent and total — every link would open the app to nothing — which is exactly the class of bug a test, not a comment, has to prevent.
+    * `DeepLinkTarget` — a `/d/<public_id>` or `/s/<slug>` **raw addressed name**, deliberately not a resolved document, for the same reason the link graph stores names: `/s/` is late-bound, so what a slug points at is a property of the read.
+    * `parseDeepLink(Uri)` — the claim matrix. Accepts `/d/` and `/s/` on the pinned host over `https` **and** `http` (letting an unencrypted link escape to a browser is strictly worse than opening it here, since the app then talks to its own configured `https` Base URL regardless), tolerates trailing byte-path segments (`/raw`, `/v/:n/raw` — a copied URL still names its document), and returns **null for everything else**. Null means "not ours" and callers must no-op on it rather than surface an error: the intent-filter is already scoped to `/d/` and `/s/`, so a future widening should degrade to silence, not to a toast about a link the operator never expected the app to claim. The one accepted under-delivery is that a version-pinned link opens the *latest* view, because `ReaderScreen` owns version selection in its own state rather than in its constructor.
+  * Covered by [test/deep_link_test.dart](file:///Users/kyle/Repos/slopcafe_ui/test/deep_link_test.dart): the claim/reject matrix in both directions, and the Gradle↔Dart host invariant (verified to discriminate — flipping the Gradle literal fails the test).
 * **[lib/core/theme.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/theme.dart)**
   * Assembles the Cortado `ThemeData` (light + dark) from the design tokens: maps the palette onto a Material `ColorScheme` AND registers the raw token set as a `ThemeExtension`, plus component themes (cards, inputs, buttons, sheets).
 * **[lib/core/design/tokens.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/core/design/tokens.dart)**
@@ -194,6 +205,7 @@ barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dar
     * `fetchVersions(publicId)` → `ListVersionsResponse` (`GET /admin/documents/:id/versions`; newest first, capped at the 200 most recent, no cursor). Deliberately **uncached and never folded into `DocumentsListState`** — a promote or a restore invalidates it the instant it happens, and it is only ever read by a screen that is already open, so callers re-fetch rather than hold it.
     * `promoteVersion(publicId, version)` → the updated `DocumentListing` (`POST /admin/documents/:id/promote`, hand-built body). Promote is **not a write**: no version bump, no sanitizer re-run, no FTS/vector resync — it only repoints `published_ver`, which makes it idempotent and legal on a *private* document (that stages the choice before the door opens; the later flip to public keeps it). The response is canonical for `published_ver`, so it is mirrored onto the row in state **and** into the offline cache exactly like the `visibility`/`slug`/`tags`/`status` mutators.
     * `restoreVersion(publicId, version)` → **`RestoreResponse`** (rewritten onto the operator JSON route `POST /admin/documents/:id/restore`; the old `POST /d/:id/restore` `FormData` call and its version-number guessing are gone). Restore is mandatorily **restore-as-new** — the backend re-writes the chosen version's retained source as a brand-new head and never rewinds `current_ver`, so `RestoreResponse.version` is a number that did not exist before the call. It re-runs the *current* sanitizer over *old* source, so the response carries a fresh `modified`/`stripped`/`will_not_render` report — the reason this returns the typed response instead of an `int`. It bumps `current_ver` (so it reloads the canonical first page) and deliberately leaves `published_ver` alone, meaning a restore on a gated public document is **not** what readers get. Callers must check `VersionListing.sourcePresent` first: a pre-`0008` version predates source retention and cannot be restored.
+  * Exposes `resolveListing({publicId, slug})` — the **shared name→listing resolver**, the landing point for every *late-bound* reference into the corpus: a link tapped inside the Reader's WebView, an outbound edge in the link graph, and an inbound web link from outside the app (`lib/core/deep_link.dart`). All three arrive holding a raw addressed name rather than a document, which is exactly what the link graph's late-binding rule says they must. Was private to `ReaderScreen`; lifted here so "a tapped link and a tapped web link open the same document the same way" is true rather than coincidental. Three tiers, cheapest first: the loaded list → `GET /admin/documents?slug=` / `GET /admin/documents/:id` → a synthesised placeholder row. Two properties are load-bearing: it resolves through the **admin** surface, so a **private** target opens rather than dead-ending (the one thing a browser could never do with that URL); and the placeholder tier exists **only for `public_id`**, because an id is an immutable capability — a failed lookup on one means "couldn't ask" (offline, rejected token) far more often than "gone", and opening the Reader on a placeholder lets its own byte-path fetch produce the real answer, including an offline-cached body and the honest revoked/not-found page. A **slug** gets no placeholder: a name that resolved to nothing leaves no id to fetch bytes with. Returns null rather than throwing — every caller is a navigation gesture, and a network blip should cost the tap, not the screen.
   * Exposes `backfillVectors(VectorBackfillMode)` — walks the cursor-paginated `POST /admin/vectors/backfill` to completion (`missing` = embed un-vectored docs · `rebuild` = re-embed the corpus) and returns a summed `BackfillSummary`. Drives the Operate › Documents "Search index" action; touches no document state (vectors are a search-side index).
 * **[lib/providers/agent_provider.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/providers/agent_provider.dart)**
   * Manages agent lists, agent creation, key minting/rotation, and key revocation actions.
@@ -219,6 +231,11 @@ barrel **[lib/api/api.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/api/api.dar
   * `order=updated` rather than the default: the interesting rows (just-rewritten documents) land on the first page, and the walk's ordering matches the queue's own sort key, so rows arrive roughly sorted and the list stops reshuffling as pages land. **No `updated_since`** — a document rewritten last year and never approved is still waiting, so narrowing the walk would trade completeness on the one surface that cannot afford it.
   * Generation token like the change feed, but it matters more here: this is a *loop* of awaits, so an abandoned walk has many chances to commit. Every write is gated and the loop itself breaks on a generation change.
   * `resolve(publicId, publishedVer)` — a local edit that drops a row after a successful publish, taking the **canonical** `published_ver` off the `PromoteResponse` so the row is re-evaluated rather than assumed resolved (promoting v6 of a document whose head is v8 leaves it in the queue). A re-read instead would cost a round trip to learn one row's new number — and would reshuffle the queue under an operator working through it, since a promote stamps `updated_at`. No offline fallback and no cache write, for the change feed's reason: the queue's claim is "these are waiting *right now*", and a stale one would have the operator approving against numbers that have moved.
+* **[lib/providers/deep_link_provider.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/providers/deep_link_provider.dart)**
+  * `deepLinksSupported` — the **mobile-only rule**, stated in one place rather than left incidental. `Platform.isAndroid || Platform.isIOS`; iOS is included ahead of the target existing so that adding one is an Xcode capability plus an `apple-app-site-association` file, not a hunt through Dart for a platform check that silently excluded it.
+  * `appLinksProvider` (injection seam over the `app_links` singleton) and `inboundDeepLinksProvider` → `Stream<DeepLinkTarget>`.
+  * **A plain `Provider<Stream<…>>`, not a `StreamProvider`**, and that is a correctness choice: the consumer wants each link as an *event* to navigate on, while `StreamProvider` would hand it de-duplicated application *state* — re-opening the same URL twice in a row is a repeat of an equal `AsyncData<DeepLinkTarget>`, so a `ref.listen` would never fire the second time and the tap would land on nothing.
+  * **No `getInitialLink()` call, and adding one would be a bug rather than belt-and-braces.** The Android plugin holds the launch intent's URL and flushes it to the *first* subscriber, once, guarded by its own `initialLinkSent` flag. So the cold-start link survives an arbitrarily long detour through first-run setup, and a later re-subscription does not replay it into a second Reader.
 * **[lib/providers/health_provider.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/providers/health_provider.dart)**
   * `healthProvider` (`Notifier<HealthState>`) — the best-effort `/healthz` snapshot (sanitizer version + R2 storage cap/used) shown on the Operate stat grid + storage bar. Was Operate-local widget state; **lifted into a provider** so the shared pull-to-refresh can reload it from either home tab. `load()` is best-effort (a failure keeps the last snapshot; the opportunistic `storage_used_bytes`/`storage_bytes_used` field isn't in the contract).
 * **[lib/providers/refresh.dart](file:///Users/kyle/Repos/slopcafe_ui/lib/providers/refresh.dart)**
@@ -292,6 +309,49 @@ dart run tool/gen_macos_icon.dart            # source art -> the macOS appiconse
 * **The drop shadow is part of the art**, since macOS adds none: ~30% black, Gaussian sigma 12, pushed 11px down at 1024px, fitted to the alpha falloff around the system icons.
 
 Each slot is rendered at its native size rather than downscaled from a master — at 16px the squircle is only ~3px of curve, and resampling that out of a 1024px alpha channel smears a rim that native supersampling resolves cleanly. Verified end-to-end against Apple's own icons: **exact** at 16 and 32px, 0.196px RMS at 128, 0.296px at 256.
+
+---
+
+## 🔗 Inbound web links (Android App Links)
+
+A tap on `https://slopcafe.com/d/<public_id>` or `/s/<slug>` anywhere on an
+Android device opens that document in the Reader instead of a browser. The
+operator runbook — including the `assetlinks.json` that must be published and
+the `adb` verification commands — is
+**[docs/deep-links.md](file:///Users/kyle/Repos/slopcafe_ui/docs/deep-links.md)**.
+The four things worth knowing here:
+
+* **The app half is complete; the web-server half is not, and cannot be done
+  from this repo.** `android:autoVerify="true"` is honoured only if
+  `https://<host>/.well-known/assetlinks.json` names this package and this
+  build's signing certificate. Until that file is live the links still work —
+  they just open in a browser, exactly as before. Note the current fingerprint
+  to publish is a *debug* keystore's, because `build.gradle.kts` still signs
+  release with the debug config (standing `TODO` there); docs/deep-links.md
+  spells out why that is fine to get working and wrong to leave live.
+* **The claim is deliberately narrow**: `/d/` and `/s/` path prefixes only, one
+  host, no subdomains. Claiming the whole origin would swallow the rendered
+  site, `/openapi.json` and the root into an operator console that has nothing
+  to show for them. `http` *is* claimed alongside `https`, because letting an
+  unencrypted link escape to a browser is strictly worse than opening it here —
+  the app then talks to its own configured `https` Base URL regardless.
+* **macOS is excluded, by design and by circumstance.** A `https://` link only
+  reaches a Mac app through Universal Links, which needs an `Associated Domains`
+  entitlement, which needs a Developer Program team — and this app is ad-hoc
+  signed with no team. Registering a custom URL scheme instead would hijack the
+  operator's browser links system-wide, which is the opposite of what a desktop
+  operator wants: on a Mac a `slopcafe.com` link belongs in the browser. The
+  macOS bundle therefore declares no `CFBundleURLTypes` and no
+  `associated-domains`, and `deepLinksSupported` says so in Dart as well rather
+  than letting the exclusion be an accident of configuration.
+* **The domain is a build-time fact, not the runtime Base URL.** Android decides
+  whether the app is even offered the tap from the manifest, long before any
+  Dart runs. So the host is written twice — `manifestPlaceholders["deepLinkHost"]`
+  in `android/app/build.gradle.kts` and `kDeepLinkHost` in
+  `lib/core/deep_link.dart` — and `test/deep_link_test.dart` reads the Gradle
+  literal back to pin the pair. Change either and the test names the other. The
+  Settings Base URL remains an independent knob: it can point at staging while
+  the build claims production.
 
 ---
 

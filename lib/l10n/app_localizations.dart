@@ -2602,6 +2602,12 @@ abstract class AppLocalizations {
   /// **'Clear Secure Storage'**
   String get clearSecureStorageButton;
 
+  /// Toast shown when a web link tapped outside the app (a /s/<slug> URL) resolves to no document — the slug is unclaimed, retired, or belongs to a different deployment than the one configured.
+  ///
+  /// In en, this message translates to:
+  /// **'That link doesn\'t lead to a document on this deployment.'**
+  String get deepLinkUnresolved;
+
   /// No description provided for @relativeToday.
   ///
   /// In en, this message translates to:
