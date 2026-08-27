@@ -62,6 +62,16 @@ final connectionStateProvider =
       ConnectionStateNotifier.new,
     );
 
+/// Marks a request whose 401 is a *result* rather than an app-wide auth failure.
+///
+/// Settings' connection test deliberately fires credentials that may be wrong —
+/// that is the whole point of a test — and reports the outcome in its own result
+/// panel. Letting that 401 flip [connectionStateProvider] would raise the global
+/// "token rejected" banner and have [AppShell] push a *second* Settings screen
+/// on top of the one the operator is typing in. Requests carrying this flag are
+/// exempt; every other 401 is still handled globally.
+const String kProbeRequestExtra = 'slopcafe.probe';
+
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio();
 
@@ -85,7 +95,17 @@ final dioProvider = Provider<Dio>((ref) {
             options.path.contains('/d/') ||
             options.path.startsWith('d/');
 
-        if (isAuthRequired && token != null) {
+        // Never overwrite a token the caller supplied. Settings' auth probe
+        // sets its own so it can test the credentials *typed into the form*
+        // rather than the ones already saved — which is the only way to prove a
+        // second deployment before committing it, and would otherwise send the
+        // active instance's token to a URL it means nothing to (a guaranteed
+        // 401 on every "Test Connection" for a new instance). Same principle as
+        // the Accept header below: an explicit caller knows better.
+        final hasAuth = options.headers.keys.any(
+          (key) => key.trim().toLowerCase() == 'authorization',
+        );
+        if (isAuthRequired && token != null && !hasAuth) {
           options.headers['Authorization'] = 'Bearer $token';
         }
 
@@ -143,7 +163,8 @@ final dioProvider = Provider<Dio>((ref) {
         // `tokenRejectedDetail` fallback. We do forward the backend's own
         // `ErrorBody.message` (server-supplied detail, parsed via the typed
         // envelope) when present; `errorMessage` stays null otherwise.
-        if (e.response?.statusCode == 401) {
+        final isProbe = e.requestOptions.extra[kProbeRequestExtra] == true;
+        if (e.response?.statusCode == 401 && !isProbe) {
           final apiError = ApiError.fromException(e);
           ref
               .read(connectionStateProvider.notifier)

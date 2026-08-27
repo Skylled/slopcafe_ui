@@ -10,8 +10,11 @@ import '../core/design/typography.dart';
 import '../l10n/l10n.dart';
 import '../providers/deep_link_provider.dart';
 import '../providers/document_provider.dart';
+import '../providers/instances_provider.dart';
 import '../providers/refresh.dart';
 import '../widgets/cafe_logo.dart';
+import '../widgets/instance_switcher.dart';
+import '../widgets/press_card.dart';
 import '../widgets/toast.dart';
 import 'library_screen.dart';
 import 'reader_screen.dart';
@@ -28,7 +31,10 @@ import 'settings_screen.dart';
 ///   an explicit refresh action (pull-to-refresh has no mouse gesture) and a
 ///   Settings shortcut.
 ///
-/// Both idioms share the global 401 interception that surfaces Settings.
+/// Both idioms share the global 401 interception that surfaces Settings, and
+/// both reach the instance quick switcher without a detour through Settings:
+/// the rail's logo opens it here, and the Operate header's chip opens it on
+/// phones (`operate_screen.dart`).
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
 
@@ -76,6 +82,9 @@ class _AppShellState extends ConsumerState<AppShell> {
   /// the `/s/` case — a slug nothing answers to, which is a fact about the
   /// corpus and worth saying out loud rather than swallowing into a dead tap.
   Future<void> _openDeepLink(DeepLinkTarget target) async {
+    await _switchToLinkHostIfNeeded();
+    if (!mounted) return;
+
     final doc = await ref
         .read(documentsListProvider.notifier)
         .resolveListing(publicId: target.publicId, slug: target.slug);
@@ -89,6 +98,37 @@ class _AppShellState extends ConsumerState<AppShell> {
     await Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => ReaderScreen(doc: doc)));
+  }
+
+  /// Point the app at the instance that can actually answer for an inbound link
+  /// before resolving it.
+  ///
+  /// Only one host's links reach this app at all — Android decides that from the
+  /// manifest filter, long before any Dart runs, which is why [kDeepLinkHost] is
+  /// a build-time constant (see `deep_link.dart`). So the question is never
+  /// *which* host the link named; it is whether the deployment currently active
+  /// is the one serving that host.
+  ///
+  /// Once an operator keeps a fork alongside upstream, the answer is often no,
+  /// and resolving anyway looks exactly like a broken link: the public id is
+  /// meaningless to the fork, so a real, live document reports as unresolvable.
+  /// Worse, ids are per-deployment, so a collision would open the *wrong*
+  /// document under the right name. Switching first makes a tapped link mean the
+  /// same thing whichever instance the operator happened to leave active.
+  ///
+  /// A no-op when the active instance already serves that host, or when no saved
+  /// instance does — in the latter case the link falls through to the active
+  /// deployment and the usual unresolved toast, which is the pre-existing
+  /// behaviour.
+  Future<void> _switchToLinkHostIfNeeded() async {
+    final set = ref.read(instancesProvider).value;
+    if (set == null) return;
+    final target = set.byHost(kDeepLinkHost);
+    if (target == null || target.id == set.activeId) return;
+
+    await ref.read(instancesProvider.notifier).switchTo(target.id);
+    if (!mounted) return;
+    showToast(context, context.l10n.deepLinkSwitchedInstance(target.label));
   }
 
   void _openSettings() {
@@ -206,6 +246,7 @@ class _SideRailState extends ConsumerState<_SideRail> {
     final c = context.colors;
     final pad = MediaQuery.paddingOf(context);
     final labels = _tabLabels(context);
+    final active = ref.watch(activeInstanceProvider);
 
     return Container(
       width: AppLayout.railWidth,
@@ -216,8 +257,36 @@ class _SideRailState extends ConsumerState<_SideRail> {
       ),
       child: Column(
         children: [
-          const CafeLogo(size: 26),
-          const SizedBox(height: 26),
+          // The logo doubles as the desktop quick switcher: it is the one
+          // element of the rail that was pure decoration, and it already reads
+          // as "which Slopcafe is this". The active instance's name sits under
+          // it so the answer is visible without opening anything.
+          Tooltip(
+            message: context.l10n.instanceSwitcherTitle,
+            child: Tappable(
+              onTap: () => showInstanceSwitcher(context),
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                child: Column(
+                  children: [
+                    const CafeLogo(size: 26),
+                    if (active != null) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        active.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: AppText.label.copyWith(color: c.textDim),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 22),
           for (var i = 0; i < _tabIcons.length; i++)
             Padding(
               padding: const EdgeInsets.only(bottom: 6),

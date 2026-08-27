@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme.dart';
-import 'core/secure_storage.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/l10n.dart';
+import 'providers/instances_provider.dart';
 import 'screens/app_shell.dart';
 import 'screens/settings_screen.dart';
 
@@ -29,43 +29,31 @@ class SlopcafeAdminApp extends StatelessWidget {
   }
 }
 
-/// First-launch gate: routes to [SettingsScreen] when the deployment is not yet
-/// configured (no Base URL / Operator Token in secure storage), otherwise the
-/// [AppShell]. Mirrors the connection check the old `MainNavigationShell` ran on
-/// startup; the in-app 401 interception now lives in [AppShell].
-class RootGate extends StatefulWidget {
+/// First-launch gate: routes to [SettingsScreen] while no deployment is
+/// configured, otherwise the [AppShell].
+///
+/// It watches [instancesProvider] rather than reading secure storage once at
+/// `initState`, which is what makes the gate reactive: saving the first
+/// instance swaps in the shell, and clearing every instance from the Settings
+/// danger zone drops straight back to setup, with no callback threaded through
+/// the screen to say so.
+class RootGate extends ConsumerWidget {
   const RootGate({super.key});
 
   @override
-  State<RootGate> createState() => _RootGateState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final instances = ref.watch(instancesProvider);
 
-class _RootGateState extends State<RootGate> {
-  bool? _configured;
-
-  @override
-  void initState() {
-    super.initState();
-    _check();
-  }
-
-  Future<void> _check() async {
-    final storage = SecureStorageService.instance;
-    final url = await storage.getBaseUrl();
-    final token = await storage.getOperatorToken();
-    if (!mounted) return;
-    setState(() => _configured = url != null && token != null);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final configured = _configured;
-    if (configured == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-    if (!configured) {
-      return SettingsScreen(onSaved: () => setState(() => _configured = true));
-    }
-    return const AppShell();
+    return instances.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      // Storage is unreadable rather than empty. Setup is still the useful
+      // destination: it is the one screen that can write a fresh set over
+      // whatever is wrong, and its danger zone can clear it outright.
+      error: (_, _) => const SettingsScreen(firstRun: true),
+      data: (set) => set.isConfigured
+          ? const AppShell()
+          : const SettingsScreen(firstRun: true),
+    );
   }
 }

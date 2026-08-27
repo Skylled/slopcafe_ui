@@ -863,7 +863,7 @@
   "credentialsSection": "Credentials",
   "openTheLine": "Open the line",
   "@openTheLine": { "description": "Settings intro card heading (café metaphor for connecting)." },
-  "connectionIntroBody": "Point the operator app at your Slopcafe deployment and provide an admin token. Credentials are stored only on this device in secure storage.",
+  "connectionIntroBody": "Point the operator app at a Slopcafe deployment and provide an admin token. Save several and switch between them without signing out. Credentials are stored only on this device in secure storage.",
   "baseUrlLabel": "Base URL",
   "baseUrlHint": "https://slopcafe.com",
   "@baseUrlHint": { "description": "Example placeholder shown in the Base URL field." },
@@ -894,8 +894,72 @@
   "tokenRejectedDetail": "Operator token rejected. Please verify your credentials.",
   "@tokenRejectedDetail": { "description": "Unauthorized (401) message shown in the app-wide toast and the Settings banner body. Used as the fallback when the API layer carries no server-supplied detail." },
   "clearSecureStorageTitle": "Clear secure storage",
-  "clearSecureStorageBody": "Removes the saved Base URL and Operator Token from this device and resets the connection state.",
+  "clearSecureStorageBody": "Removes every saved instance — Base URLs, Operator Tokens and cached documents — from this device and resets the connection state.",
   "clearSecureStorageButton": "Clear Secure Storage",
+
+  "instancesSection": "Instances",
+  "@instancesSection": { "description": "Settings section header above the list of saved Slopcafe deployments." },
+  "instanceSwitcherTitle": "Switch instance",
+  "@instanceSwitcherTitle": { "description": "Title of the quick-switcher bottom sheet, and the tooltip on the affordance that opens it." },
+  "instanceSwitcherSubtitle": "Saved deployments",
+  "@instanceSwitcherSubtitle": { "description": "Eyebrow above the quick-switcher sheet title." },
+  "instanceActive": "Active",
+  "@instanceActive": { "description": "Pill marking the instance the app is currently pointed at." },
+  "instanceLabelLabel": "Name",
+  "@instanceLabelLabel": { "description": "Field label for the operator-chosen name of an instance." },
+  "instanceLabelHint": "Production, Fork, staging…",
+  "@instanceLabelHint": { "description": "Placeholder for the instance name field. Blank falls back to the host." },
+  "addInstanceSection": "Add an instance",
+  "@addInstanceSection": { "description": "Header of the Settings form when it is composing a new instance." },
+  "editInstanceSection": "Editing {label}",
+  "@editInstanceSection": {
+    "description": "Header of the Settings form when it is editing a saved instance.",
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "addInstanceButton": "Add Instance",
+  "@addInstanceButton": { "description": "Primary button that saves the form as a new instance." },
+  "saveInstanceButton": "Save Changes",
+  "@saveInstanceButton": { "description": "Primary button that saves edits to an existing instance." },
+  "cancelEdit": "Cancel",
+  "@cancelEdit": { "description": "Abandons an in-progress edit and returns the form to add-a-new-instance mode." },
+  "editInstance": "Edit",
+  "removeInstance": "Remove",
+  "instanceAdded": "{label} added",
+  "@instanceAdded": {
+    "description": "Toast after saving a new instance.",
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "instanceUpdated": "{label} updated",
+  "@instanceUpdated": {
+    "description": "Toast after saving edits to an existing instance.",
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "instanceRemoved": "{label} removed",
+  "@instanceRemoved": {
+    "description": "Toast after forgetting an instance.",
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "switchedToInstance": "Now on {label}",
+  "@switchedToInstance": {
+    "description": "Toast confirming the app is now pointed at another deployment.",
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "switchingInstance": "Switching…",
+  "@switchingInstance": { "description": "Shown while a switch reloads the fleet data against the new deployment." },
+  "removeInstanceTitle": "Remove instance",
+  "removeInstanceBody": "Forget {label} on this device? Its Base URL, Operator Token and cached documents are removed. The deployment itself is untouched.",
+  "@removeInstanceBody": {
+    "description": "Body of the confirm sheet before forgetting an instance.",
+    "placeholders": { "label": { "type": "String" } }
+  },
+  "noInstancesYet": "No instances saved yet. Add your first deployment below.",
+  "@noInstancesYet": { "description": "Empty state above the Settings form on a fresh install." },
+  "deepLinkSwitchedInstance": "Switched to {label} to open that link",
+  "@deepLinkSwitchedInstance": {
+    "description": "Toast shown when an inbound web link belonged to a saved instance other than the active one, so the app switched before opening the Reader.",
+    "placeholders": { "label": { "type": "String" } }
+  },
+
 
   "deepLinkUnresolved": "That link doesn't lead to a document on this deployment.",
   "@deepLinkUnresolved": {

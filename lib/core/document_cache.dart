@@ -2,16 +2,86 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import '../api/api.dart';
+import 'secure_storage.dart';
 
+/// The offline document cache — rendered HTML by `public_id`, plus the default
+/// document list.
+///
+/// ## Why every path goes through a per-instance namespace
+///
+/// A `public_id` is a fact about *one* deployment. Two Slopcafe instances can
+/// legitimately mint the same id for entirely different documents, so a single
+/// flat cache shared across instances would serve one deployment's bytes under
+/// the other's name — silently, and only for documents whose ids happened to
+/// collide. Every file therefore lives under `slopcafe_doc_cache/<instance-id>/`,
+/// where the namespace is [SlopcafeInstance.id] (see `instances.dart`).
+///
+/// Namespacing rather than wiping on switch is deliberate too: switching back to
+/// an instance finds its cache intact, which is the whole point of a cache for
+/// an operator who moves between deployments all day.
 class DocumentCacheManager {
-  static Future<Directory> get _cacheDir async {
+  /// The namespace used when no instance is active. Only reachable in the
+  /// window before first-run setup completes, where nothing is cached anyway.
+  static const String _unscopedNamespace = 'default';
+
+  /// One-shot guard for [_pruneLegacyLayout].
+  static bool _prunedLegacyLayout = false;
+
+  /// The cache root, shared by every instance.
+  static Future<Directory> get _cacheRoot async {
     final tempDir = await getTemporaryDirectory();
-    final cachePath = '${tempDir.path}/slopcafe_doc_cache';
-    final dir = Directory(cachePath);
+    return Directory('${tempDir.path}/slopcafe_doc_cache');
+  }
+
+  /// The active instance's cache directory, created on demand.
+  static Future<Directory> get _cacheDir async {
+    final root = await _cacheRoot;
+    await _pruneLegacyLayout(root);
+    final namespace =
+        await SecureStorageService.instance.getActiveInstanceId() ??
+        _unscopedNamespace;
+    final dir = Directory('${root.path}/$namespace');
     if (!await dir.exists()) {
       await dir.create(recursive: true);
     }
     return dir;
+  }
+
+  /// Delete the loose files a pre-multi-instance build left directly in the
+  /// cache root, once per process.
+  ///
+  /// Those files belong to the deployment that became the first migrated
+  /// instance, but they are cached bytes in a temp directory — re-fetching them
+  /// costs one request each, whereas hoisting them into a namespace costs code
+  /// that would be dead the moment every install has upgraded. Directories are
+  /// left alone: those are the namespaces.
+  static Future<void> _pruneLegacyLayout(Directory root) async {
+    if (_prunedLegacyLayout) return;
+    _prunedLegacyLayout = true;
+    try {
+      if (!await root.exists()) return;
+      for (final entity in root.listSync()) {
+        if (entity is File) await entity.delete();
+      }
+    } catch (_) {
+      // Best-effort: a cache we could not tidy is still a working cache.
+    }
+  }
+
+  /// Drop every cached file for one instance — called when that instance is
+  /// removed, or when its Base URL is edited to point somewhere else and its id
+  /// therefore names a different deployment.
+  static Future<void> deleteNamespace(String instanceId) async {
+    try {
+      final root = await _cacheRoot;
+      final dir = Directory('${root.path}/$instanceId');
+      if (await dir.exists()) {
+        await dir.delete(recursive: true);
+      }
+    } catch (_) {
+      // Fail silently: an un-evicted cache is stale, not broken — every read
+      // is version-keyed and revalidated.
+    }
   }
 
   static Future<File> _getCacheFile(String publicId, int version) async {

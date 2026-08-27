@@ -7,28 +7,39 @@ import '../core/api_client.dart';
 import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
-import '../core/secure_storage.dart';
+import '../core/instances.dart';
 import '../l10n/l10n.dart';
+import '../providers/instances_provider.dart';
 import '../widgets/app_button.dart';
 import '../widgets/cafe_logo.dart';
+import '../widgets/instance_switcher.dart';
 import '../widgets/section_header.dart';
+import '../widgets/sheets.dart';
 import '../widgets/toast.dart';
 
-/// The Pass — operator connection setup.
+/// The Pass — operator connection setup, and the manager for every saved
+/// Slopcafe deployment.
 ///
-/// Pushed route (its own Scaffold + AppBar titled "Connection"). Ported from
-/// the legacy `SettingsScreen` in `lib/main.dart`: it stores the deployment
-/// Base URL + Operator Token, runs the double-probe connection test
-/// (`GET /healthz` then `GET /admin/agents?limit=1` with a Bearer token),
-/// persists credentials via [SecureStorageService], and can clear secure
-/// storage. The wiring is preserved exactly; only the presentation is restyled
-/// into the Cortado language.
+/// Pushed route (its own Scaffold + AppBar titled "Connection"), or the
+/// first-run destination when nothing is configured yet ([firstRun]).
+///
+/// Two things share the screen. The **instance list** is the set of saved
+/// deployments: tap one to switch, or use its menu to edit or forget it. The
+/// **form** below composes a new instance, or edits the one selected from that
+/// list. The double-probe connection test (`GET /healthz`, then
+/// `GET /admin/agents?limit=1` with a Bearer token) is unchanged, and still runs
+/// against whatever is typed in the form rather than against what is saved — so
+/// a new deployment can be proven before it is committed.
+///
+/// The quick switcher in the shell ([showInstanceSwitcher]) covers the frequent
+/// case; this screen is where the set itself is curated.
 class SettingsScreen extends ConsumerStatefulWidget {
-  const SettingsScreen({super.key, this.onSaved});
+  const SettingsScreen({super.key, this.firstRun = false});
 
-  /// Optional callback fired after a successful save. When null, the screen
-  /// pops itself instead (preserving the legacy navigate-away behavior).
-  final VoidCallback? onSaved;
+  /// True when this is the first-launch gate rather than a pushed route: there
+  /// is no instance list to show, no route to pop back to, and saving hands off
+  /// to `RootGate`, which swaps in the shell as soon as an instance exists.
+  final bool firstRun;
 
   @override
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
@@ -36,33 +47,52 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _labelController = TextEditingController();
   final _urlController = TextEditingController();
   final _tokenController = TextEditingController();
   bool _obscureToken = true;
   bool _testingConnection = false;
+  bool _saving = false;
   String? _testResult;
   bool _resultIsError = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadConnectionSettings();
-  }
+  /// The instance the form is editing, or null when it is composing a new one.
+  /// This is the screen's one mode bit: it decides the form's header, its
+  /// primary button, and whether saving upserts or appends.
+  String? _editingId;
 
   @override
   void dispose() {
+    _labelController.dispose();
     _urlController.dispose();
     _tokenController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadConnectionSettings() async {
-    final storage = SecureStorageService.instance;
-    final url = await storage.getBaseUrl();
-    final token = await storage.getOperatorToken();
-    if (!mounted) return;
-    if (url != null) _urlController.text = url;
-    if (token != null) _tokenController.text = token;
+  /// Load [instance] into the form for editing.
+  void _beginEdit(SlopcafeInstance instance) {
+    setState(() {
+      _editingId = instance.id;
+      _labelController.text = instance.label;
+      _urlController.text = instance.baseUrl;
+      _tokenController.text = instance.operatorToken;
+      // A probe result describes the credentials that were on screen when it
+      // ran, so it is stale the moment the form is repopulated.
+      _testResult = null;
+      _resultIsError = false;
+    });
+  }
+
+  /// Return the form to compose-a-new-instance mode.
+  void _resetForm() {
+    setState(() {
+      _editingId = null;
+      _labelController.clear();
+      _urlController.clear();
+      _tokenController.clear();
+      _testResult = null;
+      _resultIsError = false;
+    });
   }
 
   Future<void> _testConnection() async {
@@ -79,13 +109,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final token = _tokenController.text.trim();
 
     try {
+      // Both probes address `url` absolutely and carry their own token, so the
+      // test proves the credentials *in the form* rather than the ones already
+      // saved — which is what lets a second deployment be verified before it is
+      // committed, while some other instance is still the active one.
+      final probeOptions = Options(extra: const {kProbeRequestExtra: true});
+
       // 1. Health Probe (unauthenticated).
-      final healthResponse = await dio.get('$url/healthz');
+      final healthResponse = await dio.get(
+        '$url/healthz',
+        options: probeOptions,
+      );
 
       // 2. Auth Probe (Bearer token).
       final authResponse = await dio.get(
         '$url/admin/agents?limit=1',
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
+        options: Options(
+          headers: {'Authorization': 'Bearer $token'},
+          extra: const {kProbeRequestExtra: true},
+        ),
       );
 
       if (healthResponse.statusCode == 200 && authResponse.statusCode == 200) {
@@ -122,34 +164,97 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  /// Commit the form — as an edit to [_editingId], or as a new instance.
+  ///
+  /// Either path reloads the fleet against the affected deployment (see
+  /// [InstancesNotifier]), so this awaits real network work and holds the
+  /// buttons disabled while it runs.
   Future<void> _saveSettings() async {
     if (!_formKey.currentState!.validate()) return;
     final l10n = context.l10n;
-    await SecureStorageService.instance.saveConnectionDetails(
-      baseUrl: _urlController.text,
-      operatorToken: _tokenController.text,
-    );
-    if (!mounted) return;
-    showToast(context, l10n.connectionSaved);
-    final onSaved = widget.onSaved;
-    if (onSaved != null) {
-      onSaved();
-    } else {
-      Navigator.of(context).maybePop();
+    final navigator = Navigator.of(context);
+    final notifier = ref.read(instancesProvider.notifier);
+    final editingId = _editingId;
+
+    setState(() => _saving = true);
+    String label;
+    try {
+      if (editingId != null) {
+        await notifier.edit(
+          id: editingId,
+          baseUrl: _urlController.text,
+          operatorToken: _tokenController.text,
+          label: _labelController.text,
+        );
+        label =
+            ref.read(instancesProvider).value?.byId(editingId)?.label ??
+            _labelController.text;
+      } else {
+        final added = await notifier.add(
+          baseUrl: _urlController.text,
+          operatorToken: _tokenController.text,
+          label: _labelController.text,
+        );
+        label = added.label;
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
+    if (!mounted) return;
+
+    showToast(
+      context,
+      editingId != null
+          ? l10n.instanceUpdated(label)
+          : l10n.instanceAdded(label),
+    );
+
+    if (widget.firstRun) {
+      // `RootGate` watches the same provider and swaps in the shell on its own
+      // as soon as an instance exists — there is nothing to pop back to here.
+      return;
+    }
+    if (editingId != null) {
+      _resetForm();
+    } else {
+      navigator.maybePop();
+    }
+  }
+
+  Future<void> _switchTo(SlopcafeInstance instance) async {
+    final l10n = context.l10n;
+    setState(() => _saving = true);
+    try {
+      await ref.read(instancesProvider.notifier).switchTo(instance.id);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+    if (!mounted) return;
+    showToast(context, l10n.switchedToInstance(instance.label));
+  }
+
+  Future<void> _removeInstance(SlopcafeInstance instance) async {
+    final l10n = context.l10n;
+    final confirmed = await showConfirmSheet(
+      context,
+      title: l10n.removeInstanceTitle,
+      body: Text(l10n.removeInstanceBody(instance.label)),
+      cta: l10n.removeInstance,
+      danger: true,
+    );
+    if (!confirmed || !mounted) return;
+
+    await ref.read(instancesProvider.notifier).remove(instance.id);
+    if (_editingId == instance.id) _resetForm();
+    if (!mounted) return;
+    showToast(context, l10n.instanceRemoved(instance.label));
   }
 
   Future<void> _clearAll() async {
     final l10n = context.l10n;
-    await SecureStorageService.instance.clearAll();
-    _urlController.clear();
-    _tokenController.clear();
-    ref.read(connectionStateProvider.notifier).reset();
+    await ref.read(instancesProvider.notifier).clearAll();
     if (!mounted) return;
-    setState(() {
-      _testResult = null;
-      _resultIsError = false;
-    });
+    _resetForm();
     showToast(context, l10n.secureStorageCleared);
   }
 
@@ -160,11 +265,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final connectionState = ref.watch(connectionStateProvider);
     final isUnauthorized =
         connectionState.status == ConnectionStatus.unauthorized;
+    final set = ref.watch(instancesProvider).value;
+    final instances = set?.instances ?? const <SlopcafeInstance>[];
+    final activeId = set?.activeId;
+    final editing = _editingId == null ? null : set?.byId(_editingId!);
+    final busy = _testingConnection || _saving;
 
     return Scaffold(
       backgroundColor: c.bg,
       appBar: AppBar(
-        leading: const BackButton(),
+        // First run is the root: there is no route underneath to go back to.
+        leading: widget.firstRun ? null : const BackButton(),
+        automaticallyImplyLeading: false,
         title: Text(l10n.connectionTitle),
       ),
       body: Form(
@@ -188,7 +300,67 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ],
               _IntroCard(),
               const SizedBox(height: AppSpacing.xxl),
-              SectionHeader(l10n.credentialsSection),
+
+              // ---- Saved instances -------------------------------------
+              // Hidden on first run, where the list is necessarily empty and a
+              // header over nothing is just noise.
+              if (instances.isNotEmpty) ...[
+                SectionHeader(l10n.instancesSection),
+                for (final instance in instances) ...[
+                  InstanceRow(
+                    instance: instance,
+                    active: instance.id == activeId,
+                    onTap: busy ? null : () => _switchTo(instance),
+                    trailing: _InstanceMenu(
+                      enabled: !busy,
+                      onEdit: () => _beginEdit(instance),
+                      onRemove: () => _removeInstance(instance),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+                const SizedBox(height: AppSpacing.xl),
+              ] else if (!widget.firstRun) ...[
+                Text(
+                  l10n.noInstancesYet,
+                  style: AppText.body.copyWith(color: c.textDim),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+              ],
+
+              // ---- Add / edit form -------------------------------------
+              Row(
+                children: [
+                  Expanded(
+                    child: SectionHeader(
+                      editing != null
+                          ? l10n.editInstanceSection(editing.label)
+                          : instances.isEmpty
+                          ? l10n.credentialsSection
+                          : l10n.addInstanceSection,
+                    ),
+                  ),
+                  if (editing != null)
+                    TextButton(
+                      onPressed: busy ? null : _resetForm,
+                      child: Text(l10n.cancelEdit),
+                    ),
+                ],
+              ),
+              _FieldLabel(l10n.instanceLabelLabel),
+              const SizedBox(height: AppSpacing.sm),
+              TextFormField(
+                controller: _labelController,
+                autocorrect: false,
+                style: AppText.body.copyWith(color: c.text),
+                decoration: InputDecoration(
+                  hintText: l10n.instanceLabelHint,
+                  prefixIcon: const Icon(Icons.badge_outlined),
+                ),
+                // Deliberately not required: a blank name falls back to the
+                // host, which is a better default than refusing the save.
+              ),
+              const SizedBox(height: AppSpacing.lg),
               _FieldLabel(l10n.baseUrlLabel),
               const SizedBox(height: AppSpacing.sm),
               TextFormField(
@@ -253,17 +425,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       variant: AppBtnVariant.outline,
                       icon: Icons.bolt,
                       expand: true,
-                      onPressed: _testingConnection ? null : _testConnection,
+                      onPressed: busy ? null : _testConnection,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: AppButton(
-                      l10n.saveAndContinue,
+                      _saving
+                          ? l10n.switchingInstance
+                          : editing != null
+                          ? l10n.saveInstanceButton
+                          : instances.isEmpty
+                          ? l10n.saveAndContinue
+                          : l10n.addInstanceButton,
                       variant: AppBtnVariant.primary,
                       icon: Icons.check,
                       expand: true,
-                      onPressed: _testingConnection ? null : _saveSettings,
+                      onPressed: busy ? null : _saveSettings,
                     ),
                   ),
                 ],
@@ -478,3 +656,50 @@ class _DangerCard extends StatelessWidget {
     );
   }
 }
+
+/// The per-instance overflow menu in the Settings list: edit, or forget.
+///
+/// Switching is the row tap, so the menu carries only the two actions that are
+/// not the common case — which keeps a mis-aimed tap on a busy list from
+/// forgetting a deployment.
+class _InstanceMenu extends StatelessWidget {
+  const _InstanceMenu({
+    required this.enabled,
+    required this.onEdit,
+    required this.onRemove,
+  });
+
+  final bool enabled;
+  final VoidCallback onEdit;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final l10n = context.l10n;
+    return PopupMenuButton<_InstanceAction>(
+      enabled: enabled,
+      tooltip: '',
+      icon: Icon(Icons.more_horiz, size: 20, color: c.textDim),
+      onSelected: (action) => switch (action) {
+        _InstanceAction.edit => onEdit(),
+        _InstanceAction.remove => onRemove(),
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: _InstanceAction.edit,
+          child: Text(l10n.editInstance),
+        ),
+        PopupMenuItem(
+          value: _InstanceAction.remove,
+          child: Text(
+            l10n.removeInstance,
+            style: AppText.body.copyWith(color: c.red),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+enum _InstanceAction { edit, remove }

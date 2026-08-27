@@ -1467,7 +1467,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connectionIntroBody =>
-      'Point the operator app at your Slopcafe deployment and provide an admin token. Credentials are stored only on this device in secure storage.';
+      'Point the operator app at a Slopcafe deployment and provide an admin token. Save several and switch between them without signing out. Credentials are stored only on this device in secure storage.';
 
   @override
   String get baseUrlLabel => 'Base URL';
@@ -1543,10 +1543,91 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearSecureStorageBody =>
-      'Removes the saved Base URL and Operator Token from this device and resets the connection state.';
+      'Removes every saved instance — Base URLs, Operator Tokens and cached documents — from this device and resets the connection state.';
 
   @override
   String get clearSecureStorageButton => 'Clear Secure Storage';
+
+  @override
+  String get instancesSection => 'Instances';
+
+  @override
+  String get instanceSwitcherTitle => 'Switch instance';
+
+  @override
+  String get instanceSwitcherSubtitle => 'Saved deployments';
+
+  @override
+  String get instanceActive => 'Active';
+
+  @override
+  String get instanceLabelLabel => 'Name';
+
+  @override
+  String get instanceLabelHint => 'Production, Fork, staging…';
+
+  @override
+  String get addInstanceSection => 'Add an instance';
+
+  @override
+  String editInstanceSection(String label) {
+    return 'Editing $label';
+  }
+
+  @override
+  String get addInstanceButton => 'Add Instance';
+
+  @override
+  String get saveInstanceButton => 'Save Changes';
+
+  @override
+  String get cancelEdit => 'Cancel';
+
+  @override
+  String get editInstance => 'Edit';
+
+  @override
+  String get removeInstance => 'Remove';
+
+  @override
+  String instanceAdded(String label) {
+    return '$label added';
+  }
+
+  @override
+  String instanceUpdated(String label) {
+    return '$label updated';
+  }
+
+  @override
+  String instanceRemoved(String label) {
+    return '$label removed';
+  }
+
+  @override
+  String switchedToInstance(String label) {
+    return 'Now on $label';
+  }
+
+  @override
+  String get switchingInstance => 'Switching…';
+
+  @override
+  String get removeInstanceTitle => 'Remove instance';
+
+  @override
+  String removeInstanceBody(String label) {
+    return 'Forget $label on this device? Its Base URL, Operator Token and cached documents are removed. The deployment itself is untouched.';
+  }
+
+  @override
+  String get noInstancesYet =>
+      'No instances saved yet. Add your first deployment below.';
+
+  @override
+  String deepLinkSwitchedInstance(String label) {
+    return 'Switched to $label to open that link';
+  }
 
   @override
   String get deepLinkUnresolved =>

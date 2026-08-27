@@ -8,7 +8,7 @@ The app uses the **Cortado** design language: a warm café-themed visual system 
 **honey** palette, serif display type, press-cards, a floating pill tab bar) with light + dark support.
 The mobile information architecture is three tabs — **Library** ("The Café"), **Search**, and
 **Operate** ("The Pass") — plus a full-screen document **Reader** and a **Connection** (Settings)
-screen. See [GEMINI.md](GEMINI.md) for the full codebase map.
+screen, which doubles as the manager for every saved deployment. See [GEMINI.md](GEMINI.md) for the full codebase map.
 
 > Cortado's visual language is inspired by the [Craft](https://www.craft.do/) app, whose
 > warm, document-forward aesthetic guided the original Claude Design overhaul.
@@ -45,6 +45,12 @@ screen. See [GEMINI.md](GEMINI.md) for the full codebase map.
   - Tapping a `https://slopcafe.com/d/<id>` or `/s/<slug>` link anywhere on the device opens it in the app's Reader instead of a browser — including **private** documents, which resolve through the operator's own token.
   - Deliberately mobile-only; on macOS a web link belongs in the browser.
   - Requires an `assetlinks.json` on the web host to skip the browser. Setup and domain configuration: [docs/deep-links.md](docs/deep-links.md).
+- **Multiple instances**:
+  - Save several Slopcafe deployments (production, a fork, a local dev backend) and switch between them without signing out and back in.
+  - One-tap quick switcher from the shell — the side rail's logo on desktop, a chip beside the Operate title on phones — with full add/edit/remove management on the Connection screen.
+  - Each instance is isolated: its own operator token, its own OAuth client registrations, and its own offline document cache (a `public_id` means different things on different deployments, so the caches are namespaced rather than shared).
+  - Test a new deployment's credentials before committing them, while another instance is still the active one.
+  - An inbound web link is routed to the saved instance that actually serves that host, whichever one you left active.
 - **Security & Connection System**:
   - Double-probe verification (smoke check `GET /healthz` + authenticated probe `GET /admin/agents`).
   - Cross-screen authorization interception forcing immediate re-authentication on `401 Unauthorized` token rejection.

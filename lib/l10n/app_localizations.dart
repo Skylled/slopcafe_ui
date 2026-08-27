@@ -2455,7 +2455,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectionIntroBody.
   ///
   /// In en, this message translates to:
-  /// **'Point the operator app at your Slopcafe deployment and provide an admin token. Credentials are stored only on this device in secure storage.'**
+  /// **'Point the operator app at a Slopcafe deployment and provide an admin token. Save several and switch between them without signing out. Credentials are stored only on this device in secure storage.'**
   String get connectionIntroBody;
 
   /// No description provided for @baseUrlLabel.
@@ -2593,7 +2593,7 @@ abstract class AppLocalizations {
   /// No description provided for @clearSecureStorageBody.
   ///
   /// In en, this message translates to:
-  /// **'Removes the saved Base URL and Operator Token from this device and resets the connection state.'**
+  /// **'Removes every saved instance — Base URLs, Operator Tokens and cached documents — from this device and resets the connection state.'**
   String get clearSecureStorageBody;
 
   /// No description provided for @clearSecureStorageButton.
@@ -2601,6 +2601,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear Secure Storage'**
   String get clearSecureStorageButton;
+
+  /// Settings section header above the list of saved Slopcafe deployments.
+  ///
+  /// In en, this message translates to:
+  /// **'Instances'**
+  String get instancesSection;
+
+  /// Title of the quick-switcher bottom sheet, and the tooltip on the affordance that opens it.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch instance'**
+  String get instanceSwitcherTitle;
+
+  /// Eyebrow above the quick-switcher sheet title.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved deployments'**
+  String get instanceSwitcherSubtitle;
+
+  /// Pill marking the instance the app is currently pointed at.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get instanceActive;
+
+  /// Field label for the operator-chosen name of an instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get instanceLabelLabel;
+
+  /// Placeholder for the instance name field. Blank falls back to the host.
+  ///
+  /// In en, this message translates to:
+  /// **'Production, Fork, staging…'**
+  String get instanceLabelHint;
+
+  /// Header of the Settings form when it is composing a new instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an instance'**
+  String get addInstanceSection;
+
+  /// Header of the Settings form when it is editing a saved instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing {label}'**
+  String editInstanceSection(String label);
+
+  /// Primary button that saves the form as a new instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Instance'**
+  String get addInstanceButton;
+
+  /// Primary button that saves edits to an existing instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get saveInstanceButton;
+
+  /// Abandons an in-progress edit and returns the form to add-a-new-instance mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancelEdit;
+
+  /// No description provided for @editInstance.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editInstance;
+
+  /// No description provided for @removeInstance.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removeInstance;
+
+  /// Toast after saving a new instance.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} added'**
+  String instanceAdded(String label);
+
+  /// Toast after saving edits to an existing instance.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} updated'**
+  String instanceUpdated(String label);
+
+  /// Toast after forgetting an instance.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} removed'**
+  String instanceRemoved(String label);
+
+  /// Toast confirming the app is now pointed at another deployment.
+  ///
+  /// In en, this message translates to:
+  /// **'Now on {label}'**
+  String switchedToInstance(String label);
+
+  /// Shown while a switch reloads the fleet data against the new deployment.
+  ///
+  /// In en, this message translates to:
+  /// **'Switching…'**
+  String get switchingInstance;
+
+  /// No description provided for @removeInstanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove instance'**
+  String get removeInstanceTitle;
+
+  /// Body of the confirm sheet before forgetting an instance.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget {label} on this device? Its Base URL, Operator Token and cached documents are removed. The deployment itself is untouched.'**
+  String removeInstanceBody(String label);
+
+  /// Empty state above the Settings form on a fresh install.
+  ///
+  /// In en, this message translates to:
+  /// **'No instances saved yet. Add your first deployment below.'**
+  String get noInstancesYet;
+
+  /// Toast shown when an inbound web link belonged to a saved instance other than the active one, so the app switched before opening the Reader.
+  ///
+  /// In en, this message translates to:
+  /// **'Switched to {label} to open that link'**
+  String deepLinkSwitchedInstance(String label);
 
   /// Toast shown when a web link tapped outside the app (a /s/<slug> URL) resolves to no document — the slug is unclaimed, retired, or belongs to a different deployment than the one configured.
   ///

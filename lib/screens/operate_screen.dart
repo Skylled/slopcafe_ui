@@ -8,6 +8,7 @@ import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/format.dart';
+import '../core/instances.dart';
 import '../core/publication.dart';
 import '../api/api.dart';
 import '../core/secure_storage.dart';
@@ -15,10 +16,12 @@ import '../l10n/l10n.dart';
 import '../providers/agent_provider.dart';
 import '../providers/document_provider.dart';
 import '../providers/health_provider.dart';
+import '../providers/instances_provider.dart';
 import '../providers/links_provider.dart';
 import '../providers/refresh.dart';
 import '../widgets/app_button.dart';
 import '../widgets/doc_feed_card.dart';
+import '../widgets/instance_switcher.dart';
 import '../widgets/pill.dart';
 import '../widgets/press_card.dart';
 import '../widgets/section_header.dart';
@@ -218,6 +221,7 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
     final agentsState = ref.watch(agentsListProvider);
     final docsState = ref.watch(documentsListProvider);
     final health = ref.watch(healthProvider);
+    final activeInstance = ref.watch(activeInstanceProvider);
 
     final agents = agentsState.agents;
     final docs = docsState.documents;
@@ -284,11 +288,34 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
               ),
               children: [
                 // ---- Header ----
-                Eyebrow(l10n.backOfHouse),
-                const SizedBox(height: 3),
-                Text(
-                  l10n.thePass,
-                  style: AppText.display.copyWith(color: c.text),
+                // The instance chip rides the Operate title because this is the
+                // operator's tab: every destructive action on the screen below
+                // lands on whichever deployment the chip names, so the answer to
+                // "which one am I about to act on" belongs in the same glance as
+                // the title. On expanded layouts the side rail already carries a
+                // switcher, so the chip stands down rather than offering two.
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Eyebrow(l10n.backOfHouse),
+                          const SizedBox(height: 3),
+                          Text(
+                            l10n.thePass,
+                            style: AppText.display.copyWith(color: c.text),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!context.isExpandedLayout && activeInstance != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4, left: 8),
+                        child: _InstanceChip(instance: activeInstance),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 18),
 
@@ -2878,6 +2905,51 @@ class _EditSlugTagsSheetState extends State<_EditSlugTagsSheet> {
             onPressed: _busy ? null : _save,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The compact-layout entry point to the instance quick switcher, shown beside
+/// the Operate title.
+///
+/// Named rather than iconic: an icon would say that switching is possible
+/// without saying what is currently selected, and the second half is the part
+/// worth a permanent slot on the screen where documents get revoked.
+class _InstanceChip extends StatelessWidget {
+  const _InstanceChip({required this.instance});
+
+  final SlopcafeInstance instance;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Tappable(
+      onTap: () => showInstanceSwitcher(context),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: c.clay.withValues(alpha: 0.10),
+          border: Border.all(color: c.clay.withValues(alpha: 0.28)),
+          borderRadius: BorderRadius.circular(AppRadii.pill),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.swap_horiz, size: 14, color: c.clayD),
+            const SizedBox(width: 5),
+            Flexible(
+              child: Text(
+                instance.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.label.copyWith(color: c.clayD),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

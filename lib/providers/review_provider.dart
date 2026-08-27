@@ -91,6 +91,18 @@ class ReviewQueueNotifier extends Notifier<ReviewQueueState> {
   @override
   ReviewQueueState build() => const ReviewQueueState();
 
+  /// Drop everything this notifier is holding, back to its initial state.
+  ///
+  /// Called when the app is pointed at another deployment: these rows describe
+  /// the deployment that served them and mean nothing against the next one. It
+  /// is deliberately separate from the reload that follows, because a reload
+  /// that *fails* — an unreachable host, a rejected token, exactly the states a
+  /// freshly added instance is in — leaves the previous state in place by
+  /// design, which is right for a refresh and wrong for a switch. Clearing first
+  /// makes the failure show as an empty, erroring screen rather than as the
+  /// previous deployment's corpus under the new deployment's name.
+  void reset() => state = build();
+
   /// Re-read the queue from the beginning.
   ///
   /// Rows already on screen stay under the spinner — refreshing a queue the
