@@ -1,4 +1,5 @@
 import 'dart:developer' as dev;
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api.dart';
 import '../core/api_client.dart';
@@ -70,6 +71,13 @@ class AgentsListNotifier extends Notifier<AgentsListState> {
       final response = await dio.get(
         '/admin/agents',
         queryParameters: queryParams,
+        // `/admin/agents` is operator-only, so a valid reader-tier token
+        // 401s here by design — that is not a rejected token, just a tier
+        // this fetch does not clear. kProbeRequestExtra keeps that 401 out of
+        // the global interceptor so it does not misread as "token rejected"
+        // and bounce the reader to Settings; the catch clause below degrades
+        // it locally instead. See the constant's doc in `api_client.dart`.
+        options: Options(extra: const {kProbeRequestExtra: true}),
       );
       final parsed = ListAgentsResponse.fromJson(
         response.data as Map<String, dynamic>,
@@ -92,6 +100,29 @@ class AgentsListNotifier extends Notifier<AgentsListState> {
         nextCursor: nextCursor,
         isLoading: false,
         hasError: false,
+      );
+    } on DioException catch (e, stack) {
+      final status = e.response?.statusCode;
+      if (status == 401 || status == 403) {
+        // A reader-tier token, not a bad one — see the comment on the
+        // request above. Degrade to an empty fleet rather than an error
+        // banner: no agent visibility is the correct reader experience, not
+        // a failure to report. A truly rejected token still surfaces through
+        // the document list fetch, which is not exempt from the global 401
+        // handler.
+        state = state.copyWith(
+          agents: clear ? const [] : state.agents,
+          nextCursor: () => null,
+          isLoading: false,
+          hasError: false,
+        );
+        return;
+      }
+      dev.log('Failed to fetch agents', error: e, stackTrace: stack);
+      state = state.copyWith(
+        isLoading: false,
+        hasError: true,
+        errorMessage: ApiError.describe(e),
       );
     } catch (e, stack) {
       dev.log('Failed to fetch agents', error: e, stackTrace: stack);

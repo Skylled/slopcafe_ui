@@ -83,9 +83,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         options: probeOptions,
       );
 
-      // 2. Auth Probe (Bearer token).
+      // 2. Auth probe. Deliberately `GET /d?limit=1`, not `/admin/agents`:
+      // `/admin/agents` is operator-only and 401s a valid reader-tier token,
+      // which is exactly the credential this build expects an operator to
+      // hand a reader — that would fail Test Connection for a token that
+      // works everywhere else. `/d` is reader-OK and still proves the token
+      // is accepted at all, which is everything this probe needs to show.
       final authResponse = await dio.get(
-        '$kInsightBaseUrl/admin/agents?limit=1',
+        '$kInsightBaseUrl/d',
+        queryParameters: const {'limit': 1},
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
           extra: const {kProbeRequestExtra: true},

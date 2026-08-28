@@ -65,12 +65,27 @@ final connectionStateProvider =
 
 /// Marks a request whose 401 is a *result* rather than an app-wide auth failure.
 ///
-/// Settings' connection test deliberately fires credentials that may be wrong —
-/// that is the whole point of a test — and reports the outcome in its own result
-/// panel. Letting that 401 flip [connectionStateProvider] would raise the global
-/// "token rejected" banner and have [AppShell] push a *second* Settings screen
-/// on top of the one the operator is typing in. Requests carrying this flag are
-/// exempt; every other 401 is still handled globally.
+/// Two call sites carry this flag, for two different reasons:
+///
+///   - Settings' connection test deliberately fires credentials that may be
+///     wrong — that is the whole point of a test — and reports the outcome in
+///     its own result panel. Letting that 401 flip [connectionStateProvider]
+///     would raise the global "token rejected" banner and have [AppShell]
+///     push a *second* Settings screen on top of the one the operator is
+///     typing in.
+///   - The agent-fleet fetch (`AgentsListNotifier.loadNextPage`, which backs
+///     `agentsListProvider`) hits `/admin/agents`, an operator-only route. A
+///     valid **reader**-tier token — which Insight's read-only build accepts
+///     everywhere else — 401s there by design, and that 401 is not a rejected
+///     token; it is a permission tier the fleet ticker just does not get to
+///     see. The notifier degrades that response locally (empty list, no error
+///     banner) instead of letting it read as "token rejected" and bounce the
+///     reader to Settings. A genuinely bad token is still caught: the document
+///     list fetch (`/admin/documents`) is not flagged, so it still 401s
+///     through the global path below.
+///
+/// Requests carrying this flag are exempt from the global handling; every
+/// other 401 still is.
 const String kProbeRequestExtra = 'slopcafe.probe';
 
 final dioProvider = Provider<Dio>((ref) {
