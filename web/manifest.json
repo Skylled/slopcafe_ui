@@ -1,0 +1,35 @@
+{
+    "name": "Slopcafe Operator",
+    "short_name": "Slopcafe",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#F9F5F0",
+    "theme_color": "#F9F5F0",
+    "description": "Operator console for a Slopcafe deployment: browse the corpus, review what agents have written, and decide what readers see.",
+    "orientation": "any",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

@@ -678,6 +678,10 @@
   "openingInBrowser": "Opening in browser…",
   "urlCopiedPaste": "URL copied — paste it in your browser",
   "couldNotLaunchBrowser": "Could not launch browser — URL copied instead",
+  "clipboardUnavailable": "Couldn't copy — this browser blocked clipboard access",
+  "@clipboardUnavailable": {
+    "description": "Shown when Clipboard.setData fails. Only reachable on the web, where the async Clipboard API requires a secure context (https, or localhost) — over plain http the copy is refused. Before this message existed the failure was completely silent: no clipboard, no toast."
+  },
   "openInBrowserDialogTitle": "Open in browser?",
   "@openInBrowserDialogTitle": {
     "description": "Title of the confirmation modal when tapping an external link in the WebView reader."

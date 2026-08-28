@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:app_links/app_links.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/deep_link.dart';
@@ -20,7 +21,23 @@ import '../core/deep_link.dart';
 /// is included ahead of the target existing so that adding one is an Xcode
 /// capability plus an `apple-app-site-association` file, not a hunt through
 /// Dart for a platform check that silently excluded it.
-bool get deepLinksSupported => Platform.isAndroid || Platform.isIOS;
+///
+/// **The `kIsWeb` guard must stay a separate statement, and it must come
+/// first.** On the web an inbound link is just the page's own URL, so the
+/// answer is a plain "no" — but the reason for the shape is that `dart:io`
+/// compiles to a *throwing stub* under dart2js, where every `Platform` member
+/// raises `UnsupportedError`. `kIsWeb` is a compile-time constant, so an early
+/// return lets the compiler drop the second statement — and with it the
+/// `Platform` reference — before it can ever run. Fold this back into one
+/// expression and the web build still *compiles*, then dies at runtime: this
+/// getter is evaluated by [inboundDeepLinksProvider], which `AppShell`
+/// initialises in `initState`, so the throw takes out the entire shell subtree
+/// and Flutter paints a bare grey `ErrorWidget` over the window. No compiler
+/// error, no console exception — Flutter catches it — just a grey rectangle.
+bool get deepLinksSupported {
+  if (kIsWeb) return false;
+  return Platform.isAndroid || Platform.isIOS;
+}
 
 /// The `app_links` handle. Overridable in tests; the package itself is a
 /// singleton, so this provider is about injection, not lifetime.

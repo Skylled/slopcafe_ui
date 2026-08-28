@@ -9,6 +9,7 @@ import '../core/format.dart';
 import '../core/review.dart';
 import '../l10n/l10n.dart';
 import '../providers/review_provider.dart';
+import '../widgets/app_button.dart';
 import '../widgets/doc_feed_card.dart';
 import '../widgets/pill.dart';
 import '../widgets/press_card.dart';
@@ -77,9 +78,17 @@ class _ReviewQueueScreenState extends ConsumerState<ReviewQueueScreen> {
           color: c.clay,
           backgroundColor: c.surface,
           child: ListView(
-            // Without this the list refuses drags whenever the content is
-            // shorter than the viewport, which is exactly the empty and error
-            // states — neither of which carries any other retry affordance.
+            // Keeps the list draggable when its content is shorter than the
+            // viewport, which is exactly the empty and error states — neither
+            // of which carries any other retry affordance. Under clamping
+            // physics a short list refuses the drag and the RefreshIndicator
+            // never sees it.
+            //
+            // Redundant today, deliberately kept: ScrollView already defaults
+            // to these physics for a vertical list with no controller, and the
+            // day this one acquires a controller `primary` goes false and takes
+            // the default with it. Same line, same reason, on all three pushed
+            // worklists.
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.fromLTRB(
               gutter,
@@ -88,7 +97,26 @@ class _ReviewQueueScreenState extends ConsumerState<ReviewQueueScreen> {
               AppSpacing.bottomInset,
             ),
             children: [
-              BackHeader(l10n.reviewQueue, eyebrow: l10n.thePass),
+              // An explicit refresh beside the title, because the
+              // [RefreshIndicator] above takes a drag and Flutter's desktop/web
+              // scroll behaviour will not start one from a mouse — so
+              // pull-to-refresh is touch-only. The shell's side rail has the
+              // same action for the same reason, but a pushed route covers the
+              // rail. It matters most on this screen: the queue is a live
+              // sweep, and the operator's own work in the Review screen is what
+              // empties it, so "ask again" is the commonest thing they want.
+              Row(
+                children: [
+                  Expanded(
+                    child: BackHeader(l10n.reviewQueue, eyebrow: l10n.thePass),
+                  ),
+                  AppIconButton(
+                    Icons.refresh,
+                    tooltip: l10n.refresh,
+                    onPressed: state.isLoading ? null : _reload,
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
               // Always visible, in the spirit of the orphans screen's "rebuild
               // the graph first": this states what the queue *is*, and without

@@ -2110,6 +2110,12 @@ abstract class AppLocalizations {
   /// **'Could not launch browser — URL copied instead'**
   String get couldNotLaunchBrowser;
 
+  /// Shown when Clipboard.setData fails. Only reachable on the web, where the async Clipboard API requires a secure context (https, or localhost) — over plain http the copy is refused. Before this message existed the failure was completely silent: no clipboard, no toast.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t copy — this browser blocked clipboard access'**
+  String get clipboardUnavailable;
+
   /// Title of the confirmation modal when tapping an external link in the WebView reader.
   ///
   /// In en, this message translates to:

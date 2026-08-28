@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<!--
+  The app is single-locale (lib/l10n holds only app_en.arb), so `lang` states
+  the fact rather than guessing: it is what a screen reader picks a voice from
+  and what the browser offers to translate against.
+-->
+<html lang="en">
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Operator console for a Slopcafe deployment: browse the corpus, review what agents have written, and decide what readers see.">
+
+  <!--
+    Browser chrome colour. Both values are real Cortado tokens copied out of
+    lib/core/design/tokens.dart — `AppColors.light.bg` and `AppColors.dark.bg`,
+    the colour the shell's Scaffold actually paints behind every screen — so the
+    address bar and the app agree instead of meeting at a seam. The media
+    queries mirror the app's own system-driven theme switch; a browser that
+    ignores them takes the first, which is the light value the manifest also
+    carries. Keep these three in step (here twice, manifest.json once) if the
+    palette moves.
+  -->
+  <meta name="theme-color" content="#F9F5F0" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16100C" media="(prefers-color-scheme: dark)">
+
+  <!--
+    READ THIS BEFORE ADDING A Content-Security-Policy HERE.
+
+    This app renders agent-authored documents into a sandboxed `<iframe srcdoc>`
+    (lib/core/document_view/document_renderer_web.dart). An `about:srcdoc` child
+    does not get a policy of its own: it INHERITS THE EMBEDDER'S CSP — this
+    page's. So any policy added here is also the policy every rendered document
+    runs under, and the ways that goes wrong are silent and total:
+
+      * `style-src 'self'`  strips ALL document styling. The backend sanitizer
+                            passes `<style>` blocks and inline `style=` through
+                            on purpose (that is the documents' whole visual
+                            identity); a policy here would delete it with no
+                            error anywhere.
+      * `img-src 'self'`    kills every `data:` image, which is the only kind a
+                            document is allowed to carry.
+      * `require-trusted-types-for 'script'`
+                            makes assigning a string to `srcdoc` THROW, so
+                            documents stop rendering outright.
+
+    The frame is not relying on this page for its safety: it is sandboxed
+    without `allow-scripts` (so no script in a document can execute, full stop)
+    and carries its own strict `default-src 'none'` meta policy, injected by
+    `injectDocumentCsp`. A CSP here would be defence in depth for the Flutter
+    app itself — worth having, but it has to be written knowing it lands inside
+    the document frames too. The matching note lives in the renderer's library
+    doc; keep the two together.
+  -->
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <!-- iOS shows this under the home-screen tile, where it has room for one word. -->
+  <meta name="apple-mobile-web-app-title" content="Slopcafe">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!--
+    Favicon. Both this and every icon in the manifest are generated from the
+    same source art as the native launcher icons by `tool/gen_web_icons.dart`
+    (run it after editing assets/icon/app_icon.png). The favicon alone is
+    centre-cropped, because at 16px the source's margin costs more than it is
+    worth — the tool's header explains.
+  -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <!-- Matches `appTitle` in lib/l10n/app_en.arb — the app's one name. -->
+  <title>Slopcafe Operator</title>
+  <!--
+    manifest.json is JSON, so it cannot carry its own reasoning. The two
+    decisions in it that are not self-evident:
+
+      * `theme_color`/`background_color` are the light-mode `bg` token, the
+        same value as the first theme-color meta above. `background_color` is
+        what an installed app paints before Flutter has booted, so matching the
+        shell's background is what makes the launch look like a launch rather
+        than a flash.
+      * `orientation` is "any", not the `flutter create` default of
+        "portrait-primary". This is an operator console with a genuine
+        wide-window layout (the side rail above AppLayout.railBreakpoint), and
+        pinning an installed copy to portrait would throw that away on exactly
+        the devices — tablet, desktop — that have the room for it.
+  -->
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <!--
+    You can customize the "flutter_bootstrap.js" script.
+    This is useful to provide a custom configuration to the Flutter loader
+    or to give the user feedback during the initialization process.
+
+    For more details:
+    * https://docs.flutter.dev/platform-integration/web/initialization
+  -->
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

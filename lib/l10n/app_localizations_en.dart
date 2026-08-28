@@ -1253,6 +1253,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not launch browser — URL copied instead';
 
   @override
+  String get clipboardUnavailable =>
+      'Couldn\'t copy — this browser blocked clipboard access';
+
+  @override
   String get openInBrowserDialogTitle => 'Open in browser?';
 
   @override

@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api.dart';
+import 'http_adapter.dart';
 import 'secure_storage.dart';
 
 /// Slopcafe API Client.
@@ -75,6 +76,10 @@ const String kProbeRequestExtra = 'slopcafe.probe';
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio();
 
+  // Transport-level platform differences, all of which are browser-only — see
+  // `http_adapter.dart`. A no-op on native.
+  applyPlatformHttpAdapter(dio);
+
   // Custom Interceptor for Auth & Logging
   dio.interceptors.add(
     InterceptorsWrapper(
@@ -119,6 +124,25 @@ final dioProvider = Provider<Dio>((ref) {
         // about what the server may return, it only keeps the validator intact.
         // A caller that set its own Accept (a byte path asking for HTML, say)
         // knows better than this interceptor and is never overridden.
+        //
+        // ON THE WEB THIS IS A NO-OP, AND IT IS STILL THE RIGHT CODE. XHR
+        // already sends `Accept: */*` when the author sets none, so the browser
+        // was never the platform with the problem; setting it here just names
+        // the value the browser was going to send anyway. It is also free:
+        // `Accept` is CORS-safelisted, so writing it does not add a preflight,
+        // and XHR replaces the default rather than appending to it, so there is
+        // no doubled header. Deleting it would fix nothing and break native.
+        //
+        // What DOES take the ETag away in a browser is a different mechanism
+        // entirely, and the resemblance is a trap: a cross-origin response
+        // exposes only seven safelisted headers to script, and everything else
+        // reads back as null — no error, no console line. `etag` and
+        // `x-doc-current-version` have to be named in the deployment's
+        // `Access-Control-Expose-Headers` (they are — `CORS_EXPOSED_RESPONSE_HEADERS`
+        // in the agent-web-host repo's `src/cors.ts`, which says the same thing
+        // from the other side). So if version resolution ever goes quiet on the
+        // web, the answer is over there in the deployment's CORS config, and no
+        // amount of tightening this header will help.
         final hasAccept = options.headers.keys.any(
           (key) => key.trim().toLowerCase() == 'accept',
         );

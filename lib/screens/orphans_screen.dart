@@ -7,6 +7,7 @@ import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../l10n/l10n.dart';
 import '../providers/links_provider.dart';
+import '../widgets/app_button.dart';
 import '../widgets/doc_feed_card.dart';
 import '../widgets/press_card.dart';
 import '../widgets/section_header.dart';
@@ -42,7 +43,17 @@ class _OrphansScreenState extends ConsumerState<OrphansScreen> {
 
   Future<void> _reload() async {
     final next = ref.read(linkGraphServiceProvider).fetchOrphans();
-    setState(() => _orphans = next);
+    // A block body, not `setState(() => _orphans = next)`. An arrow closure
+    // returns the value it assigns — here a Future — and `setState` asserts
+    // against exactly that, on the assumption that a Future came back from an
+    // `async` callback doing its work in the wrong place. The assertion is
+    // debug-only, so this threw on every pull-to-refresh in a debug build and
+    // did nothing at all in a release one: the field was assigned either way.
+    // Found by the gesture test in `test/wide_layout_test.dart`, which is the
+    // only thing here that pulls the list down.
+    setState(() {
+      _orphans = next;
+    });
     await next.catchError((_) => const OrphanDocumentsResponse(documents: []));
   }
 
@@ -67,6 +78,17 @@ class _OrphansScreenState extends ConsumerState<OrphansScreen> {
               final docs = snapshot.data?.documents ?? const <DocumentListing>[];
 
               return ListView(
+                // Said out loud, although a vertical ListView with no
+                // controller is already given these physics by ScrollView's own
+                // default. The line is insurance with a name on it: add a
+                // ScrollController here — for a jump-to-top, or to drive
+                // pagination — and `primary` turns false, the default
+                // evaporates, and clamping physics refuse a drag whenever the
+                // content is shorter than the viewport. On this screen that is
+                // the *good* outcome, an empty worklist, as well as the error
+                // tile: the two states with nothing else to touch. Its two
+                // sibling worklists carry the same line for the same reason.
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
                   gutter,
                   topInset,
@@ -74,7 +96,28 @@ class _OrphansScreenState extends ConsumerState<OrphansScreen> {
                   AppSpacing.bottomInset,
                 ),
                 children: [
-                  BackHeader(l10n.orphansTitle, eyebrow: l10n.linkGraph),
+                  // The pointer's twin of the pull gesture. Flutter's
+                  // desktop/web scroll behaviour will not start a drag from a
+                  // mouse, so pull-to-refresh is touch-only; the shell's side
+                  // rail carries an explicit refresh for that reason, but a
+                  // pushed route covers the rail. Disabled while the fetch is
+                  // in flight — every tap re-issues the request, and the orphan
+                  // sweep is the most expensive read the app makes.
+                  Row(
+                    children: [
+                      Expanded(
+                        child: BackHeader(
+                          l10n.orphansTitle,
+                          eyebrow: l10n.linkGraph,
+                        ),
+                      ),
+                      AppIconButton(
+                        Icons.refresh,
+                        tooltip: l10n.refresh,
+                        onPressed: loading ? null : _reload,
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 8),
                   if (!loading && snapshot.hasError)
                     _tile(c, Icons.cloud_off, l10n.orphansLoadFailed,

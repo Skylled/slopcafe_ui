@@ -29,6 +29,34 @@ class SecureStorageService {
   // signed build (no Apple Developer team) cannot satisfy — every write fails
   // with errSecMissingEntitlement (-34018). mOptions is macOS-only, so iOS and
   // Android behaviour is unchanged.
+  //
+  // Web: no `wOptions`, deliberately, and the reasoning is written down here so
+  // it does not have to be re-derived. `flutter_secure_storage_web` keeps values
+  // in **localStorage** under `<publicKey>.<key>` — plus one bare `<publicKey>`
+  // entry holding the AES key it encrypts them with — and `WebOptions` defaults
+  // `publicKey` to the literal `'FlutterSecureStorage'`. localStorage is scoped
+  // by ORIGIN (scheme + host + port), not by path, so that default is shared
+  // with any *other* Flutter app using this plugin on the same origin. Two
+  // things would go wrong in that world: the other app's `deleteAll()` sweeps
+  // everything under the `FlutterSecureStorage.` prefix, which is our saved
+  // deployments; and a shared encryption key is what makes our ciphertext
+  // readable to it at all.
+  //
+  // We still do not set one, because neither half of that pays off here. Our
+  // key names are already app-scoped (`slopcafe_*`), so nothing collides by
+  // name; the harms above need a *second* flutter_secure_storage app co-hosted
+  // on this app's origin, which is not the shape this is deployed in; and the
+  // plugin has no migration for a `publicKey` change — flipping it silently
+  // orphans every value already written under the default, logging the operator
+  // out with their token stranded in localStorage under a prefix nothing reads.
+  // If a second app ever does share the origin, setting `wOptions` is the fix,
+  // and it has to be paired with re-entering the deployment.
+  //
+  // The web caveat that *is* real is unrelated to naming: the plugin encrypts
+  // through WebCrypto, which exists only in a secure context, so writes throw
+  // `UnsupportedError` when the app is served over plain http to anything but
+  // localhost. That is a deployment requirement (serve the app over https), not
+  // something an option here can fix.
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
     mOptions: MacOsOptions(usesDataProtectionKeychain: false),
   );

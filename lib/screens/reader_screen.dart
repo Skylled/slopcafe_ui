@@ -1,9 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
 
 import '../core/api_client.dart';
@@ -11,6 +8,8 @@ import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
 import '../core/document_cache.dart';
+import '../core/document_view/document_renderer.dart';
+import '../core/external_browser.dart';
 import '../core/format.dart';
 import '../api/api.dart';
 import '../core/links.dart';
@@ -29,11 +28,18 @@ import '../widgets/toast.dart';
 import 'document_list_screen.dart';
 
 /// ReaderScreen — the Cortado "plate". A full-bleed pushed route built around a
-/// single rendered WebView. The chrome is intentionally minimal — a compact
-/// top bar, a one-line title, a thin meta row and tappable tags — so the
-/// WebView (which scrolls internally) owns the majority of the screen. It
+/// single rendered document surface. The chrome is intentionally minimal — a
+/// compact top bar, a one-line title, a thin meta row and tappable tags — so
+/// the surface (which scrolls internally) owns the majority of the screen. It
 /// preserves the original offline cache + version-first conditional-GET
 /// strategy and all operator actions (now consolidated into the more-sheet).
+///
+/// The rendering itself belongs to [DocumentRenderer]
+/// (`lib/core/document_view/`), not to this screen: the injected CSP, the
+/// navigation policy and the macOS synthetic-base-load quirk all live behind
+/// that seam, shared with the Review screen. What stays here is everything
+/// about *which bytes* to render — the version-first cache, the conditional
+/// GET, the served-version reconciliation — and what a refused link means.
 class ReaderScreen extends ConsumerStatefulWidget {
   const ReaderScreen({super.key, required this.doc});
 
@@ -44,7 +50,9 @@ class ReaderScreen extends ConsumerStatefulWidget {
 }
 
 class _ReaderScreenState extends ConsumerState<ReaderScreen> {
-  late final WebViewController _webViewController;
+  /// Only constructed once a base URL resolves — see [_initBaseUrlAndWebview],
+  /// and the `_baseUrl != null` guards on every path that touches it.
+  late final DocumentRenderer _renderer;
   String? _baseUrl;
   bool _isLoadingBaseUrl = true;
   bool _isRevoking = false;
@@ -52,15 +60,6 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
 
   /// 0 == latest; any other value is a pinned historical version.
   int _selectedVersion = 0;
-
-  /// Armed around each programmatic `loadHtmlString(..., baseUrl: _baseUrl)`.
-  /// On macOS, WKWebView reports that synthetic load to the navigation
-  /// delegate as a request for the bare base URL — it must be allowed
-  /// through, or the reader intercepts its *own* content load (the WebView
-  /// stays blank and an "open in browser?" prompt appears). Real link taps
-  /// never run with this flag set. iOS/Android never fire the delegate for
-  /// loadHtmlString, so the flag simply stays armed until the next load there.
-  bool _expectSyntheticBaseLoad = false;
 
   late DocumentListing _currentDoc;
 
@@ -71,8 +70,18 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     _initBaseUrlAndWebview();
   }
 
+  @override
+  void dispose() {
+    // The renderer exists only when a base URL resolved; `_baseUrl` is assigned
+    // in the same synchronous step that builds it, so this guard is exactly the
+    // condition under which the `late final` above was initialised. Touching it
+    // otherwise would throw in dispose, which is the worst place to throw.
+    if (_baseUrl != null) _renderer.dispose();
+    super.dispose();
+  }
+
   // ----------------------------------------------------------------
-  // WebView + version-first offline cache (ported verbatim in logic)
+  // Document surface + version-first offline cache (ported verbatim in logic)
   // ----------------------------------------------------------------
 
   Future<void> _initBaseUrlAndWebview() async {
@@ -81,30 +90,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     _baseUrl = url;
 
     if (url != null) {
-      _webViewController = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.disabled)
-        ..setNavigationDelegate(
-          NavigationDelegate(
-            onNavigationRequest: (NavigationRequest request) {
-              final reqUrl = request.url;
-              if (reqUrl == 'about:blank' || reqUrl.startsWith('data:')) {
-                return NavigationDecision.navigate;
-              }
-              // The synthetic base-URL navigation of our own loadHtmlString
-              // (macOS WKWebView) — see [_expectSyntheticBaseLoad].
-              if (_expectSyntheticBaseLoad && _isBareBaseUrl(reqUrl)) {
-                _expectSyntheticBaseLoad = false;
-                return NavigationDecision.navigate;
-              }
-              // In-page anchor (#fragment) → let the WebView scroll natively.
-              if (_isSameDocumentFragment(reqUrl)) {
-                return NavigationDecision.navigate;
-              }
-              _handleNavigation(reqUrl);
-              return NavigationDecision.prevent;
-            },
-          ),
-        );
+      // The CSP, the JavaScript-off posture, the `about:blank`/`data:`
+      // allowances and the macOS synthetic-base-load quirk all live behind the
+      // seam now. What is left here is the one thing that is this screen's
+      // alone: a refused link is a navigation offer, resolved on-platform or
+      // confirmed out to a browser.
+      _renderer = DocumentRenderer(baseUrl: url, onLinkTap: _handleNavigation);
 
       await _loadHtmlIntoWebview();
     }
@@ -154,32 +145,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         .resolveListing(publicId: publicId, slug: slug);
   }
 
-  /// Whether [url] is exactly the configured base URL (modulo a trailing
-  /// slash) — the URL WKWebView reports for our own
-  /// `loadHtmlString(..., baseUrl:)` navigations on macOS.
-  bool _isBareBaseUrl(String url) {
-    final base = _baseUrl;
-    if (base == null) return false;
-    String norm(String u) => u.endsWith('/') ? u.substring(0, u.length - 1) : u;
-    return norm(url) == norm(base);
-  }
-
-  /// Whether [url] is an in-page anchor jump within the loaded document, i.e.
-  /// it differs from the base URL only by a `#fragment`. Those should scroll
-  /// natively rather than route through external/document navigation.
-  bool _isSameDocumentFragment(String url) {
-    final reqUri = Uri.tryParse(url);
-    if (reqUri == null || !reqUri.hasFragment || reqUri.fragment.isEmpty) {
-      return false;
-    }
-    final baseUri = _baseUrl != null ? Uri.tryParse(_baseUrl!) : null;
-    if (baseUri == null) return false;
-    String norm(String p) => p.isEmpty ? '/' : p;
-    return reqUri.scheme == baseUri.scheme &&
-        reqUri.host == baseUri.host &&
-        norm(reqUri.path) == norm(baseUri.path);
-  }
-
+  /// What to do with a link the document surface refused.
+  ///
+  /// The surface has already absorbed everything it handles natively (its own
+  /// content load, an in-page `#fragment` jump), so anything arriving here is a
+  /// real outbound link: an on-platform one resolves and pushes a new Reader, a
+  /// foreign one goes through the "open in browser?" confirmation.
   Future<void> _handleNavigation(String url) async {
     final reqUri = Uri.tryParse(url);
     if (reqUri == null) {
@@ -357,9 +328,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
     // the instant cached re-render — it would only flicker and reset the scroll
     // position before the fresh bytes arrive.
     if (!force && cachedHtml != null) {
-      final securedHtml = _injectCspMeta(cachedHtml);
-      _expectSyntheticBaseLoad = true;
-      await _webViewController.loadHtmlString(securedHtml, baseUrl: _baseUrl);
+      await _renderer.loadHtml(cachedHtml);
     }
 
     // Fetch fresh version from server in background/foreground
@@ -431,9 +400,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
       );
 
       // Render fresh HTML (now from the network, not the cache)
-      final securedHtml = _injectCspMeta(freshHtml);
-      _expectSyntheticBaseLoad = true;
-      await _webViewController.loadHtmlString(securedHtml, baseUrl: _baseUrl);
+      await _renderer.loadHtml(freshHtml);
     } on DioException catch (dioErr) {
       final statusCode = dioErr.response?.statusCode;
       if (statusCode == 404 || statusCode == 410) {
@@ -448,7 +415,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             : l10n.documentNotFoundHtmlBody;
 
         final errorHtml = _buildErrorHtml(errorTitle, errorMsg);
-        await _webViewController.loadHtmlString(errorHtml);
+        await _renderer.loadNotice(errorHtml);
       } else {
         // Network/connection/server error
         if (cachedHtml == null) {
@@ -456,7 +423,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             l10n.offlineConnectionError,
             l10n.couldNotRetrieve,
           );
-          await _webViewController.loadHtmlString(errorHtml);
+          await _renderer.loadNotice(errorHtml);
         }
       }
     } catch (e) {
@@ -465,18 +432,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           l10n.errorTitle,
           ApiError.describe(e),
         );
-        await _webViewController.loadHtmlString(errorHtml);
+        await _renderer.loadNotice(errorHtml);
       }
-    }
-  }
-
-  String _injectCspMeta(String html) {
-    const csp =
-        "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; img-src data:; style-src 'unsafe-inline' data:; font-src data:; base-uri 'none'; form-action 'none'\">";
-    if (html.contains('<head>')) {
-      return html.replaceFirst('<head>', '<head>\n$csp');
-    } else {
-      return '$csp\n$html';
     }
   }
 
@@ -535,39 +492,62 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   // Clipboard / browser helpers (ported)
   // ----------------------------------------------------------------
 
-  Future<void> _copyToClipboard(String text, String message) async {
-    await Clipboard.setData(ClipboardData(text: text));
-    if (!mounted) return;
-    showToast(context, message);
+  /// Puts [text] on the clipboard and says whether it landed.
+  ///
+  /// The `try` is not defensive padding: `Clipboard.setData` **can fail on the
+  /// web**, and only there. `navigator.clipboard` is a secure-context API, so
+  /// it is simply absent on any page served over plain `http` to anything but
+  /// `localhost`; Flutter's engine then falls back to the deprecated
+  /// `document.execCommand('copy')`, which browsers are free to refuse. A
+  /// refusal comes back as an error envelope on the platform channel — i.e. a
+  /// thrown `PlatformException` — and every call site here is an unawaited
+  /// `onTap` closure, so before this the failure was total silence: nothing on
+  /// the clipboard, no toast, nothing in the console. A copy that silently did
+  /// not happen is worse than a refused one, because the operator walks away
+  /// believing they hold a URL.
+  Future<bool> _copyToClipboard(String text, String message) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: text));
+    } catch (_) {
+      if (mounted) {
+        showToast(context, context.l10n.clipboardUnavailable, danger: true);
+      }
+      return false;
+    }
+    // Copied either way; the toast is just the acknowledgement, so a screen
+    // that went away in the meantime does not turn a success into a failure.
+    if (mounted) showToast(context, message);
+    return true;
   }
 
+  /// Sends [url] out of the app, and reports what actually happened.
+  ///
+  /// The platform ladder lives behind `lib/core/external_browser.dart` — on
+  /// the web it is a new tab, on mobile an external browser, on macOS `open` —
+  /// and this method owns only the part that needs a human: what to say, and
+  /// what to fall back to. The clipboard is that fallback, and the two failure
+  /// messages are deliberately different. "Could not launch browser" describes
+  /// a platform that had a way and failed; "URL copied — paste it in your
+  /// browser" describes one that never had a way, where there is nothing to
+  /// report as broken.
   Future<void> _openExternalBrowser(String url) async {
     final l10n = context.l10n;
-    try {
-      final uri = Uri.tryParse(url);
-      if (uri != null && (Platform.isAndroid || Platform.isIOS)) {
-        if (await canLaunchUrl(uri)) {
-          if (!mounted) return;
-          showToast(context, l10n.openingInBrowser);
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-          return;
-        }
-      }
+    final outcome = await openInExternalBrowser(url);
+    if (!mounted) return;
 
-      if (Platform.isMacOS) {
-        await Process.run('open', [url]);
-        if (!mounted) return;
-        showToast(context, l10n.openingInBrowser);
-      } else {
-        await Clipboard.setData(ClipboardData(text: url));
-        if (!mounted) return;
-        showToast(context, l10n.urlCopiedPaste);
-      }
-    } catch (e) {
-      await Clipboard.setData(ClipboardData(text: url));
-      if (!mounted) return;
-      showToast(context, l10n.couldNotLaunchBrowser, danger: true);
+    if (outcome == ExternalBrowserOutcome.opened) {
+      showToast(context, l10n.openingInBrowser);
+      return;
     }
+
+    // `_copyToClipboard` raises its own alarm when even this does not work, so
+    // there is no path here that ends in silence.
+    await _copyToClipboard(
+      url,
+      outcome == ExternalBrowserOutcome.unsupported
+          ? l10n.urlCopiedPaste
+          : l10n.couldNotLaunchBrowser,
+    );
   }
 
   // ----------------------------------------------------------------
@@ -1667,7 +1647,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         borderRadius: BorderRadius.circular(AppRadii.xl),
         boxShadow: c.shadow,
       ),
-      child: WebViewWidget(controller: _webViewController),
+      child: DocumentSurface(renderer: _renderer),
     );
   }
 

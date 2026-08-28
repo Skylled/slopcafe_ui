@@ -79,11 +79,17 @@ class _ChangesScreenState extends ConsumerState<ChangesScreen> {
           color: c.clay,
           backgroundColor: c.surface,
           child: ListView(
-            // Without this the list refuses drags whenever the content is
-            // shorter than the viewport (clamping physics), which would make
-            // pull-to-refresh unreachable in exactly the two states that need it
-            // — the error tile and the empty result, neither of which carries
-            // any other retry affordance.
+            // Keeps the list draggable when its content is shorter than the
+            // viewport — the error tile and the empty result, the two states
+            // pull-to-refresh matters most in and the two with no other retry
+            // affordance. Under clamping physics a short list refuses the drag
+            // outright and the RefreshIndicator never sees it.
+            //
+            // Redundant today, deliberately kept: ScrollView already defaults
+            // to these physics for a vertical list with no controller. The day
+            // this list acquires one, `primary` goes false and the default goes
+            // with it — silently, since nothing about the screen looks
+            // different until somebody pulls an empty list and nothing happens.
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.fromLTRB(
               gutter,
@@ -92,7 +98,27 @@ class _ChangesScreenState extends ConsumerState<ChangesScreen> {
               AppSpacing.bottomInset,
             ),
             children: [
-              BackHeader(l10n.changeFeed, eyebrow: l10n.thePass),
+              // The header carries an explicit refresh because the
+              // [RefreshIndicator] wrapping this list has no mouse gesture:
+              // Flutter's desktop/web scroll behaviour does not accept a drag
+              // from a pointer, so pull-to-refresh is touch-only. The shell
+              // answers that with a refresh action in its side rail
+              // (`app_shell.dart`), but a pushed route covers the rail — so a
+              // screen reached this way has to carry its own, or an operator
+              // with a mouse has no way at all to re-ask a question whose whole
+              // point is that the answer keeps changing.
+              Row(
+                children: [
+                  Expanded(
+                    child: BackHeader(l10n.changeFeed, eyebrow: l10n.thePass),
+                  ),
+                  AppIconButton(
+                    Icons.refresh,
+                    tooltip: l10n.refresh,
+                    onPressed: state.isLoading ? null : _reload,
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
               _WindowSegmented(value: state.window, onChanged: _setWindow),
               const SizedBox(height: 14),

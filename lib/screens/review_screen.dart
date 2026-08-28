@@ -1,13 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 import '../api/api.dart';
 import '../core/api_client.dart';
 import '../core/design/layout.dart';
 import '../core/design/tokens.dart';
 import '../core/design/typography.dart';
+import '../core/document_view/document_renderer.dart';
 import '../core/publication.dart';
 import '../core/review.dart';
 import '../core/secure_storage.dart';
@@ -24,27 +24,30 @@ import 'reader_screen.dart';
 /// Side-by-side review of a gated document: what readers are served today
 /// against what they would be served if the operator approved.
 ///
-/// **Two WebViews, not one.** The screen holds a live controller per side and
-/// swaps which one is painted, rather than driving a single WebView back and
-/// forth. That costs a second platform view for the lifetime of one pushed
-/// route, and buys three things a single-WebView tab switcher cannot have:
+/// **Two document surfaces, not one.** The screen holds a live
+/// [DocumentRenderer] per side and swaps which one is painted, rather than
+/// driving a single surface back and forth. That costs a second platform view
+/// for the lifetime of one pushed route, and buys three things a single-surface
+/// tab switcher cannot have:
 ///
 ///  1. **Each pane keeps its scroll offset.** The entire point of the switcher
-///     is flipping between the same passage in two versions. A shared WebView
+///     is flipping between the same passage in two versions. A shared surface
 ///     re-renders on every flip and lands back at the top, which makes the one
 ///     interaction this screen exists for useless past the first screenful.
-///  2. **A flip costs nothing.** No request, no `loadHtmlString`, no re-layout
-///     of untrusted HTML — just a change of painted child. Comparing means
+///  2. **A flip costs nothing.** No request, no re-load, no re-layout of
+///     untrusted HTML — just a change of painted child. Comparing means
 ///     flipping repeatedly and quickly, and a reload's worth of latency on each
 ///     one reads as the app stuttering.
 ///  3. **Failures stay local.** A version whose bytes are gone leaves its own
 ///     pane showing the error while the other still renders, so the operator can
 ///     see what *is* live even when the head won't load.
 ///
-/// The controller owns the underlying platform WebView — `WebViewWidget` only
+/// The renderer owns the underlying platform surface — [DocumentSurface] only
 /// displays it — so both sides load concurrently on open regardless of which is
 /// painted, and `IndexedStack` (which lays out every child, unlike `Offstage`)
-/// keeps the hidden one alive and warm.
+/// keeps the hidden one alive and warm. That ownership split is the seam's
+/// stated contract rather than an accident of `webview_flutter`, so it survives
+/// whatever a future platform implementation renders into.
 ///
 /// **Both panes read the same route shape**, `/d/:id/v/:n/raw`, including the
 /// live side, which `/d/:id/raw` would also have served. That is deliberate:
@@ -72,23 +75,22 @@ class ReviewScreen extends ConsumerStatefulWidget {
 
 enum _PaneStatus { loading, ready, failed }
 
-/// One side of the comparison: its version, its WebView, and how that load went.
+/// One side of the comparison: its version, its surface, and how that load went.
+///
+/// A renderer per pane, never one shared: besides keeping each pane's scroll and
+/// failures to itself, it is what keeps the macOS synthetic-base-load flag
+/// per-pane. The two sides load concurrently, so a single shared flag would let
+/// whichever load finished first disarm the other's and leave that pane
+/// intercepting its own content. That used to be a field here, maintained by
+/// hand; it now falls out of there being two renderers.
 class _Pane {
   _Pane({required this.side, required this.version});
 
   final ReviewSide side;
   final int version;
 
-  WebViewController? controller;
+  DocumentRenderer? renderer;
   _PaneStatus status = _PaneStatus.loading;
-
-  /// Armed around each programmatic `loadHtmlString(..., baseUrl:)`. On macOS,
-  /// WKWebView reports that synthetic load to the navigation delegate as a
-  /// request for the bare base URL; without letting it through, the pane
-  /// intercepts its own content load and stays blank. Same mechanism as the
-  /// Reader's flag, per pane — the two WebViews load independently, so one
-  /// shared flag would let whichever load finished first disarm the other's.
-  bool expectSyntheticBaseLoad = false;
 }
 
 class _ReviewScreenState extends ConsumerState<ReviewScreen> {
@@ -123,6 +125,14 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     _init();
   }
 
+  @override
+  void dispose() {
+    for (final pane in _panes) {
+      pane.renderer?.dispose();
+    }
+    super.dispose();
+  }
+
   Iterable<_Pane> get _panes => [_live, _latest];
 
   _Pane _paneFor(ReviewSide side) => side == ReviewSide.live ? _live : _latest;
@@ -134,7 +144,20 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
     if (url != null) {
       for (final pane in _panes) {
-        pane.controller = _buildController(pane);
+        // Identical security posture to the Reader — JavaScript off plus the
+        // injected strict CSP, both owned by the seam. A review surface is the
+        // last place to relax that: it is where an operator decides to put
+        // agent-authored bytes in front of the public.
+        //
+        // Link navigation is refused in both panes. Following one would replace
+        // the pane's content and destroy the comparison the operator set up,
+        // and there is no second surface here to open it into — so the URL is
+        // dropped and the refusal is stated. The Reader owns link traversal;
+        // this screen owns one document's two versions.
+        pane.renderer = DocumentRenderer(
+          baseUrl: url,
+          onLinkTap: (_) => _reportInertLink(),
+        );
       }
     }
 
@@ -146,73 +169,19 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     await Future.wait(_panes.map(_loadPane));
   }
 
-  WebViewController _buildController(_Pane pane) {
-    return WebViewController()
-      // Identical security posture to the Reader: document HTML is untrusted
-      // content authored by agents, so no JavaScript and a strict injected CSP.
-      // A review surface is the last place to relax that — it is where an
-      // operator is deciding to put those bytes in front of the public.
-      ..setJavaScriptMode(JavaScriptMode.disabled)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onNavigationRequest: (request) {
-            final url = request.url;
-            if (url == 'about:blank' || url.startsWith('data:')) {
-              return NavigationDecision.navigate;
-            }
-            if (pane.expectSyntheticBaseLoad && _isBareBaseUrl(url)) {
-              pane.expectSyntheticBaseLoad = false;
-              return NavigationDecision.navigate;
-            }
-            // In-page anchors scroll natively — they move within the version
-            // being reviewed, which is exactly what this screen is for.
-            if (_isSameDocumentFragment(url)) {
-              return NavigationDecision.navigate;
-            }
-            // Everything else is refused. Following a link would replace this
-            // pane's content and destroy the comparison the operator set up,
-            // and there is no second surface here to open it into. The Reader
-            // owns link traversal; this screen owns one document's two versions.
-            _reportInertLink();
-            return NavigationDecision.prevent;
-          },
-        ),
-      );
-  }
-
   void _reportInertLink() {
     if (!mounted) return;
     showToast(context, context.l10n.reviewLinksInert);
   }
 
-  bool _isBareBaseUrl(String url) {
-    final base = _baseUrl;
-    if (base == null) return false;
-    String norm(String u) => u.endsWith('/') ? u.substring(0, u.length - 1) : u;
-    return norm(url) == norm(base);
-  }
-
-  bool _isSameDocumentFragment(String url) {
-    final reqUri = Uri.tryParse(url);
-    if (reqUri == null || !reqUri.hasFragment || reqUri.fragment.isEmpty) {
-      return false;
-    }
-    final baseUri = _baseUrl != null ? Uri.tryParse(_baseUrl!) : null;
-    if (baseUri == null) return false;
-    String norm(String p) => p.isEmpty ? '/' : p;
-    return reqUri.scheme == baseUri.scheme &&
-        reqUri.host == baseUri.host &&
-        norm(reqUri.path) == norm(baseUri.path);
-  }
-
-  /// Fetch one version's rendered bytes and paint them into that pane's WebView.
+  /// Fetch one version's rendered bytes and paint them into that pane's surface.
   ///
   /// No `If-None-Match` and no cache write: the panes are a live comparison, and
   /// the body cache holds one version per document by construction (see the
   /// class doc).
   Future<void> _loadPane(_Pane pane) async {
-    final controller = pane.controller;
-    if (controller == null || _baseUrl == null) return;
+    final renderer = pane.renderer;
+    if (renderer == null || _baseUrl == null) return;
     final l10n = context.l10n;
 
     try {
@@ -224,17 +193,15 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
       _noteHeadMoved(response.headers);
 
-      final html = _injectCspMeta(response.data as String);
-      pane.expectSyntheticBaseLoad = true;
-      await controller.loadHtmlString(html, baseUrl: _baseUrl);
+      await renderer.loadHtml(response.data as String);
       if (!mounted) return;
       setState(() => pane.status = _PaneStatus.ready);
     } catch (e) {
       if (!mounted) return;
       // The failure is rendered *into* the pane rather than swapping the
-      // WebView out for an error widget: the platform view stays alive, the
+      // surface out for an error widget: the platform view stays alive, the
       // other pane is untouched, and a retry has somewhere to paint.
-      await controller.loadHtmlString(
+      await renderer.loadNotice(
         _buildErrorHtml(
           l10n.reviewPaneLoadFailed(pane.version),
           ApiError.describe(e),
@@ -262,15 +229,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     if (current == null || current <= _latest.version) return;
     if (!mounted || _headMovedTo == current) return;
     setState(() => _headMovedTo = current);
-  }
-
-  String _injectCspMeta(String html) {
-    const csp =
-        "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; img-src data:; style-src 'unsafe-inline' data:; font-src data:; base-uri 'none'; form-action 'none'\">";
-    if (html.contains('<head>')) {
-      return html.replaceFirst('<head>', '<head>\n$csp');
-    }
-    return '$csp\n$html';
   }
 
   String _buildErrorHtml(String title, String message) {
@@ -529,7 +487,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   }
 
   /// The two panes. `IndexedStack` lays out both children and paints one, so the
-  /// hidden WebView stays mounted, loaded and scrolled where the operator left
+  /// hidden surface stays mounted, loaded and scrolled where the operator left
   /// it. Children are built from `ReviewSide.values` and indexed by lookup, so
   /// nothing depends on the enum's declaration order.
   Widget _buildPanes(AppColors c) {
@@ -543,12 +501,12 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   }
 
   Widget _buildPane(AppColors c, _Pane pane) {
-    final controller = pane.controller;
-    if (controller == null) return const SizedBox.shrink();
+    final renderer = pane.renderer;
+    if (renderer == null) return const SizedBox.shrink();
     return Stack(
       children: [
-        Positioned.fill(child: WebViewWidget(controller: controller)),
-        // Painted over the WebView rather than replacing it, so the platform
+        Positioned.fill(child: DocumentSurface(renderer: renderer)),
+        // Painted over the surface rather than replacing it, so the platform
         // view is never torn down and rebuilt between loading and ready.
         if (pane.status == _PaneStatus.loading)
           Positioned.fill(
