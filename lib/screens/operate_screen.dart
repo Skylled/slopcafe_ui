@@ -250,14 +250,14 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
               OpStat(
                 icon: Icons.description_outlined,
                 label: l10n.liveDocuments,
-                value: '$liveDocs',
+                value: '${health.d1Documents ?? liveDocs}',
                 sub: l10n.publicCountSub(publicDocs),
               ),
               OpStat(
                 icon: Icons.person_outline,
                 label: l10n.activeAgents,
                 value: '$activeAgents',
-                sub: l10n.ofCountSub(agents.length),
+                sub: l10n.ofCountSub(health.d1Agents ?? agents.length),
               ),
               OpStat(
                 icon: Icons.key_outlined,
@@ -813,6 +813,39 @@ class _OperateScreenState extends ConsumerState<OperateScreen> {
               }),
             ),
           ),
+        if (state.hasMore) ...[
+          const SizedBox(height: 12),
+          AppButton(
+            l10n.changeFeedMore,
+            icon: Icons.expand_more,
+            expand: true,
+            onPressed: state.isLoading
+                ? null
+                : () => ref
+                    .read(documentsListProvider.notifier)
+                    .loadNextPage(),
+          ),
+        ],
+        if (state.isLoading && docs.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Center(
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: c.clay,
+              ),
+            ),
+          ),
+        ],
+        if (state.hasError && docs.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Text(
+            state.errorMessage ?? l10n.couldNotLoadDocuments,
+            style: AppText.small.copyWith(color: c.red),
+          ),
+        ],
       ],
     );
   }

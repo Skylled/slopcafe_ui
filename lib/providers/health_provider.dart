@@ -14,11 +14,15 @@ class HealthState {
   final String? sanitizerVersion;
   final int? storageCapBytes;
   final int? storageUsedBytes;
+  final int? d1Documents;
+  final int? d1Agents;
 
   const HealthState({
     this.sanitizerVersion,
     this.storageCapBytes,
     this.storageUsedBytes,
+    this.d1Documents,
+    this.d1Agents,
   });
 }
 
@@ -56,6 +60,8 @@ class HealthNotifier extends Notifier<HealthState> {
         sanitizerVersion: health.sanitizerVersion,
         storageCapBytes: health.storageCapBytes,
         storageUsedBytes: used is int ? used : int.tryParse('${used ?? ''}'),
+        d1Documents: health.d1.documents,
+        d1Agents: health.d1.agents,
       );
     } catch (_) {
       // Health is non-essential; keep whatever we last had.

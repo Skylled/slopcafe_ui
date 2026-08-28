@@ -8,6 +8,7 @@ import '../core/format.dart';
 import '../l10n/l10n.dart';
 import '../api/api.dart';
 import '../providers/document_provider.dart';
+import '../widgets/app_button.dart';
 import '../widgets/doc_feed_card.dart';
 import '../widgets/press_card.dart';
 import '../widgets/section_header.dart';
@@ -105,6 +106,39 @@ class DocumentListScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+            if (docState.hasMore && tag == null) ...[
+              const SizedBox(height: 4),
+              AppButton(
+                context.l10n.changeFeedMore,
+                icon: Icons.expand_more,
+                expand: true,
+                onPressed: docState.isLoading
+                    ? null
+                    : () => ref
+                        .read(documentsListProvider.notifier)
+                        .loadNextPage(),
+              ),
+            ],
+            if (docState.isLoading && docs.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: c.clay,
+                  ),
+                ),
+              ),
+            ],
+            if (docState.hasError && docs.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                docState.errorMessage ?? context.l10n.couldNotLoadDocuments,
+                style: AppText.small.copyWith(color: c.red),
+              ),
+            ],
           ],
         ),
       ),

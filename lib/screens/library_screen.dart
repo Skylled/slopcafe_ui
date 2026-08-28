@@ -11,6 +11,7 @@ import '../l10n/l10n.dart';
 import '../api/api.dart';
 import '../providers/agent_provider.dart';
 import '../providers/document_provider.dart';
+import '../providers/health_provider.dart';
 import '../providers/refresh.dart';
 import '../widgets/doc_feed_card.dart';
 import '../widgets/press_card.dart';
@@ -39,8 +40,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   @override
   void initState() {
     super.initState();
-    // Trigger the initial loads for both lists when they're empty. Provider
-    // mutation must happen after the first frame, never during build.
+    // Trigger the initial loads for lists when they're empty, and fetch health
+    // for fleet counts. Provider mutation must happen after the first frame,
+    // never during build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (ref.read(documentsListProvider).documents.isEmpty) {
@@ -49,6 +51,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       if (ref.read(agentsListProvider).agents.isEmpty) {
         ref.read(agentsListProvider.notifier).loadNextPage(clear: true);
       }
+      ref.read(healthProvider.notifier).load();
     });
   }
 
@@ -69,6 +72,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final c = context.colors;
     final docState = ref.watch(documentsListProvider);
     final agentState = ref.watch(agentsListProvider);
+    final health = ref.watch(healthProvider);
 
     // Live = non-revoked documents (mirrors mockup's `DOCS.filter(!revokedAt)`).
     final live = docState.documents.where((d) => !d.isRevoked).toList();
@@ -119,7 +123,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 _offlineBanner(c),
                 const SizedBox(height: 14),
               ],
-              _tickers(c, live.length, agentState.agents.length, publicCount),
+              _tickers(
+                c,
+                health.d1Documents ?? live.length,
+                health.d1Agents ?? agentState.agents.length,
+                publicCount,
+              ),
               const SizedBox(height: 26),
               if (featured != null) ...[
                 RiseIn(

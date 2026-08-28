@@ -23,6 +23,9 @@ class DocumentsListState {
     this.isOffline = false,
   });
 
+  /// Whether another page can be requested.
+  bool get hasMore => nextCursor != null && nextCursor!.isNotEmpty;
+
   DocumentsListState copyWith({
     List<DocumentListing>? documents,
     String? Function()? nextCursor,
