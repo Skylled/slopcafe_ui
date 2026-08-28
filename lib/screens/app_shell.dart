@@ -19,12 +19,11 @@ import '../widgets/toast.dart';
 import 'library_screen.dart';
 import 'reader_screen.dart';
 import 'search_screen.dart';
-import 'operate_screen.dart';
 import 'settings_screen.dart';
 
-/// The three-tab Cortado app shell, adaptive to the window width:
+/// The two-tab Cortado app shell, adaptive to the window width:
 ///
-/// * **Compact** (phones): an [IndexedStack] of Library / Search / Operate
+/// * **Compact** (phones): an [IndexedStack] of Library / Search
 ///   under a floating pill tab bar (mirrors the old `MainNavigationShell`).
 /// * **Expanded** (tablets / desktop, `>= AppLayout.railBreakpoint`): the same
 ///   stack beside a left side rail carrying the tabs plus desktop affordances —
@@ -158,7 +157,7 @@ class _AppShellState extends ConsumerState<AppShell> {
 
     final content = IndexedStack(
       index: _index,
-      children: const [LibraryScreen(), SearchScreen(), OperateScreen()],
+      children: const [LibraryScreen(), SearchScreen()],
     );
 
     if (context.isExpandedLayout) {
@@ -201,12 +200,11 @@ class _AppShellState extends ConsumerState<AppShell> {
 const _tabIcons = [
   Icons.coffee_outlined,
   Icons.search,
-  Icons.notifications_outlined,
 ];
 
 List<String> _tabLabels(BuildContext context) {
   final l10n = context.l10n;
-  return [l10n.tabLibrary, l10n.tabSearch, l10n.tabOperate];
+  return [l10n.tabLibrary, l10n.tabSearch];
 }
 
 // ============================================================
