@@ -12,33 +12,32 @@ import '../l10n/l10n.dart';
 import '../providers/instances_provider.dart';
 import '../widgets/app_button.dart';
 import '../widgets/cafe_logo.dart';
-import '../widgets/instance_switcher.dart';
 import '../widgets/section_header.dart';
-import '../widgets/sheets.dart';
 import '../widgets/toast.dart';
 
-/// The Pass — operator connection setup, and the manager for every saved
-/// Slopcafe deployment.
+/// The Pass — operator connection setup for Insight's one hardcoded
+/// deployment ([kInsightBaseUrl]).
 ///
 /// Pushed route (its own Scaffold + AppBar titled "Connection"), or the
-/// first-run destination when nothing is configured yet ([firstRun]).
+/// first-run destination when no token is saved yet ([firstRun]).
 ///
-/// Two things share the screen. The **instance list** is the set of saved
-/// deployments: tap one to switch, or use its menu to edit or forget it. The
-/// **form** below composes a new instance, or edits the one selected from that
-/// list. The double-probe connection test (`GET /healthz`, then
-/// `GET /admin/agents?limit=1` with a Bearer token) is unchanged, and still runs
-/// against whatever is typed in the form rather than against what is saved — so
-/// a new deployment can be proven before it is committed.
-///
-/// The quick switcher in the shell ([showInstanceSwitcher]) covers the frequent
-/// case; this screen is where the set itself is curated.
+/// Insight is a read-only fork of the generic operator app (see the project
+/// CLAUDE.md) and this screen is where that shows up most: there is no Base
+/// URL field and no saved-instance list to manage — [SlopcafeInstance] and
+/// [InstanceSet] underneath still model a set of deployments, seeded by
+/// [SecureStorageService.load] to exactly one, but nothing here lets an
+/// operator add a second. The form is just a token, tested against
+/// [kInsightBaseUrl] with a reader-safe probe (`GET /d?limit=1` — *not*
+/// `/admin/agents`, which 401s a valid reader token) and saved with
+/// [InstancesNotifier.edit]. Signing out ([InstancesNotifier.signOut]) clears
+/// the token without discarding the instance, so there is always something to
+/// sign back into.
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key, this.firstRun = false});
 
-  /// True when this is the first-launch gate rather than a pushed route: there
-  /// is no instance list to show, no route to pop back to, and saving hands off
-  /// to `RootGate`, which swaps in the shell as soon as an instance exists.
+  /// True when this is the first-launch gate rather than a pushed route:
+  /// there is no route to pop back to, and saving hands off to `RootGate`,
+  /// which swaps in the shell as soon as the hardcoded instance has a token.
   final bool firstRun;
 
   @override
@@ -47,8 +46,6 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _labelController = TextEditingController();
-  final _urlController = TextEditingController();
   final _tokenController = TextEditingController();
   bool _obscureToken = true;
   bool _testingConnection = false;
@@ -56,43 +53,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String? _testResult;
   bool _resultIsError = false;
 
-  /// The instance the form is editing, or null when it is composing a new one.
-  /// This is the screen's one mode bit: it decides the form's header, its
-  /// primary button, and whether saving upserts or appends.
-  String? _editingId;
-
   @override
   void dispose() {
-    _labelController.dispose();
-    _urlController.dispose();
     _tokenController.dispose();
     super.dispose();
-  }
-
-  /// Load [instance] into the form for editing.
-  void _beginEdit(SlopcafeInstance instance) {
-    setState(() {
-      _editingId = instance.id;
-      _labelController.text = instance.label;
-      _urlController.text = instance.baseUrl;
-      _tokenController.text = instance.operatorToken;
-      // A probe result describes the credentials that were on screen when it
-      // ran, so it is stale the moment the form is repopulated.
-      _testResult = null;
-      _resultIsError = false;
-    });
-  }
-
-  /// Return the form to compose-a-new-instance mode.
-  void _resetForm() {
-    setState(() {
-      _editingId = null;
-      _labelController.clear();
-      _urlController.clear();
-      _tokenController.clear();
-      _testResult = null;
-      _resultIsError = false;
-    });
   }
 
   Future<void> _testConnection() async {
@@ -105,25 +69,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     });
 
     final dio = ref.read(dioProvider);
-    final url = _urlController.text.trim();
     final token = _tokenController.text.trim();
 
     try {
-      // Both probes address `url` absolutely and carry their own token, so the
-      // test proves the credentials *in the form* rather than the ones already
-      // saved — which is what lets a second deployment be verified before it is
-      // committed, while some other instance is still the active one.
+      // Both probes carry their own token and address the hardcoded instance
+      // absolutely, so the test proves the credential *typed into the form*
+      // rather than whatever is already saved.
       final probeOptions = Options(extra: const {kProbeRequestExtra: true});
 
-      // 1. Health Probe (unauthenticated).
+      // 1. Health probe (unauthenticated).
       final healthResponse = await dio.get(
-        '$url/healthz',
+        '$kInsightBaseUrl/healthz',
         options: probeOptions,
       );
 
       // 2. Auth Probe (Bearer token).
       final authResponse = await dio.get(
-        '$url/admin/agents?limit=1',
+        '$kInsightBaseUrl/admin/agents?limit=1',
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
           extra: const {kProbeRequestExtra: true},
@@ -164,98 +126,57 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  /// Commit the form — as an edit to [_editingId], or as a new instance.
+  /// Save the typed token onto the hardcoded instance.
   ///
-  /// Either path reloads the fleet against the affected deployment (see
-  /// [InstancesNotifier]), so this awaits real network work and holds the
-  /// buttons disabled while it runs.
-  Future<void> _saveSettings() async {
+  /// Reloads the fleet against it (see [InstancesNotifier.edit]), so this
+  /// awaits real network work and holds the buttons disabled while it runs —
+  /// which is also what proves the token beyond the Test Connection probe.
+  Future<void> _signIn() async {
     if (!_formKey.currentState!.validate()) return;
     final l10n = context.l10n;
     final navigator = Navigator.of(context);
-    final notifier = ref.read(instancesProvider.notifier);
-    final editingId = _editingId;
+    final activeId = ref.read(instancesProvider).value?.activeId;
+    // Always present once `instancesProvider` has loaded — `SecureStorageService.load`
+    // seeds the hardcoded instance whenever nothing else is persisted, so
+    // there is no "no instance to sign into" state to guard against here in
+    // practice. The check is defensive, not reachable.
+    if (activeId == null) return;
 
     setState(() => _saving = true);
-    String label;
     try {
-      if (editingId != null) {
-        await notifier.edit(
-          id: editingId,
-          baseUrl: _urlController.text,
-          operatorToken: _tokenController.text,
-          label: _labelController.text,
-        );
-        label =
-            ref.read(instancesProvider).value?.byId(editingId)?.label ??
-            _labelController.text;
-      } else {
-        final added = await notifier.add(
-          baseUrl: _urlController.text,
-          operatorToken: _tokenController.text,
-          label: _labelController.text,
-        );
-        label = added.label;
-      }
+      await ref
+          .read(instancesProvider.notifier)
+          .edit(
+            id: activeId,
+            baseUrl: kInsightBaseUrl,
+            operatorToken: _tokenController.text,
+          );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
     if (!mounted) return;
 
-    showToast(
-      context,
-      editingId != null
-          ? l10n.instanceUpdated(label)
-          : l10n.instanceAdded(label),
-    );
+    showToast(context, l10n.connectionSaved);
 
     if (widget.firstRun) {
       // `RootGate` watches the same provider and swaps in the shell on its own
-      // as soon as an instance exists — there is nothing to pop back to here.
+      // as soon as the instance has a token — there is nothing to pop back to
+      // here.
       return;
     }
-    if (editingId != null) {
-      _resetForm();
-    } else {
-      navigator.maybePop();
-    }
+    navigator.maybePop();
   }
 
-  Future<void> _switchTo(SlopcafeInstance instance) async {
+  Future<void> _signOut() async {
     final l10n = context.l10n;
-    setState(() => _saving = true);
-    try {
-      await ref.read(instancesProvider.notifier).switchTo(instance.id);
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
+    await ref.read(instancesProvider.notifier).signOut();
     if (!mounted) return;
-    showToast(context, l10n.switchedToInstance(instance.label));
-  }
-
-  Future<void> _removeInstance(SlopcafeInstance instance) async {
-    final l10n = context.l10n;
-    final confirmed = await showConfirmSheet(
-      context,
-      title: l10n.removeInstanceTitle,
-      body: Text(l10n.removeInstanceBody(instance.label)),
-      cta: l10n.removeInstance,
-      danger: true,
-    );
-    if (!confirmed || !mounted) return;
-
-    await ref.read(instancesProvider.notifier).remove(instance.id);
-    if (_editingId == instance.id) _resetForm();
-    if (!mounted) return;
-    showToast(context, l10n.instanceRemoved(instance.label));
-  }
-
-  Future<void> _clearAll() async {
-    final l10n = context.l10n;
-    await ref.read(instancesProvider.notifier).clearAll();
-    if (!mounted) return;
-    _resetForm();
-    showToast(context, l10n.secureStorageCleared);
+    setState(() {
+      _tokenController.clear();
+      _testResult = null;
+      _resultIsError = false;
+    });
+    showToast(context, l10n.signedOut);
   }
 
   @override
@@ -265,10 +186,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final connectionState = ref.watch(connectionStateProvider);
     final isUnauthorized =
         connectionState.status == ConnectionStatus.unauthorized;
-    final set = ref.watch(instancesProvider).value;
-    final instances = set?.instances ?? const <SlopcafeInstance>[];
-    final activeId = set?.activeId;
-    final editing = _editingId == null ? null : set?.byId(_editingId!);
+    final activeInstance = ref.watch(activeInstanceProvider);
+    final isConfigured = activeInstance?.operatorToken.isNotEmpty ?? false;
     final busy = _testingConnection || _saving;
 
     return Scaffold(
@@ -301,88 +220,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               _IntroCard(),
               const SizedBox(height: AppSpacing.xxl),
 
-              // ---- Saved instances -------------------------------------
-              // Hidden on first run, where the list is necessarily empty and a
-              // header over nothing is just noise.
-              if (instances.isNotEmpty) ...[
-                SectionHeader(l10n.instancesSection),
-                for (final instance in instances) ...[
-                  InstanceRow(
-                    instance: instance,
-                    active: instance.id == activeId,
-                    onTap: busy ? null : () => _switchTo(instance),
-                    trailing: _InstanceMenu(
-                      enabled: !busy,
-                      onEdit: () => _beginEdit(instance),
-                      onRemove: () => _removeInstance(instance),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                ],
-                const SizedBox(height: AppSpacing.xl),
-              ] else if (!widget.firstRun) ...[
-                Text(
-                  l10n.noInstancesYet,
-                  style: AppText.body.copyWith(color: c.textDim),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-              ],
-
-              // ---- Add / edit form -------------------------------------
-              Row(
-                children: [
-                  Expanded(
-                    child: SectionHeader(
-                      editing != null
-                          ? l10n.editInstanceSection(editing.label)
-                          : instances.isEmpty
-                          ? l10n.credentialsSection
-                          : l10n.addInstanceSection,
-                    ),
-                  ),
-                  if (editing != null)
-                    TextButton(
-                      onPressed: busy ? null : _resetForm,
-                      child: Text(l10n.cancelEdit),
-                    ),
-                ],
-              ),
-              _FieldLabel(l10n.instanceLabelLabel),
-              const SizedBox(height: AppSpacing.sm),
-              TextFormField(
-                controller: _labelController,
-                autocorrect: false,
-                style: AppText.body.copyWith(color: c.text),
-                decoration: InputDecoration(
-                  hintText: l10n.instanceLabelHint,
-                  prefixIcon: const Icon(Icons.badge_outlined),
-                ),
-                // Deliberately not required: a blank name falls back to the
-                // host, which is a better default than refusing the save.
-              ),
-              const SizedBox(height: AppSpacing.lg),
+              // ---- The hardcoded instance ------------------------------
+              // Read-only: Insight talks to exactly one deployment, so there
+              // is nothing here to type or change.
+              SectionHeader(l10n.credentialsSection),
               _FieldLabel(l10n.baseUrlLabel),
               const SizedBox(height: AppSpacing.sm),
-              TextFormField(
-                controller: _urlController,
-                keyboardType: TextInputType.url,
-                autocorrect: false,
-                style: AppText.body.copyWith(color: c.text),
-                decoration: InputDecoration(
-                  hintText: l10n.baseUrlHint,
-                  prefixIcon: const Icon(Icons.link),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return l10n.baseUrlRequired;
-                  }
-                  if (!value.startsWith('http://') &&
-                      !value.startsWith('https://')) {
-                    return l10n.baseUrlInvalidScheme;
-                  }
-                  return null;
-                },
-              ),
+              const _FixedBaseUrl(),
               const SizedBox(height: AppSpacing.lg),
               _FieldLabel(l10n.operatorTokenLabel),
               const SizedBox(height: AppSpacing.sm),
@@ -432,16 +276,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Expanded(
                     child: AppButton(
                       _saving
-                          ? l10n.switchingInstance
-                          : editing != null
+                          ? l10n.saving
+                          : isConfigured
                           ? l10n.saveInstanceButton
-                          : instances.isEmpty
-                          ? l10n.saveAndContinue
-                          : l10n.addInstanceButton,
+                          : l10n.saveAndContinue,
                       variant: AppBtnVariant.primary,
                       icon: Icons.check,
                       expand: true,
-                      onPressed: busy ? null : _saveSettings,
+                      onPressed: busy ? null : _signIn,
                     ),
                   ),
                 ],
@@ -450,10 +292,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(height: AppSpacing.xl),
                 _ResultPanel(text: _testResult!, isError: _resultIsError),
               ],
-              const SizedBox(height: AppSpacing.xxl),
-              Divider(color: c.lineSoft, height: 1),
-              const SizedBox(height: AppSpacing.xl),
-              _DangerCard(onClear: _clearAll),
+              if (isConfigured) ...[
+                const SizedBox(height: AppSpacing.xxl),
+                Divider(color: c.lineSoft, height: 1),
+                const SizedBox(height: AppSpacing.xl),
+                _SignOutCard(onSignOut: busy ? null : _signOut),
+              ],
             ],
           ),
         ),
@@ -510,6 +354,41 @@ class _IntroCard extends StatelessWidget {
           Text(
             context.l10n.connectionIntroBody,
             style: AppText.body.copyWith(color: c.textDim),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Read-only display of [kInsightBaseUrl] — Insight has no field to type a
+/// Base URL into, only this label of the one deployment it talks to.
+class _FixedBaseUrl extends StatelessWidget {
+  const _FixedBaseUrl();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: c.surface2,
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        border: Border.all(color: c.lineSoft),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.link, size: 18, color: c.textDim),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: SelectableText(
+              kInsightBaseUrl,
+              style: AppText.mono.copyWith(color: c.text),
+            ),
           ),
         ],
       ),
@@ -617,10 +496,12 @@ class _ResultPanel extends StatelessWidget {
   }
 }
 
-/// Destructive zone: clears all locally-stored secure credentials.
-class _DangerCard extends StatelessWidget {
-  const _DangerCard({required this.onClear});
-  final VoidCallback onClear;
+/// Clears the saved operator token, keeping the hardcoded instance — "for my
+/// own sanity" per the operator who asked for it to stay. Shown only once a
+/// token is actually saved, since there is nothing to sign out of otherwise.
+class _SignOutCard extends StatelessWidget {
+  const _SignOutCard({required this.onSignOut});
+  final VoidCallback? onSignOut;
 
   @override
   Widget build(BuildContext context) {
@@ -630,76 +511,29 @@ class _DangerCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: c.surface,
         borderRadius: BorderRadius.circular(AppRadii.xl),
-        border: Border.all(color: c.red.withValues(alpha: 0.22)),
+        border: Border.all(color: c.lineSoft),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            context.l10n.clearSecureStorageTitle,
+            context.l10n.signOutTitle,
             style: AppText.title.copyWith(color: c.text),
           ),
           const SizedBox(height: 4),
           Text(
-            context.l10n.clearSecureStorageBody,
+            context.l10n.signOutBody,
             style: AppText.small.copyWith(color: c.textDim),
           ),
           const SizedBox(height: AppSpacing.md),
           AppButton(
-            context.l10n.clearSecureStorageButton,
-            variant: AppBtnVariant.danger,
-            icon: Icons.delete_outline,
-            onPressed: onClear,
+            context.l10n.signOutButton,
+            variant: AppBtnVariant.outline,
+            icon: Icons.logout,
+            onPressed: onSignOut,
           ),
         ],
       ),
     );
   }
 }
-
-/// The per-instance overflow menu in the Settings list: edit, or forget.
-///
-/// Switching is the row tap, so the menu carries only the two actions that are
-/// not the common case — which keeps a mis-aimed tap on a busy list from
-/// forgetting a deployment.
-class _InstanceMenu extends StatelessWidget {
-  const _InstanceMenu({
-    required this.enabled,
-    required this.onEdit,
-    required this.onRemove,
-  });
-
-  final bool enabled;
-  final VoidCallback onEdit;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final l10n = context.l10n;
-    return PopupMenuButton<_InstanceAction>(
-      enabled: enabled,
-      tooltip: '',
-      icon: Icon(Icons.more_horiz, size: 20, color: c.textDim),
-      onSelected: (action) => switch (action) {
-        _InstanceAction.edit => onEdit(),
-        _InstanceAction.remove => onRemove(),
-      },
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: _InstanceAction.edit,
-          child: Text(l10n.editInstance),
-        ),
-        PopupMenuItem(
-          value: _InstanceAction.remove,
-          child: Text(
-            l10n.removeInstance,
-            style: AppText.body.copyWith(color: c.red),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-enum _InstanceAction { edit, remove }

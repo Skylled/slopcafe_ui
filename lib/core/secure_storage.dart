@@ -80,19 +80,30 @@ class SecureStorageService {
   InstanceSet? _cached;
 
   /// Load the saved set, migrating a pre-multi-instance install on first call.
+  ///
+  /// Insight has no Base URL field for an operator to fall back on, so
+  /// "nothing usable persisted" can never resolve to [InstanceSet.empty] —
+  /// that would strand `SettingsScreen` unable to create anything to sign
+  /// into. Every path that used to return empty (nothing under the storage
+  /// key, unparseable JSON, or a parse that dropped every record) instead
+  /// seeds [kInsightBaseUrl] via [_migrateLegacy], which only migrates real
+  /// legacy credentials and otherwise seeds. See [InstancesNotifier.signOut]
+  /// for how a token gets cleared without losing the instance the same way.
   Future<InstanceSet> load() async {
     final cached = _cached;
     if (cached != null) return cached;
 
     final raw = await _storage.read(key: _keyInstances);
     if (raw != null && raw.isNotEmpty) {
+      InstanceSet parsed;
       try {
-        return _cached = InstanceSet.fromJson(json.decode(raw));
+        parsed = InstanceSet.fromJson(json.decode(raw));
       } catch (_) {
         // Unparseable JSON reads as "nothing saved" rather than throwing on
         // every launch — InstanceSet.fromJson is tolerant for the same reason.
-        return _cached = const InstanceSet.empty();
+        parsed = const InstanceSet.empty();
       }
+      if (parsed.isNotEmpty) return _cached = parsed;
     }
 
     return _cached = await _migrateLegacy();
@@ -109,13 +120,15 @@ class SecureStorageService {
   /// (they were only ever this deployment's).
   ///
   /// Only a *complete* pair migrates. A half-configured install (a Base URL with
-  /// no token) is one the old `RootGate` already treated as unconfigured and
-  /// routed to setup, so nothing that was reachable before is lost.
+  /// no token) is one the old `RootGate` already treated as unconfigured, and on
+  /// Insight there is no field left to complete it with — so rather than
+  /// stranding that install, this falls through to [_seedInsightInstance] the
+  /// same as a true fresh install.
   Future<InstanceSet> _migrateLegacy() async {
     final url = await _storage.read(key: _legacyKeyBaseUrl);
     final token = await _storage.read(key: _legacyKeyOperatorToken);
     if (url == null || url.isEmpty || token == null || token.isEmpty) {
-      return const InstanceSet.empty();
+      return _seedInsightInstance();
     }
 
     final rawIds = await _storage.read(key: _legacyKeyUnboundOAuthClientIds);
@@ -139,6 +152,24 @@ class SecureStorageService {
     await _storage.delete(key: _legacyKeyOperatorToken);
     await _storage.delete(key: _legacyKeyUnboundOAuthClientIds);
     return set;
+  }
+
+  /// A fresh, unpersisted set holding just [kInsightBaseUrl] with an empty
+  /// token. [newInstanceId] is a pure function of the host, so this is
+  /// deterministic: every cold [load] with nothing usable in storage seeds
+  /// the identical id, and the first real write (signing in, via
+  /// [updateInstance]) is what actually persists it. Not writing here on every
+  /// read is deliberate — a read should not have a storage side effect, on web
+  /// least of all, where it would touch localStorage on every visit before the
+  /// operator has done anything.
+  InstanceSet _seedInsightInstance() {
+    final instance = SlopcafeInstance(
+      id: newInstanceId(kInsightBaseUrl, taken: const <String>[]),
+      label: defaultLabelFor(kInsightBaseUrl),
+      baseUrl: kInsightBaseUrl,
+      operatorToken: '',
+    );
+    return InstanceSet(instances: [instance], activeId: instance.id);
   }
 
   // ---- Active-instance conveniences ----------------------------------------

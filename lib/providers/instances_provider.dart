@@ -10,8 +10,14 @@ import 'document_provider.dart';
 import 'health_provider.dart';
 import 'review_provider.dart';
 
-/// The saved deployments and the pointer to the active one — the store behind
-/// the Settings instance list and the shell's quick switcher.
+/// The saved deployments and the pointer to the active one.
+///
+/// On Insight this is a one-element set, seeded by
+/// [SecureStorageService.load] and locked there — [SettingsScreen] only ever
+/// [edit]s or [signOut]s that single instance, never [add]s or [remove]s a
+/// second one. The generic multi-instance machinery below (switching,
+/// upserting, the reload-not-invalidate policy) is otherwise unchanged, since
+/// it works the same way on a set of one.
 ///
 /// ## What a switch has to do besides swapping credentials
 ///
@@ -112,10 +118,40 @@ class InstancesNotifier extends AsyncNotifier<InstanceSet> {
     await _resetDerivedState();
   }
 
-  /// Throw away everything the previous deployment put on screen and refetch
-  /// against the new one. See the class doc for why this reloads rather than
-  /// invalidating.
-  Future<void> _resetDerivedState() async {
+  /// Clear the active instance's operator token, keeping its Base URL —
+  /// Insight's "Sign out". The instance is never removed (there is nowhere
+  /// left to re-add it from; see `secure_storage.dart`'s seeding note), only
+  /// its credential.
+  ///
+  /// [edit] is not reused here even though the storage write it would do is
+  /// identical, because [edit] always ends in [_resetDerivedState]'s full
+  /// reload — right when a *replacement* credential should be proven against
+  /// the backend immediately, and wrong here: the only credential a reload
+  /// could fire requests with is the one just being revoked. An empty Bearer
+  /// token still reads as "present" to the Dio interceptor (it is `''`, not
+  /// null), so that reload would 401 on `/admin/documents` — which is not
+  /// exempt from the global interceptor — and bounce the operator straight
+  /// back through the Settings screen they are already standing on. Every
+  /// list is still cleared, so a subsequent sign-in starts from a clean slate
+  /// rather than the previous session's rows.
+  Future<void> signOut() async {
+    final id = state.value?.activeId;
+    if (id == null) return;
+    await _storage.updateInstance(
+      id: id,
+      baseUrl: kInsightBaseUrl,
+      operatorToken: '',
+    );
+    state = AsyncData(await _storage.load());
+    await _resetDerivedState(refetch: false);
+  }
+
+  /// Throw away everything the previous deployment put on screen and, unless
+  /// [refetch] is false, refetch against the new one. See the class doc for
+  /// why a switch reloads rather than invalidates — [refetch] exists only for
+  /// [signOut], which wants the clearing half without the doomed-to-401 fetch
+  /// half; see its doc for why.
+  Future<void> _resetDerivedState({bool refetch = true}) async {
     // A 401 raised by the deployment we just left says nothing about this one.
     ref.read(connectionStateProvider.notifier).reset();
 
@@ -140,15 +176,15 @@ class InstancesNotifier extends AsyncNotifier<InstanceSet> {
     // fetches in `initState` when it is first pushed, so waking it here would
     // buy nothing and cost two requests on every switch.
     if (ref.exists(changeFeedProvider)) {
-      ref.read(changeFeedProvider.notifier)
-        ..reset()
-        ..reload();
+      final notifier = ref.read(changeFeedProvider.notifier)..reset();
+      if (refetch) notifier.reload();
     }
     if (ref.exists(reviewQueueProvider)) {
-      ref.read(reviewQueueProvider.notifier)
-        ..reset()
-        ..reload();
+      final notifier = ref.read(reviewQueueProvider.notifier)..reset();
+      if (refetch) notifier.reload();
     }
+
+    if (!refetch) return;
 
     // The home tabs. Awaited so a caller can show a spinner until the shell is
     // actually showing the new deployment rather than the old one's leftovers.

@@ -21,7 +21,6 @@ import '../providers/links_provider.dart';
 import '../providers/refresh.dart';
 import '../widgets/app_button.dart';
 import '../widgets/doc_feed_card.dart';
-import '../widgets/instance_switcher.dart';
 import '../widgets/pill.dart';
 import '../widgets/press_card.dart';
 import '../widgets/section_header.dart';
@@ -2943,12 +2942,12 @@ class _EditSlugTagsSheetState extends State<_EditSlugTagsSheet> {
   }
 }
 
-/// The compact-layout entry point to the instance quick switcher, shown beside
-/// the Operate title.
+/// Names the active deployment beside the Operate title.
 ///
-/// Named rather than iconic: an icon would say that switching is possible
-/// without saying what is currently selected, and the second half is the part
-/// worth a permanent slot on the screen where documents get revoked.
+/// Non-interactive: Insight is locked to one hardcoded deployment (see the
+/// project CLAUDE.md), and this whole screen is dead code besides — its tab
+/// was already removed from [AppShell]. This chip, and the switcher it used
+/// to open, are what is left of the generic app's instance quick switcher.
 class _InstanceChip extends StatelessWidget {
   const _InstanceChip({required this.instance});
 
@@ -2958,8 +2957,6 @@ class _InstanceChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     return Tappable(
-      onTap: () => showInstanceSwitcher(context),
-      behavior: HitTestBehavior.opaque,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 150),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

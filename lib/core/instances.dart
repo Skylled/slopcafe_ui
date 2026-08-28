@@ -8,8 +8,9 @@
 /// or a pure function over one, so the whole switching model is unit-testable
 /// without a keychain, a device or a backend. The persistence lives in
 /// `lib/core/secure_storage.dart`, the reset-on-switch orchestration in
-/// `lib/providers/instances_provider.dart`, and the UI in `SettingsScreen` and
-/// the shell's quick switcher.
+/// `lib/providers/instances_provider.dart`, and the UI in `SettingsScreen` —
+/// on the generic app, alongside the shell's quick switcher; on Insight,
+/// which locks every instance but [kInsightBaseUrl] out of reach, alone.
 ///
 /// ## Why an instance is more than a URL + token pair
 ///
@@ -44,6 +45,18 @@
 /// across such an edit, since the id now names a different deployment; the
 /// storage layer drops that namespace when the URL changes.
 library;
+
+/// The one Slopcafe deployment the Insight build talks to.
+///
+/// Insight is a read-only fork of the generic operator app (see the project
+/// CLAUDE.md): the Base URL field is gone from Settings, and
+/// [SecureStorageService.load] seeds a single instance pointed here whenever
+/// nothing is persisted yet, so the app is never configurable against any
+/// other deployment. Everything downstream — [InstanceSet], the switch/edit
+/// machinery this library still exposes — is unchanged and still works on a
+/// one-element set; only the UI that let an operator add a second element was
+/// removed.
+const String kInsightBaseUrl = 'https://insight-slopcafe.skylled.workers.dev';
 
 /// One saved deployment: where it is, how to authenticate to it, and the
 /// deployment-scoped state that would be nonsense to share with another.

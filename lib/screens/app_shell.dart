@@ -13,8 +13,6 @@ import '../providers/document_provider.dart';
 import '../providers/instances_provider.dart';
 import '../providers/refresh.dart';
 import '../widgets/cafe_logo.dart';
-import '../widgets/instance_switcher.dart';
-import '../widgets/press_card.dart';
 import '../widgets/toast.dart';
 import 'library_screen.dart';
 import 'reader_screen.dart';
@@ -30,10 +28,12 @@ import 'settings_screen.dart';
 ///   an explicit refresh action (pull-to-refresh has no mouse gesture) and a
 ///   Settings shortcut.
 ///
-/// Both idioms share the global 401 interception that surfaces Settings, and
-/// both reach the instance quick switcher without a detour through Settings:
-/// the rail's logo opens it here, and the Operate header's chip opens it on
-/// phones (`operate_screen.dart`).
+/// Both idioms share the global 401 interception that surfaces Settings. The
+/// generic app's instance quick switcher lived on the rail's logo and the
+/// Operate header's chip; Insight is locked to one hardcoded deployment (see
+/// the project CLAUDE.md), so neither affordance switches anything anymore —
+/// the logo is decoration and the Operate screen is dead code, its tab
+/// already removed.
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
 
@@ -255,33 +255,28 @@ class _SideRailState extends ConsumerState<_SideRail> {
       ),
       child: Column(
         children: [
-          // The logo doubles as the desktop quick switcher: it is the one
-          // element of the rail that was pure decoration, and it already reads
-          // as "which Slopcafe is this". The active instance's name sits under
-          // it so the answer is visible without opening anything.
-          Tooltip(
-            message: context.l10n.instanceSwitcherTitle,
-            child: Tappable(
-              onTap: () => showInstanceSwitcher(context),
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                child: Column(
-                  children: [
-                    const CafeLogo(size: 26),
-                    if (active != null) ...[
-                      const SizedBox(height: 5),
-                      Text(
-                        active.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: AppText.label.copyWith(color: c.textDim),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+          // Insight is locked to one hardcoded deployment (see the project
+          // CLAUDE.md), so the logo is pure decoration here — the generic
+          // app's quick switcher lived on this tap and is gone along with
+          // every other way to point the app at a different instance. The
+          // active instance's name still sits under it, which on Insight is
+          // just a label of the one deployment this build talks to.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Column(
+              children: [
+                const CafeLogo(size: 26),
+                if (active != null) ...[
+                  const SizedBox(height: 5),
+                  Text(
+                    active.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: AppText.label.copyWith(color: c.textDim),
+                  ),
+                ],
+              ],
             ),
           ),
           const SizedBox(height: 22),

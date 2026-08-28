@@ -1471,7 +1471,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connectionIntroBody =>
-      'Point the operator app at a Slopcafe deployment and provide an admin token. Save several and switch between them without signing out. Credentials are stored only on this device in secure storage.';
+      'Sign in with a Slopcafe token to browse this deployment\'s published documents. The token is stored only on this device in secure storage.';
 
   @override
   String get baseUrlLabel => 'Base URL';
@@ -1551,6 +1551,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearSecureStorageButton => 'Clear Secure Storage';
+
+  @override
+  String get signOutTitle => 'Sign out';
+
+  @override
+  String get signOutBody =>
+      'Clears the saved operator token from this device. The connection stays pointed at this deployment — sign back in any time.';
+
+  @override
+  String get signOutButton => 'Sign Out';
+
+  @override
+  String get signedOut => 'Signed out';
 
   @override
   String get instancesSection => 'Instances';

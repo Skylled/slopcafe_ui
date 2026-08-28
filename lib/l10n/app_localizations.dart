@@ -2461,7 +2461,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectionIntroBody.
   ///
   /// In en, this message translates to:
-  /// **'Point the operator app at a Slopcafe deployment and provide an admin token. Save several and switch between them without signing out. Credentials are stored only on this device in secure storage.'**
+  /// **'Sign in with a Slopcafe token to browse this deployment\'s published documents. The token is stored only on this device in secure storage.'**
   String get connectionIntroBody;
 
   /// No description provided for @baseUrlLabel.
@@ -2607,6 +2607,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear Secure Storage'**
   String get clearSecureStorageButton;
+
+  /// Title of the Settings card that clears the saved operator token.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOutTitle;
+
+  /// Body of the sign-out card explaining what it does and does not clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clears the saved operator token from this device. The connection stays pointed at this deployment — sign back in any time.'**
+  String get signOutBody;
+
+  /// Button that clears the saved operator token.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get signOutButton;
+
+  /// Toast shown after signing out.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out'**
+  String get signedOut;
 
   /// Settings section header above the list of saved Slopcafe deployments.
   ///
