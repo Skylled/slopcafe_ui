@@ -68,6 +68,14 @@ void main() {
                     'service': 'slopcafe',
                     'sanitizer_version': '1.2.3',
                     'storage_cap_bytes': 1000000,
+                    'openapi': 'https://slopcafe.com/openapi.json',
+                    'docs': 'https://slopcafe.com/docs',
+                    'mcp': 'https://slopcafe.com/mcp',
+                    'cors': {
+                      'enabled': false,
+                      'allowed_origin_count': 0,
+                      'request_origin_allowed': false,
+                    },
                     'd1': {
                       'documents': 2500,
                       'agents': 8,
